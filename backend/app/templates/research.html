@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Research Submission - SpacePoint{% endblock %}
+
+{% block nav_actions %}
+<button onclick="logout()" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">Logout</button>
+{% endblock %}
+
+{% block content %}
+<div class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div
+        class="w-full max-w-3xl glass-panel p-10 rounded-2xl relative z-10 shadow-2xl animate-fade-in-up border-t-4 border-t-space-accent">
+
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-display font-bold text-white tracking-tight">Phase 2: Research Submission</h2>
+            <p class="mt-4 text-gray-400 text-sm max-w-xl mx-auto">
+                In this final phase, please review the Space.Terms document and upload your research submission in PDF
+                format.
+            </p>
+        </div>
+
+        <!-- Task Info -->
+        <div class="bg-space-900/40 p-6 rounded-xl border border-white/5 mb-8">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 mt-1">
+                    <svg class="w-6 h-6 text-space-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                        </path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-bold text-white">Space.Terms Document</h3>
+                    <p class="mt-1 text-sm text-gray-300 mb-4">
+                        Download and read the terms carefully. Use the provided template and instructions for your
+                        research submission.
+                    </p>
+                    <a href="https://drive.google.com/file/d/1X20xvheKJYu18P3a8rx0EDgWzXd9brQZ/view" target="_blank"
+                        class="inline-flex items-center px-4 py-2 border border-space-accent text-sm font-medium rounded-lg text-space-accent hover:bg-space-accent hover:text-space-900 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Download Space.Terms
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <form id="research-form" onsubmit="submitResearch(event)" class="space-y-6">
+            <!-- Upload Area -->
+            <div
+                class="border-2 border-dashed border-white/20 rounded-xl p-8 text-center hover:border-space-accent transition-colors bg-space-900/30">
+                <input type="file" id="file_upload" accept="application/pdf" required class="hidden"
+                    onchange="updateFileName()">
+                <label for="file_upload" class="cursor-pointer flex flex-col items-center">
+                    <div class="bg-white/5 p-4 rounded-full mb-3 text-space-accent" id="upload-icon">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                            </path>
+                        </svg>
+                    </div>
+                    <span class="text-sm font-medium text-white" id="file-name">Click to upload your Submission
+                        (PDF)</span>
+                    <span class="text-xs text-gray-400 mt-1">Maximum file size: 10MB</span>
+                </label>
+            </div>
+
+            <!-- Optional Text -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300">Additional Comments (Optional)</label>
+                <textarea id="content_text" rows="3"
+                    class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border resize-none"></textarea>
+            </div>
+
+            <div id="submit-error" class="hidden text-sm text-red-400 text-center font-medium"></div>
+
+            <button type="submit" id="btn-submit"
+                class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-space-900 bg-space-accent hover:bg-space-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-space-accent focus:ring-offset-space-900 transition-colors shadow-[0_0_15px_rgba(79,209,197,0.3)]">
+                Submit Application
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function updateFileName() {
+        const input = document.getElementById('file_upload');
+        const fileNameSpan = document.getElementById('file-name');
+        const iconDiv = document.getElementById('upload-icon');
+
+        if (input.files.length > 0) {
+            fileNameSpan.textContent = `Selected: ${input.files[0].name}`;
+            fileNameSpan.classList.add('text-space-accent');
+            iconDiv.classList.replace('text-space-accent', 'text-green-400');
+            iconDiv.innerHTML = `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+        } else {
+            fileNameSpan.textContent = "Click to upload your Submission (PDF)";
+            fileNameSpan.classList.remove('text-space-accent');
+        }
+    }
+
+    async function submitResearch(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('file_upload');
+        const contentText = document.getElementById('content_text').value;
+        const errDiv = document.getElementById('submit-error');
+        const btn = document.getElementById('btn-submit');
+
+        if (fileInput.files.length === 0) {
+            errDiv.textContent = "Please select a PDF file.";
+            errDiv.classList.remove('hidden');
+            return;
+        }
+
+        errDiv.classList.add('hidden');
+        btn.disabled = true;
+        btn.textContent = "Uploading...";
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        if (contentText.trim() !== "") {
+            formData.append("content_text", contentText);
+        }
+
+        try {
+            const resp = await fetch("/api/applicant/research", {
+                method: "POST",
+                body: formData
+            });
+
+            if (resp.ok) {
+                window.location.href = "/status";
+            } else {
+                const data = await resp.json();
+                errDiv.textContent = data.detail || "Error submitting application.";
+                errDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            errDiv.textContent = "Network error during upload.";
+            errDiv.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Submit Application";
+        }
+    }
+
+    async function logout() {
+        await fetch("/api/auth/logout", { method: "POST" });
+        window.location.href = "/";
+    }
+</script>
+{% endblock %}

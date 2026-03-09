@@ -1,0 +1,431 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - SpacePoint{% endblock %}
+
+{% block nav_actions %}
+<button onclick="logout()" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">Logout
+    Admin</button>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-grow flex flex-col">
+
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-display font-bold text-white tracking-tight">Applicants Review Dashboard</h1>
+        <button onclick="fetchApplicants()"
+            class="text-space-accent hover:text-white transition-colors flex items-center">
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                </path>
+            </svg>
+            Refresh
+        </button>
+    </div>
+
+    <!-- Applicants List View -->
+    <div id="list-view" class="w-full glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-xl">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-space-900/80 border-b border-white/10 text-sm tracking-wide text-gray-400 uppercase">
+                        <th class="py-4 px-6 font-semibold">Applicant Name</th>
+                        <th class="py-4 px-6 font-semibold">City</th>
+                        <th class="py-4 px-6 font-semibold">Status</th>
+                        <th class="py-4 px-6 font-semibold">Sub Date</th>
+                        <th class="py-4 px-6 font-semibold text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="applicants-table" class="text-gray-300 divide-y divide-white/5">
+                    <tr>
+                        <td colspan="5" class="py-10 text-center text-gray-500">Loading applicants...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Applicant Detail Modal / View -->
+    <div id="detail-view" class="hidden flex-col gap-8 w-full">
+        <div class="flex items-center text-sm">
+            <button onclick="closeDetail()" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Applicants List
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left col: Profile info -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="glass-panel p-6 rounded-2xl border border-white/10">
+                    <h3 class="text-xl font-display font-bold text-white mb-4">Profile</h3>
+                    <div id="det-profile" class="space-y-4 text-sm text-gray-300">
+                        <!-- injected by JS -->
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl border border-white/10">
+                    <h3 class="text-xl font-display font-bold text-white mb-4">Adjudication</h3>
+                    <form id="review-form" onsubmit="submitReview(event)">
+                        <input type="hidden" id="rev-uid">
+
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Decision</label>
+                        <select id="rev-status"
+                            class="w-full rounded-lg border-white/20 bg-space-900/80 px-3 py-2 text-white focus:ring-space-accent mb-4 border">
+                            <option value="UNDER_REVIEW">Under Review</option>
+                            <option value="APPROVED">Approve</option>
+                            <option value="REJECTED">Reject</option>
+                        </select>
+
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Feedback (Required on
+                            Reject)</label>
+                        <textarea id="rev-feedback" rows="4"
+                            class="w-full rounded-lg border-white/20 bg-space-900/80 px-3 py-2 text-white focus:ring-space-accent mb-4 border resize-none"></textarea>
+
+                        <div id="rev-error" class="text-red-400 text-sm hidden mb-4"></div>
+
+                        <button type="submit"
+                            class="w-full py-2 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]">Save
+                            Decision</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right col: Submissions -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass-panel p-6 rounded-2xl border border-white/10">
+                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+                        <h3 class="text-xl font-display font-bold text-white">Modules & Checklist</h3>
+                        <a id="det-dl-btn" href="#" target="_blank"
+                            class="px-4 py-2 bg-space-accent text-space-900 rounded-lg font-bold hover:bg-space-hover transition-colors text-sm flex items-center shadow-[0_0_10px_rgba(79,209,197,0.3)]">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            Export Consolidated PDF
+                        </a>
+                    </div>
+
+                    <div id="det-checklist" class="space-y-6">
+                        <!-- injected by JS -->
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl border border-white/10">
+                    <h3 class="text-xl font-display font-bold text-white mb-6">Video Summaries</h3>
+                    <div id="det-videos" class="space-y-6">
+                        <!-- injected by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getStatusBadge(st) {
+        if (st === 'APPROVED') return `<span class="px-2 py-1 rounded bg-green-500/20 text-green-400 text-xs font-bold border border-green-500/30">APPROVED</span>`;
+        if (st === 'REJECTED') return `<span class="px-2 py-1 rounded bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30">REJECTED</span>`;
+        if (st === 'UNDER_REVIEW') return `<span class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30">UNDER REVIEW</span>`;
+        return `<span class="px-2 py-1 rounded bg-gray-500/20 text-gray-400 text-xs font-bold border border-gray-500/30">${st}</span>`;
+    }
+
+    async function fetchApplicants() {
+        try {
+            const resp = await fetch("/api/admin/applicants");
+            if (resp.status === 401 || resp.status === 403) {
+                window.location.href = "/admin/login";
+                return;
+            }
+            const data = await resp.json();
+
+            const tbody = document.getElementById('applicants-table');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-500">No applicants found.</td></tr>`;
+            }
+
+            data.forEach(app => {
+                let d = new Date(app.created_at).toLocaleDateString();
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-white/5 transition-colors group cursor-pointer border-b border-white/5 last:border-0";
+                tr.onclick = () => openDetail(app.id);
+                tr.innerHTML = `
+                    <td class="py-4 px-6">
+                        <div class="font-medium text-white">${app.name}</div>
+                        <div class="text-xs text-gray-500">${app.email}</div>
+                    </td>
+                    <td class="py-4 px-6">${app.city}</td>
+                    <td class="py-4 px-6">${getStatusBadge(app.status)}</td>
+                    <td class="py-4 px-6 text-sm text-gray-400">${d}</td>
+                    <td class="py-4 px-6 text-right">
+                        <span class="text-space-accent opacity-0 group-hover:opacity-100 transition-opacity">Review &rarr;</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function openDetail(id) {
+        document.getElementById('list-view').classList.add('hidden');
+        document.getElementById('detail-view').classList.remove('hidden');
+        document.getElementById('detail-view').style.display = 'flex';
+
+        try {
+            const resp = await fetch(`/api/admin/applicants/${id}`);
+            const data = await resp.json();
+
+            // Populate Profile
+            let phtml = `
+                <div><span class="text-gray-500">Name:</span> <span class="text-white">${data.user.name}</span></div>
+                <div><span class="text-gray-500">Email:</span> <span class="text-white">${data.user.email}</span></div>
+                <div><span class="text-gray-500">Phone:</span> <span class="text-white">${data.user.phone}</span></div>
+                <div class="h-px bg-white/10 my-2"></div>
+                <div><span class="text-gray-500">University:</span> <span class="text-white">${data.profile.university}</span></div>
+                <div><span class="text-gray-500">Degree:</span> <span class="text-white">${data.profile.highest_degree}${data.profile.highest_degree_other ? ' (' + data.profile.highest_degree_other + ')' : ''}</span></div>
+                <div><span class="text-gray-500">City:</span> <span class="text-white">${data.profile.city_of_residence}</span></div>
+                <div class="h-px bg-white/10 my-2"></div>
+                <div><span class="text-gray-500 block mb-1">Deliver Cities:</span> 
+                    <div class="flex flex-wrap gap-1">${JSON.parse(data.profile.deliver_cities_json).map(c => `<span class="bg-white/10 px-2 py-0.5 rounded text-xs">${c}</span>`).join('')}</div>
+                </div>
+                <div class="mt-2"><span class="text-gray-500 block mb-1">Background:</span> 
+                    <div class="flex flex-wrap gap-1">${JSON.parse(data.profile.background_areas_json).map(c => `<span class="bg-space-accent/20 text-space-accent px-2 py-0.5 rounded text-xs">${c}</span>`).join('')}</div>
+                </div>
+                ${data.profile.background_other ? `<div><span class="text-gray-500 text-xs">Other: ${data.profile.background_other}</span></div>` : ''}
+                <div class="mt-4"><span class="text-gray-500">Invite Code:</span> <span class="font-mono text-xs text-white">${data.user.invitation_code_used}</span></div>
+            `;
+            document.getElementById('det-profile').innerHTML = phtml;
+
+            // Populate Review Form
+            document.getElementById('rev-uid').value = id;
+            document.getElementById('rev-status').value = data.review.status;
+            document.getElementById('rev-feedback').value = data.review.feedback || '';
+
+            // Set full PDF export link
+            document.getElementById('det-dl-btn').href = `/api/admin/applicants/${id}/export.pdf`;
+
+            // Populate Checklist
+            try {
+                const checkResp = await fetch(`/api/admin/applicants/${id}/checklist`);
+                const checklistData = await checkResp.json();
+
+                let checkHtml = '';
+
+                if (checklistData.length === 0) {
+                    checkHtml = '<p class="text-gray-500 text-sm italic">No checklist data found.</p>';
+                }
+
+                checklistData.forEach(mod => {
+                    let modBadge = '';
+                    let modActions = '';
+                    let sub = mod.submission;
+
+                    if (sub) {
+                        modBadge = getStatusBadge(sub.status);
+
+                        let d = new Date(sub.submitted_at).toLocaleDateString();
+                        modActions = `
+                            <div class="mt-4 bg-black/30 p-4 rounded-lg border border-white/5 space-y-4">
+                                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                                    <div class="text-sm text-gray-400">PDF Submitted: <span class="text-white">${d}</span></div>
+                                    <a href="/api/admin/modules/submissions/${sub.id}/download" target="_blank" class="text-blue-400 hover:text-blue-300 flex items-center text-sm font-semibold bg-blue-500/10 px-3 py-1.5 rounded transition-colors">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        View Module PDF
+                                    </a>
+                                </div>
+                                ${sub.notes_text ? `<div><span class="text-gray-500 text-xs block mb-1">Applicant Notes:</span><span class="text-gray-300 italic text-sm">${sub.notes_text}</span></div>` : ''}
+                                
+                                <div class="border-t border-white/10 pt-4 mt-2">
+                                    <div class="text-xs text-gray-500 mb-3 font-semibold uppercase tracking-wider">Module Adjudication:</div>
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <button onclick="reviewModule(${sub.id}, 'APPROVED')" class="px-4 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/50 rounded text-sm font-bold transition-all ${sub.status === 'APPROVED' ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-space-900 bg-green-500/20' : ''}">Approve PDF</button>
+                                        <button onclick="reviewModule(${sub.id}, 'REJECTED')" class="px-4 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/50 rounded text-sm font-bold transition-all ${sub.status === 'REJECTED' ? 'ring-2 ring-red-500 ring-offset-2 ring-offset-space-900 bg-red-500/20' : ''}">Reject PDF</button>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <input type="text" id="mfb-${sub.id}" placeholder="Optional feedback logic for rejection..." value="${sub.feedback || ''}" class="flex-grow bg-space-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-space-accent outline-none">
+                                        <button onclick="reviewModule(${sub.id}, '${sub.status}')" class="px-4 bg-space-800 hover:bg-white/10 text-gray-300 border border-white/20 rounded-lg text-sm font-semibold transition-colors">Save Note</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        modBadge = '<span class="px-2 py-1 bg-gray-600/20 text-gray-400 text-xs font-bold rounded border border-gray-600/30">PENDING UPLOAD</span>';
+                    }
+
+                    checkHtml += `
+                        <div class="bg-space-900/40 rounded-xl overflow-hidden border border-white/5 mb-4">
+                            <div class="bg-space-900/80 px-5 py-4 border-b border-white/10 flex items-center justify-between cursor-pointer hover:bg-space-800/80 transition-colors" onclick="toggleModule(${mod.id})">
+                                <h4 class="font-display font-bold text-white text-lg flex items-center gap-2">
+                                    <svg id="icon-mod-${mod.id}" class="w-5 h-5 transition-transform transform -rotate-90 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    ${mod.title}
+                                </h4>
+                                <div>${modBadge}</div>
+                            </div>
+                            <div id="content-mod-${mod.id}" class="px-5 pb-5 pt-2 hidden">
+                                ${modActions}
+                                <div class="mt-6 space-y-4">
+                    `;
+
+                    const renderItem = (item) => {
+                        const checked = item.is_completed;
+                        const icon = checked
+                            ? '<svg class="w-5 h-5 text-space-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                            : '<svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+
+                        return `
+                            <div class="flex items-start gap-3 border-b border-white/5 pb-3 mb-3 last:border-0 last:pb-0 last:mb-0">
+                                <div class="flex-shrink-0 mt-0.5">
+                                    ${icon}
+                                </div>
+                                <div class="font-medium text-white max-w-lg">
+                                    <span class="text-gray-400 mr-2">${item.item_code}</span>
+                                    <span class="${checked ? 'text-gray-200' : 'text-gray-500'}">${item.title}</span>
+                                </div>
+                            </div>
+                        `;
+                    };
+
+                    if (mod.items_no_section && mod.items_no_section.length > 0) {
+                        mod.items_no_section.forEach(item => {
+                            checkHtml += renderItem(item);
+                        });
+                    }
+
+                    if (mod.sections && mod.sections.length > 0) {
+                        mod.sections.forEach(sec => {
+                            checkHtml += `
+                                <div class="mt-5 first:mt-0">
+                                    <h5 class="text-sm font-bold text-gray-400 border-b border-white/10 pb-2 mb-3 tracking-wide uppercase">${sec.title}</h5>
+                                    <div class="space-y-3 pl-1">
+                            `;
+                            sec.items.forEach(item => {
+                                checkHtml += renderItem(item);
+                            });
+                            checkHtml += `</div></div>`;
+                        });
+                    }
+
+                    checkHtml += `</div></div></div>`;
+                });
+
+                document.getElementById('det-checklist').innerHTML = checkHtml;
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('det-checklist').innerHTML = '<p class="text-red-400 text-sm">Error loading checklist data.</p>';
+            }
+
+            // Populate Videos
+            let vhtml = '';
+            data.videos.sort((a, b) => a.video_no - b.video_no).forEach(v => {
+                vhtml += `
+                    <div class="bg-space-900/50 p-4 rounded-xl border border-white/5">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-semibold text-white">Video ${v.video_no}</h4>
+                            <span class="text-xs text-gray-500">${v.word_count} words</span>
+                        </div>
+                        <p class="text-sm text-gray-300 whitespace-pre-wrap">${v.summary_text || 'No summary drafted.'}</p>
+                    </div>
+                `;
+            });
+            document.getElementById('det-videos').innerHTML = vhtml;
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function closeDetail() {
+        document.getElementById('detail-view').classList.add('hidden');
+        document.getElementById('detail-view').style.display = 'none';
+        document.getElementById('list-view').classList.remove('hidden');
+        document.getElementById('rev-error').classList.add('hidden');
+    }
+
+    window.toggleModule = function (modId) {
+        const content = document.getElementById(`content-mod-${modId}`);
+        const icon = document.getElementById(`icon-mod-${modId}`);
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            icon.classList.remove('-rotate-90');
+        } else {
+            content.classList.add('hidden');
+            icon.classList.add('-rotate-90');
+        }
+    }
+
+    window.reviewModule = async function (subId, status) {
+        let fb = document.getElementById(`mfb-${subId}`).value;
+        try {
+            const resp = await fetch(`/api/admin/modules/submissions/${subId}/decision`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: status, feedback: fb })
+            });
+            if (resp.ok) {
+                // Refresh detail view
+                const uid = document.getElementById('rev-uid').value;
+                openDetail(uid);
+            } else {
+                alert("Failed to update module decision");
+            }
+        } catch (e) {
+            alert("Error updating decision: " + e.message);
+        }
+    }
+
+    async function submitReview(e) {
+        e.preventDefault();
+        const uid = document.getElementById('rev-uid').value;
+        const st = document.getElementById('rev-status').value;
+        const fb = document.getElementById('rev-feedback').value;
+        const err = document.getElementById('rev-error');
+
+        err.classList.add('hidden');
+
+        if (st === 'REJECTED' && fb.trim() === '') {
+            err.textContent = "Feedback is required for rejections to help applicants improve.";
+            err.classList.remove('hidden');
+            return;
+        }
+
+        try {
+            const resp = await fetch(`/api/admin/applicants/${uid}/review`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: st, feedback: fb })
+            });
+            const data = await resp.json();
+
+            if (resp.ok) {
+                // Return to list
+                alert(data.message || "Decision saved successfully.");
+                closeDetail();
+                fetchApplicants();
+            } else {
+                err.textContent = data.detail || "Error saving decision";
+                err.classList.remove('hidden');
+            }
+        } catch (error) {
+            err.textContent = "Network error";
+            err.classList.remove('hidden');
+        }
+    }
+
+    async function logout() {
+        await fetch("/api/auth/logout", { method: "POST" });
+        window.location.href = "/admin/login";
+    }
+
+    // Init
+    fetchApplicants();
+</script>
+{% endblock %}

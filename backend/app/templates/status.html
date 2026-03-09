@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Application Status - SpacePoint{% endblock %}
+
+{% block nav_actions %}
+<button onclick="logout()" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">Logout</button>
+{% endblock %}
+
+{% block content %}
+<div class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div
+        class="w-full max-w-2xl glass-panel p-10 rounded-2xl relative z-10 shadow-2xl animate-fade-in-up border-t-4 border-t-blue-500 text-center">
+
+        <div id="loading" class="flex justify-center items-center py-10">
+            <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+            </svg>
+        </div>
+
+        <div id="status-container" class="hidden">
+            <div id="icon-container"
+                class="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6 border-4">
+                <!-- Icon injected by JS -->
+            </div>
+
+            <h2 id="status-title" class="text-4xl font-display font-bold text-white tracking-tight mb-4">Under Review
+            </h2>
+
+            <p id="status-msg" class="text-lg text-gray-300 mb-8 leading-relaxed">
+                Your application is currently under review. We will contact you if you are shortlisted for the next
+                phase.
+            </p>
+
+            <div id="feedback-container"
+                class="hidden bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-left mb-8">
+                <h4 class="text-red-400 font-bold mb-2">Reviewer Feedback:</h4>
+                <p id="feedback-text" class="text-gray-300 italic"></p>
+            </div>
+
+            <div
+                class="inline-block bg-space-900/60 rounded-xl px-6 py-4 border border-white/10 text-sm xl:text-base text-gray-400">
+                Application Submitted on: <span id="submitted-date" class="text-white font-medium ml-2">...</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    async function checkStatus() {
+        try {
+            const resp = await fetch("/api/applicant/status");
+            if (resp.status === 401) {
+                window.location.href = "/apply";
+                return;
+            }
+            const data = await resp.json();
+
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('status-container').classList.remove('hidden');
+
+            const iconContainer = document.getElementById('icon-container');
+            const statusTitle = document.getElementById('status-title');
+            const statusMsg = document.getElementById('status-msg');
+
+            if (data.status === 'UNDER_REVIEW') {
+                iconContainer.classList.add('border-blue-500', 'bg-blue-500/20', 'text-blue-400');
+                iconContainer.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                statusTitle.textContent = "Under Review";
+                statusMsg.textContent = "Your application is under review. We will contact you if you are shortlisted for the next phase.";
+            } else if (data.status === 'APPROVED') {
+                iconContainer.classList.add('border-green-500', 'bg-green-500/20', 'text-green-400');
+                iconContainer.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                statusTitle.textContent = "Application Approved!";
+                statusMsg.textContent = "Congratulations! You have been shortlisted for the next phase. Our team will contact you shortly with the onboarding details.";
+            } else if (data.status === 'REJECTED') {
+                iconContainer.classList.add('border-red-500', 'bg-red-500/20', 'text-red-400');
+                iconContainer.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+                statusTitle.textContent = "Application Rejected";
+                statusMsg.textContent = "Thank you for applying. Unfortunately, we will not be moving forward with your application at this time.";
+
+                if (data.feedback) {
+                    document.getElementById('feedback-container').classList.remove('hidden');
+                    document.getElementById('feedback-text').textContent = data.feedback;
+                }
+
+                // Add Reopen Button dynamically
+                const reopenContainer = document.createElement('div');
+                reopenContainer.className = "mt-6";
+                reopenContainer.innerHTML = `<button onclick="reopenApp()" class="w-full sm:w-auto px-8 py-3 bg-space-accent text-space-900 font-bold rounded-full hover:bg-space-hover transition-colors shadow-[0_0_15px_rgba(79,209,197,0.3)]">Re-open Application & Update Modules</button>`;
+                document.getElementById('status-container').appendChild(reopenContainer);
+            } else {
+                // IN_PROGRESS
+                window.location.href = "/tasks/videos";
+            }
+
+            if (data.submitted_at) {
+                const d = new Date(data.submitted_at);
+                document.getElementById('submitted-date').textContent = d.toLocaleDateString() + " at " + d.toLocaleTimeString();
+            }
+
+        } catch (error) {
+            console.error("Error fetching status", error);
+        }
+    }
+
+    async function logout() {
+        await fetch("/api/auth/logout", { method: "POST" });
+        window.location.href = "/";
+    }
+
+    async function reopenApp() {
+        try {
+            const res = await fetch("/api/applicant/application/reopen", { method: "POST" });
+            if (res.ok) {
+                window.location.href = "/tasks/modules";
+            } else {
+                const data = await res.json();
+                alert("Failed to reopen application: " + (data.detail || "Unknown error"));
+            }
+        } catch (e) {
+            console.error("Error reopening:", e);
+        }
+    }
+
+    checkStatus();
+</script>
+{% endblock %}

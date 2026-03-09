@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - SpacePoint{% endblock %}
+
+{% block nav_actions %}
+{% endblock %}
+
+{% block content %}
+<div class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div
+        class="w-full max-w-md glass-panel p-10 rounded-2xl relative z-10 shadow-2xl animate-fade-in-up border-t-4 border-t-space-accent">
+
+        <div>
+            <h2 class="text-center text-3xl font-display font-bold text-white tracking-tight">Admin Portal</h2>
+            <p class="mt-2 text-center text-sm text-gray-400">
+                Sign in to manage instructor applications.
+            </p>
+        </div>
+
+        <form id="admin-login-form" autocomplete="off" class="mt-8 space-y-6" onsubmit="handleLogin(event)">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300">Email Address</label>
+                    <input type="email" id="email" required
+                        class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-3 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300">Password</label>
+                    <input type="password" id="password" required
+                        class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-3 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                </div>
+            </div>
+
+            <div id="login-error" class="hidden text-sm text-red-400 text-center font-medium"></div>
+
+            <button type="submit" id="btn-submit"
+                class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-space-900 bg-space-accent hover:bg-space-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-space-accent focus:ring-offset-space-900 transition-colors shadow-[0_0_15px_rgba(79,209,197,0.3)]">
+                Sign In
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    async function handleLogin(e) {
+        e.preventDefault();
+        const errDiv = document.getElementById('login-error');
+        const btn = document.getElementById('btn-submit');
+
+        errDiv.classList.add('hidden');
+        btn.disabled = true;
+        btn.textContent = "Authenticating...";
+
+        try {
+            const resp = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value
+                })
+            });
+
+            const data = await resp.json();
+
+            if (resp.ok) {
+                if (data.role === 'ADMIN') {
+                    window.location.href = "/admin/dashboard";
+                } else {
+                    window.location.href = "/status"; // default for applicant if they somehow end up here
+                }
+            } else {
+                errDiv.textContent = data.detail || "Invalid credentials.";
+                errDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            errDiv.textContent = "Network error during login.";
+            errDiv.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Sign In";
+        }
+    }
+</script>
+{% endblock %}

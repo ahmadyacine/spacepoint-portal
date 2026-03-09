@@ -1,0 +1,216 @@
+{% extends "base_instructor.html" %}
+
+{% block title %}Instructor ID Card | SpacePoint{% endblock %}
+{% block page_title %}Instructor ID Card{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8 animate-fade-in-up">
+
+    <!-- Header -->
+    <div class="glass-panel p-8 rounded-3xl border border-space-accent/20 relative overflow-hidden bg-gradient-to-r from-space-900/80 to-space-800/80">
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-space-accent/20 rounded-full blur-3xl mix-blend-screen pointer-events-none"></div>
+        <div class="relative z-10">
+            <h1 class="text-3xl font-display font-bold text-white mb-2">Instructor ID Card</h1>
+            <p class="text-gray-400 text-base max-w-xl">Generate your personalized SpacePoint Instructor ID card. Your card will be created using your profile photo and LinkedIn profile URL.</p>
+        </div>
+    </div>
+
+    <!-- Form + Preview Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- LEFT: Form -->
+        <div class="glass-panel p-8 rounded-2xl border border-white/5 space-y-6">
+            <h2 class="text-xl font-display font-bold text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-space-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Card Details
+            </h2>
+
+            <!-- Instructor Name (display only) -->
+            <div>
+                <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Full Name</label>
+                <div class="bg-space-900/50 border border-white/10 p-3 rounded-lg text-gray-300 font-medium">{{ user.name }}</div>
+            </div>
+
+            <!-- LinkedIn URL -->
+            <div>
+                <label for="linkedin_url" class="block text-xs uppercase tracking-wider text-gray-500 mb-1">LinkedIn Profile URL <span class="text-red-400">*</span></label>
+                <input
+                    type="url"
+                    id="linkedin_url"
+                    placeholder="https://linkedin.com/in/yourprofile"
+                    value="{{ id_card.linkedin_url if id_card and id_card.linkedin_url else '' }}"
+                    class="w-full bg-space-900 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-space-accent transition-colors"
+                >
+            </div>
+
+            <!-- Profile Photo Upload -->
+            <div>
+                <label for="profile_photo" class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Profile Photo <span class="text-red-400">*</span></label>
+                <div id="drop-zone"
+                    class="border-2 border-dashed border-white/10 rounded-xl p-6 text-center cursor-pointer hover:border-space-accent/40 transition-colors"
+                    onclick="document.getElementById('profile_photo').click()">
+                    <svg class="w-10 h-10 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <p class="text-gray-500 text-sm" id="photo-label">Click to upload JPG or PNG</p>
+                    <input type="file" id="profile_photo" accept=".jpg,.jpeg,.png" class="hidden" onchange="onPhotoChange(this)">
+                </div>
+                <div id="photo-preview-wrap" class="mt-3 text-center hidden">
+                    <img id="photo-preview" class="w-20 h-20 rounded-full object-cover mx-auto border-2 border-space-accent/40" src="" alt="Preview">
+                </div>
+            </div>
+
+            <!-- Error / Success messages -->
+            <div id="msg-error"   class="hidden text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3"></div>
+            <div id="msg-success" class="hidden text-sm text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-4 py-3"></div>
+
+            <!-- Generate Button -->
+            <button id="generate-btn" onclick="generateCard()"
+                class="w-full bg-space-accent text-space-900 font-bold py-3 rounded-xl hover:bg-space-hover transition-all shadow-lg shadow-space-accent/20 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                <span id="generate-btn-text">
+                    {% if id_card and id_card.front_card_path %}Regenerate ID Card{% else %}Generate ID Card{% endif %}
+                </span>
+            </button>
+        </div>
+
+        <!-- RIGHT: Preview -->
+        <div class="space-y-6">
+            <h2 class="text-xl font-display font-bold text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-space-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                Card Preview
+            </h2>
+
+            {% if id_card and id_card.front_card_path %}
+            <!-- Already generated — show existing -->
+            <div class="space-y-4">
+                <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+                    <div class="px-4 pt-4 pb-1 text-xs uppercase tracking-wider text-gray-500 font-medium">Front</div>
+                    <img id="front-preview" src="/api/instructor/id-card/front?t={{ id_card.updated_at or '' }}" alt="Front Card" class="w-full rounded-b-2xl">
+                </div>
+                <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+                    <div class="px-4 pt-4 pb-1 text-xs uppercase tracking-wider text-gray-500 font-medium">Back</div>
+                    <img id="back-preview" src="/api/instructor/id-card/back?t={{ id_card.updated_at or '' }}" alt="Back Card" class="w-full rounded-b-2xl">
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-gray-500">ID: <span class="text-space-accent font-mono font-bold">{{ id_card.instructor_id }}</span></span>
+                    <span class="text-gray-700">·</span>
+                    <span class="text-xs text-gray-500">Issued: {{ id_card.issue_date.strftime('%d %B %Y') if id_card.issue_date else '—' }}</span>
+                </div>
+            </div>
+            {% else %}
+            <!-- Placeholder -->
+            <div id="preview-placeholder" class="glass-panel rounded-2xl border border-white/5 p-12 text-center">
+                <svg class="w-16 h-16 text-gray-700 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2"></path>
+                </svg>
+                <p class="text-gray-600 text-sm">Your ID card will appear here after generation.</p>
+            </div>
+            <div id="preview-cards" class="hidden space-y-4">
+                <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+                    <div class="px-4 pt-4 pb-1 text-xs uppercase tracking-wider text-gray-500 font-medium">Front</div>
+                    <img id="front-preview" src="" alt="Front Card" class="w-full rounded-b-2xl">
+                </div>
+                <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+                    <div class="px-4 pt-4 pb-1 text-xs uppercase tracking-wider text-gray-500 font-medium">Back</div>
+                    <img id="back-preview" src="" alt="Back Card" class="w-full rounded-b-2xl">
+                </div>
+                <div id="card-meta" class="flex items-center gap-3">
+                    <span class="text-xs text-gray-500">ID: <span id="card-id-display" class="text-space-accent font-mono font-bold"></span></span>
+                    <span class="text-gray-700">·</span>
+                    <span id="card-date-display" class="text-xs text-gray-500"></span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Loading spinner (hidden by default) -->
+            <div id="loading" class="hidden text-center py-8">
+                <div class="w-10 h-10 border-2 border-white/10 border-t-space-accent rounded-full animate-spin mx-auto mb-3"></div>
+                <p class="text-gray-500 text-sm">Generating your ID card…</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+</style>
+
+<script>
+function onPhotoChange(input) {
+    if (!input.files || !input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('photo-preview').src = e.target.result;
+        document.getElementById('photo-preview-wrap').classList.remove('hidden');
+        document.getElementById('photo-label').textContent = input.files[0].name;
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+async function generateCard() {
+    const linUrl  = document.getElementById('linkedin_url').value.trim();
+    const photo   = document.getElementById('profile_photo').files[0];
+    const errBox  = document.getElementById('msg-error');
+    const okBox   = document.getElementById('msg-success');
+
+    errBox.classList.add('hidden');
+    okBox.classList.add('hidden');
+
+    // Validate
+    if (!linUrl) { errBox.textContent = 'LinkedIn URL is required.'; errBox.classList.remove('hidden'); return; }
+    if (!photo)  { errBox.textContent = 'Profile photo is required.'; errBox.classList.remove('hidden'); return; }
+
+    // Show loading
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('generate-btn').disabled = true;
+    document.getElementById('generate-btn-text').textContent = 'Generating…';
+
+    const form = new FormData();
+    form.append('linkedin_url', linUrl);
+    form.append('profile_image', photo);
+
+    try {
+        const res  = await fetch('/api/instructor/id-card/generate', { method: 'POST', body: form });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.detail || 'Generation failed');
+
+        // Update preview
+        const ts = Date.now();
+        document.getElementById('front-preview').src = `/api/instructor/id-card/front?t=${ts}`;
+        document.getElementById('back-preview').src  = `/api/instructor/id-card/back?t=${ts}`;
+
+        const idDisplay   = document.getElementById('card-id-display');
+        const dateDisplay = document.getElementById('card-date-display');
+        if (idDisplay)   idDisplay.textContent   = data.instructor_id;
+        if (dateDisplay) dateDisplay.textContent = `Issued: ${data.issue_date}`;
+
+        // Show cards section if previously placeholder
+        const placeholder = document.getElementById('preview-placeholder');
+        const cards       = document.getElementById('preview-cards');
+        if (placeholder) placeholder.classList.add('hidden');
+        if (cards)       cards.classList.remove('hidden');
+
+        okBox.textContent = `✓ ID Card generated successfully! Your instructor ID is ${data.instructor_id}.`;
+        okBox.classList.remove('hidden');
+        document.getElementById('generate-btn-text').textContent = 'Regenerate ID Card';
+
+    } catch (err) {
+        errBox.textContent = err.message;
+        errBox.classList.remove('hidden');
+    } finally {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('generate-btn').disabled = false;
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,423 @@
+[
+    {
+        "module_code": "1",
+        "module_title": "Orbital Mechanics & Satellite Orbits",
+        "sort_order": 1,
+        "sections": [
+            {
+                "section_code": null,
+                "section_title": null,
+                "sort_order": 1,
+                "items": [
+                    {
+                        "item_code": "1.1",
+                        "title": "Low Earth Orbit (LEO)",
+                        "description": "Definition, altitude range, and primary applications (e.g., Earth observation, ISS).",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "1.2",
+                        "title": "Medium Earth Orbit (MEO)",
+                        "description": "Definition, altitude range, and primary applications (e.g., GPS, navigation).",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "1.3",
+                        "title": "Geostationary/Geosynchronous Orbit (GEO)",
+                        "description": "Definition, altitude, and primary applications (e.g., weather, communications).",
+                        "sort_order": 3
+                    },
+                    {
+                        "item_code": "1.4",
+                        "title": "Highly Elliptical Orbit (HEO)",
+                        "description": "Definition and primary applications (e.g., communications in polar regions).",
+                        "sort_order": 4
+                    },
+                    {
+                        "item_code": "1.5",
+                        "title": "Kepler's Laws of Planetary Motion",
+                        "description": "Brief explanation of the three laws.",
+                        "sort_order": 5
+                    },
+                    {
+                        "item_code": "1.6",
+                        "title": "Newton's Law of Universal Gravitation",
+                        "description": "Brief explanation of the law.",
+                        "sort_order": 6
+                    },
+                    {
+                        "item_code": "1.7",
+                        "title": "Orbital Elements",
+                        "description": "Definition of Semi-major axis, Eccentricity, Inclination, Right Ascension of the Ascending Node (RAAN), Argument of Perigee, and True Anomaly.",
+                        "sort_order": 7
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "module_code": "2",
+        "module_title": "Satellite Classifications",
+        "sort_order": 2,
+        "sections": [
+            {
+                "section_code": "2.1",
+                "section_title": "By Size",
+                "sort_order": 1,
+                "items": [
+                    {
+                        "item_code": "2.1.1",
+                        "title": "Large Satellites",
+                        "description": "Weight range (>1000 kg) and typical uses.",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "2.1.2",
+                        "title": "Medium Satellites",
+                        "description": "Weight range (500\u20131000 kg) and typical uses.",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "2.1.3",
+                        "title": "Small Satellites",
+                        "description": "Minisatellites (100\u2013500 kg), Microsatellites (10\u2013100 kg), Nanosatellites (1\u201310 kg), Picosatellites (0.1\u20131 kg), and Femtosatellites (<0.1 kg).",
+                        "sort_order": 3
+                    }
+                ]
+            },
+            {
+                "section_code": "2.2",
+                "section_title": "By Function",
+                "sort_order": 2,
+                "items": [
+                    {
+                        "item_code": "2.2.1",
+                        "title": "Communications Satellites",
+                        "description": "Purpose and examples.",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "2.2.2",
+                        "title": "Earth Observation/Remote Sensing Satellites",
+                        "description": "Purpose and examples.",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "2.2.3",
+                        "title": "Navigation Satellites",
+                        "description": "Purpose and examples (e.g., GPS, Galileo).",
+                        "sort_order": 3
+                    },
+                    {
+                        "item_code": "2.2.4",
+                        "title": "Weather/Meteorological Satellites",
+                        "description": "Purpose and examples.",
+                        "sort_order": 4
+                    },
+                    {
+                        "item_code": "2.2.5",
+                        "title": "Scientific/Space Research Satellites",
+                        "description": "Purpose and examples.",
+                        "sort_order": 5
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "module_code": "3",
+        "module_title": "Systems Engineering Aspects",
+        "sort_order": 3,
+        "sections": [
+            {
+                "section_code": null,
+                "section_title": null,
+                "sort_order": 1,
+                "items": [
+                    {
+                        "item_code": "3.1",
+                        "title": "Project Lifecycle Phases",
+                        "description": "Brief explanation of Phases A, B, C, D, E, F.",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "3.2",
+                        "title": "Requirements Engineering",
+                        "description": "Definition of Mission, System, and Subsystem requirements.",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "3.3",
+                        "title": "Trade Studies",
+                        "description": "Purpose and process of evaluating alternatives.",
+                        "sort_order": 3
+                    },
+                    {
+                        "item_code": "3.4",
+                        "title": "Risk Management",
+                        "description": "Identification, assessment, and mitigation of risks.",
+                        "sort_order": 4
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "module_code": "4",
+        "module_title": "Satellite Subsystems",
+        "sort_order": 4,
+        "sections": [
+            {
+                "section_code": "4.1",
+                "section_title": "Command & Data Handling (C&DH)",
+                "sort_order": 1,
+                "items": [
+                    {
+                        "item_code": "4.1.1",
+                        "title": "On-Board Computer (OBC)",
+                        "description": "Function and importance.",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "4.1.2",
+                        "title": "Data Storage",
+                        "description": "Role of memory.",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "4.1.3",
+                        "title": "Data Buses",
+                        "description": "Examples (e.g., I2C, SPI, CAN bus).",
+                        "sort_order": 3
+                    }
+                ]
+            },
+            {
+                "section_code": "4.2",
+                "section_title": "Attitude Determination & Control (ADCS)",
+                "sort_order": 2,
+                "items": [
+                    {
+                        "item_code": "4.2.1",
+                        "title": "Sensors vs. Actuators",
+                        "description": "Difference between observing rotation and creating rotation.",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "4.2.2",
+                        "title": "Sensors",
+                        "description": "Role of Sun sensors, Earth horizons sensors, Star trackers, Magnetometers, and Gyroscopes.",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "4.2.3",
+                        "title": "Actuators",
+                        "description": "Role of Reaction wheels, Control moment gyros (CMGs), Magnetorquers, and Thrusters.",
+                        "sort_order": 3
+                    }
+                ]
+            },
+            {
+                "section_code": "4.3",
+                "section_title": "Electrical Power System (EPS)",
+                "sort_order": 3,
+                "items": [
+                    {
+                        "item_code": "4.3.1",
+                        "title": "Generation",
+                        "description": "Role of Solar panels.",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "4.3.2",
+                        "title": "Storage",
+                        "description": "Role of Batteries.",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "4.3.3",
+                        "title": "Distribution",
+                        "description": "Role of Power conditioning and distribution units (PCDU).",
+                        "sort_order": 3
+                    }
+                ]
+            },
+            {
+                "section_code": "4.4",
+                "section_title": "Communication Subsystem",
+                "sort_order": 4,
+                "items": [
+                    {
+                        "item_code": "4.4.1",
+                        "title": "Telemetry, Tracking, and Command (TT&C)",
+                        "description": "Definition and purpose.",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "4.4.2",
+                        "title": "Antennas",
+                        "description": "Omnidirectional vs. Directional.",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "4.4.3",
+                        "title": "Transceivers",
+                        "description": "Function.",
+                        "sort_order": 3
+                    }
+                ]
+            },
+            {
+                "section_code": "4.5",
+                "section_title": "Thermal Control",
+                "sort_order": 5,
+                "items": [
+                    {
+                        "item_code": "4.5.1",
+                        "title": "Passive vs. Active",
+                        "description": "Differences between requiring no power and requiring power to operate.",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "4.5.2",
+                        "title": "Passive Thermal Control",
+                        "description": "Multi-layer insulation (MLI), radiators, coatings, heat pipes.",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "4.5.3",
+                        "title": "Active Thermal Control",
+                        "description": "Heaters, cryocoolers.",
+                        "sort_order": 3
+                    }
+                ]
+            },
+            {
+                "section_code": "4.6",
+                "section_title": "Propulsion",
+                "sort_order": 6,
+                "items": [
+                    {
+                        "item_code": "4.6.1",
+                        "title": "Chemical vs. Electric",
+                        "description": "Differences fundamentally and their applications.",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "4.6.2",
+                        "title": "Chemical Propulsion",
+                        "description": "Solid, liquid (monopropellant, bipropellant).",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "4.6.3",
+                        "title": "Electric Propulsion",
+                        "description": "Ion thrusters, Hall-effect thrusters.",
+                        "sort_order": 3
+                    }
+                ]
+            },
+            {
+                "section_code": "4.7",
+                "section_title": "Payload",
+                "sort_order": 7,
+                "items": [
+                    {
+                        "item_code": "4.7.1",
+                        "title": "Definition",
+                        "description": "Explanation of what a payload is and examples (e.g., cameras, transponders).",
+                        "sort_order": 1
+                    }
+                ]
+            },
+            {
+                "section_code": "4.8",
+                "section_title": "Structure and Mechanisms",
+                "sort_order": 8,
+                "items": [
+                    {
+                        "item_code": "4.8.1",
+                        "title": "Primary vs. Secondary Structure",
+                        "description": "Difference.",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "4.8.2",
+                        "title": "Materials",
+                        "description": "Common materials used (e.g., Aluminum, Carbon Fiber).",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "4.8.3",
+                        "title": "Mechanisms",
+                        "description": "Deployables (e.g., solar panel hinges, antenna releases).",
+                        "sort_order": 3
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "module_code": "5",
+        "module_title": "Budgets, Analysis, Comm & Ops",
+        "sort_order": 5,
+        "sections": [
+            {
+                "section_code": "5.1",
+                "section_title": "Budgets & Analysis",
+                "sort_order": 1,
+                "items": [
+                    {
+                        "item_code": "5.1.1",
+                        "title": "Mass Budget",
+                        "description": "Allocation of weight to subsystems.",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "5.1.2",
+                        "title": "Power Budget",
+                        "description": "Allocation of power generated to subsystems.",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "5.1.3",
+                        "title": "Link Budget",
+                        "description": "Calculation of signal strength from transmitter to receiver.",
+                        "sort_order": 3
+                    },
+                    {
+                        "item_code": "5.1.4",
+                        "title": "Delta-V Budget",
+                        "description": "Calculation of the total Change in Velocity required for mission maneuvers.",
+                        "sort_order": 4
+                    }
+                ]
+            },
+            {
+                "section_code": "5.2",
+                "section_title": "Satellite Communication & Operations",
+                "sort_order": 2,
+                "items": [
+                    {
+                        "item_code": "5.2.1",
+                        "title": "Ground Segment",
+                        "description": "Role of Ground stations and Mission Control Center.",
+                        "sort_order": 1
+                    },
+                    {
+                        "item_code": "5.2.2",
+                        "title": "Uplink vs. Downlink",
+                        "description": "Difference.",
+                        "sort_order": 2
+                    },
+                    {
+                        "item_code": "5.2.3",
+                        "title": "Frequency Bands",
+                        "description": "Examples (e.g., VHF, UHF, S-band, X-band, Ka-band) and their typical uses.",
+                        "sort_order": 3
+                    }
+                ]
+            }
+        ]
+    }
+]

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}SpacePoint - Learning Modules{% endblock %}
+
+{% block nav_actions %}
+<button onclick="logout()" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">Logout</button>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-display font-bold text-white mb-2">Learning Modules</h1>
+            <p class="text-gray-400">Complete the checklist research items for each module below.</p>
+        </div>
+        <div>
+            <span id="application-status" class="px-4 py-1.5 rounded-full text-sm font-semibold border hidden"></span>
+        </div>
+    </div>
+
+    <!-- Modules Grid -->
+    <div id="modules-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <!-- Rendered via JS -->
+    </div>
+
+    <!-- Final Submission -->
+    <div
+        class="glass-panel p-8 rounded-2xl flex flex-col md:flex-row items-center justify-between border-t border-space-accent/30 mt-12 bg-space-800/50">
+        <div class="mb-6 md:mb-0">
+            <h3 class="text-xl font-display font-bold text-white mb-2">Final Application</h3>
+            <p class="text-gray-400 text-sm max-w-lg">
+                Once you have completely uploaded all required research PDFs across the 5 modules, you can submit your
+                final application for review.
+            </p>
+        </div>
+        <button id="final-submit-btn" disabled
+            class="px-8 py-4 rounded-full font-bold tracking-wide text-space-900 bg-gray-500 cursor-not-allowed transition-all transform whitespace-nowrap">
+            Submit Application
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            // Check auth
+            const authRes = await fetch('/api/auth/me');
+            if (!authRes.ok) {
+                window.location.href = '/apply';
+                return;
+            }
+
+            // Check app status to disable controls
+            const statusRes = await fetch('/api/applicant/status');
+            const appStatus = await statusRes.json();
+
+            const submitBtn = document.getElementById('final-submit-btn');
+
+            if (appStatus.status === 'UNDER_REVIEW' || appStatus.status === 'APPROVED' || appStatus.status === 'REJECTED') {
+                submitBtn.textContent = 'Application Under Review';
+                const statusBadge = document.getElementById('application-status');
+                statusBadge.classList.remove('hidden');
+                statusBadge.textContent = appStatus.status.replace('_', ' ');
+                statusBadge.classList.add('bg-blue-500/20', 'text-blue-400', 'border-blue-500/50');
+            }
+
+            // Fetch Modules
+            const res = await fetch('/api/applicant/modules');
+            if (res.status === 400) {
+                // Videos not done
+                document.getElementById('modules-container').innerHTML = `
+                    <div class="col-span-1 md:col-span-2 glass-panel p-8 text-center rounded-2xl">
+                        <svg class="w-16 h-16 text-space-accent mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <h3 class="text-xl font-bold text-white mb-2">Complete Videos First</h3>
+                        <p class="text-gray-400 mb-6">You must complete all 3 introductory video summaries before unlocking these modules.</p>
+                        <a href="/tasks/videos" class="px-6 py-2 rounded-full font-medium text-space-900 bg-space-accent hover:bg-space-hover transition-colors">Go to Videos</a>
+                    </div>
+                 `;
+                return;
+            }
+
+            if (!res.ok) throw new Error('Failed to load modules');
+            const modules = await res.json();
+
+            const container = document.getElementById('modules-container');
+            let allComplete = true;
+
+            modules.forEach(mod => {
+                if (mod.completed_items < mod.total_items) allComplete = false;
+
+                const percent = mod.total_items > 0 ? Math.round((mod.completed_items / mod.total_items) * 100) : 100;
+                const isComplete = percent === 100;
+
+                const card = document.createElement('a');
+                card.href = `/tasks/modules/${mod.id}`;
+                card.className = `glass-panel p-6 rounded-2xl group transition-all transform hover:-translate-y-1 block border ${isComplete ? 'border-space-accent/50 bg-space-accent/5' : 'border-white/10 hover:border-white/30'}`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-display font-bold text-white group-hover:text-space-accent transition-colors">
+                            Module ${mod.sort_order}: <br/><span class="text-lg font-sans text-gray-300">${mod.title}</span>
+                        </h3>
+                        ${isComplete
+                        ? `<div class="bg-space-accent/20 p-2 rounded-full"><svg class="w-6 h-6 text-space-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>`
+                        : `<div class="bg-white/5 p-2 rounded-full"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg></div>`
+                    }
+                    </div>
+                    
+                    <div class="mt-6">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-400">Progress</span>
+                            <span class="${isComplete ? 'text-space-accent font-bold' : 'text-gray-300'}">${mod.completed_items} / ${mod.total_items} Items</span>
+                        </div>
+                        <div class="w-full bg-space-900 rounded-full h-2.5 outline outline-1 outline-white/10">
+                            <div class="${isComplete ? 'bg-space-accent shadow-[0_0_10px_rgba(79,209,197,0.5)]' : 'bg-blue-500'} h-2.5 rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Enable submit application button if all items done
+            if (allComplete && appStatus.status === 'IN_PROGRESS') {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('bg-gray-500', 'cursor-not-allowed', 'text-space-900');
+                submitBtn.classList.add('bg-space-accent', 'hover:bg-space-hover', 'hover:scale-105', 'shadow-[0_0_15px_rgba(79,209,197,0.4)]', 'text-space-900');
+
+                submitBtn.addEventListener('click', async () => {
+                    const confirmSubmit = confirm("Are you sure you want to submit your final application? You will not be able to edit your checklist uploads after this.");
+                    if (confirmSubmit) {
+                        try {
+                            const submitRes = await fetch('/api/applicant/application/submit', { method: 'POST' });
+                            if (!submitRes.ok) {
+                                const err = await submitRes.json();
+                                alert('Error submitting: ' + (err.detail || 'Unknown error'));
+                                return;
+                            }
+                            window.location.href = '/status';
+                        } catch (e) {
+                            alert('An error occurred submitting the application.');
+                        }
+                    }
+                });
+            }
+
+        } catch (error) {
+            console.error('Error fetching modules:', error);
+        }
+    });
+
+    async function logout() {
+        await fetch("/api/auth/logout", { method: "POST" });
+        window.location.href = "/";
+    }
+</script>
+{% endblock %}

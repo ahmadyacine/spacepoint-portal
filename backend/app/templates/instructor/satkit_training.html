@@ -1,0 +1,118 @@
+{% extends "base_instructor.html" %}
+
+{% block title %}SatKit Training | SpacePoint Instructor{% endblock %}
+{% block page_title %}SatKit Training Center{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8 animate-fade-in-up">
+
+    <div class="mb-8 border-b border-white/10 pb-6 hidden md:block">
+        <h1 class="text-3xl font-display font-bold text-white mb-2">SatKit Training Modules</h1>
+        <p class="text-gray-400">Follow these hands-on video modules to master the operational assembly of the physical
+            SpacePoint SatKits before classroom deployment.</p>
+    </div>
+
+    <!-- Alert placeholder -->
+    <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 flex gap-4 text-blue-200">
+        <svg class="w-6 h-6 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="text-sm leading-relaxed">
+            <strong class="font-bold text-blue-300 block mb-1">Hardware Requisition Note</strong>
+            You cannot order physical SatKits for your students until you complete these training videos and pass the
+            short quiz.
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Placeholder Card 1 -->
+        <div
+            class="glass-panel rounded-2xl border border-white/10 overflow-hidden hover:border-space-accent/50 transition-colors group cursor-not-allowed opacity-80">
+            <div class="h-40 bg-space-900 border-b border-white/5 relative flex items-center justify-center">
+                <!-- Fake video thumbnail overlay -->
+                <div
+                    class="w-12 h-12 rounded-full bg-space-accent/20 flex items-center justify-center text-space-accent group-hover:bg-space-accent group-hover:text-space-900 transition-colors">
+                    <svg class="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4l12 6-12 6z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="text-xs font-bold text-space-accent tracking-wider uppercase mb-2">Module 1</div>
+                <h3 class="font-display font-bold text-lg text-white mb-2">Unboxing & Component Identification</h3>
+                <p class="text-sm text-gray-400 mb-4 line-clamp-2">Learn how to identify the onboard computer, sensors,
+                    and structural frame elements in your newly arrived kit.</p>
+                <div class="flex items-center justify-between text-xs font-medium text-gray-500">
+                    <span>15 mins</span>
+                    <span class="bg-white/5 px-2 py-1 rounded">Pending Data</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Placeholder Card 2 -->
+        <div
+            class="glass-panel rounded-2xl border border-white/10 overflow-hidden hover:border-space-accent/50 transition-colors group cursor-not-allowed opacity-80">
+            <div class="h-40 bg-space-900 border-b border-white/5 relative flex items-center justify-center">
+                <div
+                    class="w-12 h-12 rounded-full bg-space-accent/20 flex items-center justify-center text-space-accent group-hover:bg-space-accent group-hover:text-space-900 transition-colors">
+                    <svg class="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4l12 6-12 6z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="text-xs font-bold text-space-accent tracking-wider uppercase mb-2">Module 2</div>
+                <h3 class="font-display font-bold text-lg text-white mb-2">Wiring the Subsystems</h3>
+                <p class="text-sm text-gray-400 mb-4 line-clamp-2">Safely connect power distribution modules and data
+                    buses without damaging the main payload interface.</p>
+                <div class="flex items-center justify-between text-xs font-medium text-gray-500">
+                    <span>25 mins</span>
+                    <span class="bg-white/5 px-2 py-1 rounded">Pending Data</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Placeholder Card 3 -->
+        <div
+            class="glass-panel rounded-2xl border border-white/10 overflow-hidden hover:border-space-accent/50 transition-colors group cursor-not-allowed opacity-80">
+            <div class="h-40 bg-space-900 border-b border-white/5 relative flex items-center justify-center">
+                <div
+                    class="w-12 h-12 rounded-full bg-space-accent/20 flex items-center justify-center text-space-accent group-hover:bg-space-accent group-hover:text-space-900 transition-colors">
+                    <svg class="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4l12 6-12 6z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="text-xs font-bold text-space-accent tracking-wider uppercase mb-2">Module 3</div>
+                <h3 class="font-display font-bold text-lg text-white mb-2">Software Flashing</h3>
+                <p class="text-sm text-gray-400 mb-4 line-clamp-2">Install the SpacePoint OS onto the kit's brain and
+                    verify telemetry connections to the dashboard.</p>
+                <div class="flex items-center justify-between text-xs font-medium text-gray-500">
+                    <span>20 mins</span>
+                    <span class="bg-white/5 px-2 py-1 rounded">Pending Data</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+</style>
+{% endblock %}

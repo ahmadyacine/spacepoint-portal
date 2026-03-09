@@ -1,0 +1,103 @@
+{% extends "base_instructor.html" %}
+
+{% block title %}Library Resources | SpacePoint Instructor{% endblock %}
+{% block page_title %}Library Resources{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8 animate-fade-in-up">
+
+    <div class="mb-8 border-b border-white/10 pb-6 hidden md:block">
+        <h1 class="text-3xl font-display font-bold text-white mb-2">Curriculum Libary</h1>
+        <p class="text-gray-400">Download lesson plans, slide decks, and worksheets to use in your classroom.</p>
+    </div>
+
+    <div class="glass-panel border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+        <div class="p-6 border-b border-white/5 bg-space-900/50 flex justify-between items-center">
+            <h3 class="font-display font-bold text-white">Available Downloads</h3>
+            <div class="relative w-64">
+                <input type="text" disabled placeholder="Search resources..."
+                    class="w-full bg-space-900 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-gray-400 cursor-not-allowed">
+                <svg class="w-4 h-4 text-gray-500 absolute left-3 top-2.5" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr
+                        class="bg-space-900/30 border-b border-white/5 text-xs font-semibold tracking-wider text-gray-400 uppercase">
+                        <th class="py-4 px-6">ID</th>
+                        <th class="py-4 px-6">Title</th>
+                        <th class="py-4 px-6">Category</th>
+                        <th class="py-4 px-6">Format</th>
+                        <th class="py-4 px-6 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm divide-y divide-white/5">
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="py-4 px-6 text-space-accent font-mono">RES-101</td>
+                        <td class="py-4 px-6 font-medium text-white">Introduction to Arduino (Slides)</td>
+                        <td class="py-4 px-6 text-gray-400">Lesson 1</td>
+                        <td class="py-4 px-6">
+                            <span
+                                class="px-2 py-1 bg-red-500/10 text-red-400 rounded text-xs font-bold border border-red-500/20">PPTX</span>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <button disabled
+                                class="text-gray-500 bg-space-900 px-3 py-1.5 rounded cursor-not-allowed hover:bg-space-800 border border-white/10">Download</button>
+                        </td>
+                    </tr>
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="py-4 px-6 text-space-accent font-mono">RES-102</td>
+                        <td class="py-4 px-6 font-medium text-white">C++ Logic Worksheets</td>
+                        <td class="py-4 px-6 text-gray-400">Lesson 2</td>
+                        <td class="py-4 px-6">
+                            <span
+                                class="px-2 py-1 bg-blue-500/10 text-blue-400 rounded text-xs font-bold border border-blue-500/20">PDF</span>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <button disabled
+                                class="text-gray-500 bg-space-900 px-3 py-1.5 rounded cursor-not-allowed hover:bg-space-800 border border-white/10">Download</button>
+                        </td>
+                    </tr>
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="py-4 px-6 text-space-accent font-mono">RES-103</td>
+                        <td class="py-4 px-6 font-medium text-white">SatKit Assembly Guide</td>
+                        <td class="py-4 px-6 text-gray-400">Hardware</td>
+                        <td class="py-4 px-6">
+                            <span
+                                class="px-2 py-1 bg-blue-500/10 text-blue-400 rounded text-xs font-bold border border-blue-500/20">PDF</span>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <button disabled
+                                class="text-gray-500 bg-space-900 px-3 py-1.5 rounded cursor-not-allowed hover:bg-space-800 border border-white/10">Download</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SpacePoint MVP{% endblock %}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                    },
+                    colors: {
+                        space: {
+                            900: '#0B0B1A',
+                            800: '#15152F',
+                            700: '#1D1D42',
+                            accent: '#4FD1C5',
+                            hover: '#38B2AC'
+                        }
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0B0B1A;
+            color: #E2E8F0;
+        }
+
+        .glass-panel {
+            background: rgba(21, 21, 47, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+
+<body
+    class="min-h-screen flex flex-col antialiased bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]">
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 glass-panel border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.location.href='/'">
+                    <img class="h-8 sm:h-10 w-auto" src="/static/SpacePoint logo.png" alt="SpacePoint Logo">
+                </div>
+
+                <!-- Desktop nav actions -->
+                <div class="hidden sm:flex items-center gap-3">
+                    {% block nav_actions %}
+                    <button onclick="document.getElementById('login-modal').classList.remove('hidden')"
+                        class="px-5 py-2 rounded-full font-medium tracking-wide text-white border border-white/20 hover:bg-white/10 transition-colors"
+                        id="nav-login-btn">
+                        Log In
+                    </button>
+                    <a href="/apply"
+                        class="px-5 py-2 rounded-full font-medium tracking-wide text-space-900 bg-space-accent hover:bg-space-hover transition-colors shadow-[0_0_15px_rgba(79,209,197,0.4)]">
+                        Apply Now
+                    </a>
+                    {% endblock %}
+                </div>
+
+                <!-- Mobile hamburger -->
+                <button id="mobile-nav-toggle"
+                        class="sm:hidden text-gray-300 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+                        onclick="toggleMobileNav()" aria-label="Menu">
+                    <svg id="hamburger-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                    <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile dropdown panel -->
+        <div id="mobile-nav-menu"
+             class="sm:hidden hidden border-t border-white/10 bg-space-900/95 backdrop-blur-md">
+            <div class="px-4 py-4 space-y-3">
+                {% block mobile_nav_actions %}
+                <button onclick="document.getElementById('login-modal').classList.remove('hidden'); closeMobileNav();"
+                    class="w-full px-5 py-3 rounded-xl font-medium text-white border border-white/20 hover:bg-white/10 transition-colors text-left">
+                    Log In
+                </button>
+                <a href="/apply"
+                    class="block px-5 py-3 rounded-xl font-medium text-center text-space-900 bg-space-accent hover:bg-space-hover transition-colors">
+                    Apply Now
+                </a>
+                {% endblock %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-panel border-t border-white/10 mt-auto py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
+            &copy; 2026 SpacePoint. All rights reserved. Let's Build the Future.
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+    <script>
+        function toggleMobileNav() {
+            const menu = document.getElementById('mobile-nav-menu');
+            const hamburger = document.getElementById('hamburger-icon');
+            const closeIc = document.getElementById('close-icon');
+            const isOpen = !menu.classList.contains('hidden');
+            menu.classList.toggle('hidden', isOpen);
+            hamburger.classList.toggle('hidden', !isOpen);
+            closeIc.classList.toggle('hidden', isOpen);
+        }
+        function closeMobileNav() {
+            document.getElementById('mobile-nav-menu').classList.add('hidden');
+            document.getElementById('hamburger-icon').classList.remove('hidden');
+            document.getElementById('close-icon').classList.add('hidden');
+        }
+    </script>
+</body>
+
+</html>

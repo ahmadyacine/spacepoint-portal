@@ -1,0 +1,182 @@
+{% extends "base_instructor.html" %}
+
+{% block title %}Dashboard | SpacePoint Instructor{% endblock %}
+{% block page_title %}Overview{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8 animate-fade-in-up">
+    <!-- Welcome Banner Design -->
+    <div
+        class="glass-panel p-8 rounded-3xl border border-space-accent/20 relative overflow-hidden bg-gradient-to-r from-space-900/80 to-space-800/80">
+        <div
+            class="absolute -right-20 -top-20 w-64 h-64 bg-space-accent/20 rounded-full blur-3xl mix-blend-screen pointer-events-none">
+        </div>
+        <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center">
+            <div>
+                <h1 class="text-2xl sm:text-4xl font-display font-bold text-white mb-2">Welcome aboard, {{ user.name.split(' ')[0] }}!</h1>
+                <p class="text-gray-300 max-w-xl text-sm sm:text-lg">You are now an officially certified SpacePoint Instructor.
+                    Explore your dashboard to access training material, instructional resources, and classroom tools.
+                </p>
+            </div>
+            <div class="mt-6 md:mt-0 flex-shrink-0">
+                <span
+                    class="inline-flex items-center px-4 py-2 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 font-bold tracking-wide">
+                    <span class="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
+                    STATUS: ACTIVE INSTRUCTOR
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats / Status Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div
+            class="glass-panel p-6 rounded-2xl border border-white/5 hover:border-space-accent/30 transition-colors shadow-lg shadow-black/20">
+            <h3 class="text-gray-400 font-medium text-sm uppercase tracking-wider mb-2">SatKit Proficiency</h3>
+            <div class="flex items-end gap-3">
+                <span class="text-3xl font-display font-bold text-white">0%</span>
+                <span class="text-sm text-gray-500 mb-1">Modules Completed</span>
+            </div>
+            <div class="w-full bg-space-900 rounded-full h-1.5 mt-4 outline outline-1 outline-white/10">
+                <div class="bg-blue-500 h-1.5 rounded-full" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div
+            class="glass-panel p-6 rounded-2xl border border-white/5 hover:border-space-accent/30 transition-colors shadow-lg shadow-black/20">
+            <h3 class="text-gray-400 font-medium text-sm uppercase tracking-wider mb-2">Classroom Sessions</h3>
+            <div class="flex items-end gap-3">
+                <span class="text-3xl font-display font-bold text-white">0</span>
+                <span class="text-sm text-gray-500 mb-1">Hours Logged</span>
+            </div>
+            <p class="text-xs text-space-accent mt-4">Feature unlocking soon</p>
+        </div>
+
+        <div
+            class="glass-panel p-6 rounded-2xl border border-white/5 hover:border-space-accent/30 transition-colors shadow-lg shadow-black/20 bg-gradient-to-br from-space-800/50 to-space-accent/10">
+            <h3 class="text-gray-300 font-bold text-sm tracking-wider mb-2">Instructor ID Pin</h3>
+            <div class="mt-2 text-2xl font-mono tracking-[0.2em] text-white">SP-{{ "%04d" % user.id }}-UAE
+            </div>
+            <p class="text-xs text-gray-400 mt-2">Use this ID when requesting physical hardware kits.</p>
+        </div>
+
+        <!-- ID Card Status Widget -->
+        <div class="glass-panel p-6 rounded-2xl border border-white/5 hover:border-space-accent/30 transition-colors shadow-lg shadow-black/20 flex flex-col justify-between">
+            <div>
+                <h3 class="text-gray-400 font-medium text-sm uppercase tracking-wider mb-2">Instructor ID Card</h3>
+                {% if id_card and id_card.front_card_path %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-bold tracking-wide mb-3">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span> Generated
+                </span>
+                <p class="text-xs text-gray-500 mb-1 font-mono">{{ id_card.instructor_id }}</p>
+                {% else %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs font-bold tracking-wide mb-3">
+                    <span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span> Not Generated
+                </span>
+                <p class="text-xs text-gray-500 mb-1">Generate your official ID card</p>
+                {% endif %}
+            </div>
+            <div class="flex flex-col gap-2 mt-4">
+                <a href="/instructor/profile-card"
+                    class="text-center text-xs font-bold py-2 px-3 rounded-lg bg-space-accent text-space-900 hover:bg-space-hover transition-colors">
+                    {% if id_card and id_card.front_card_path %}Regenerate Card{% else %}Create ID Card{% endif %}
+                </a>
+                {% if id_card and id_card.front_card_path %}
+                <div class="flex gap-2">
+                    <a href="/api/instructor/id-card/front" target="_blank" class="flex-1 text-center text-xs py-2 px-3 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-space-accent/40 transition-colors">View Front</a>
+                    <a href="/api/instructor/id-card/back"  target="_blank" class="flex-1 text-center text-xs py-2 px-3 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-space-accent/40 transition-colors">View Back</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Next Steps Section -->
+    <div class="glass-panel p-8 rounded-2xl border border-white/5">
+        <h2 class="text-2xl font-display font-bold text-white mb-6 flex items-center">
+            <svg class="w-6 h-6 text-space-accent mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z">
+                </path>
+            </svg>
+            Recommended Next Steps
+        </h2>
+
+        <div class="space-y-4">
+            <a href="/instructor/profile-card"
+                class="block p-5 rounded-xl bg-space-900/50 border {% if id_card and id_card.front_card_path %}border-green-500/20{% else %}border-space-accent/20{% endif %} hover:bg-space-800 transition-colors flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full {% if id_card and id_card.front_card_path %}bg-green-500/20 text-green-400{% else %}bg-space-accent/20 text-space-accent{% endif %} flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white">
+                            {% if id_card and id_card.front_card_path %}
+                                Instructor ID Card — Generated ✓
+                            {% else %}
+                                Generate your Instructor ID Card
+                            {% endif %}
+                        </h4>
+                        <p class="text-sm text-gray-400">
+                            {% if id_card and id_card.front_card_path %}
+                                View or regenerate your SpacePoint ID card.
+                            {% else %}
+                                Upload your photo and LinkedIn URL to get your official card.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="{% if id_card and id_card.front_card_path %}text-green-400{% else %}text-space-accent{% endif %} opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
+            </a>
+
+            <a href="/instructor/satkit-training"
+                class="block p-5 rounded-xl bg-space-900/50 border border-white/5 hover:bg-space-800 transition-colors flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 rounded-full bg-space-accent/20 text-space-accent flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white">Start SatKit Hands-On Training</h4>
+                        <p class="text-sm text-gray-400">Access the video library and operational manuals for the
+                            SpacePoint physical kits.</p>
+                    </div>
+                </div>
+                <div class="text-space-accent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+</style>
+{% endblock %}

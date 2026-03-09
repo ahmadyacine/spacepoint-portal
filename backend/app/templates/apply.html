@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}Apply - SpacePoint Instructor{% endblock %}
+
+{% block nav_actions %}
+<!-- Hide Nav action button on apply page itself to keep focus simple -->
+{% endblock %}
+
+{% block content %}
+<div class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div class="w-full max-w-2xl space-y-8 glass-panel p-10 rounded-2xl relative z-10 shadow-2xl">
+
+        <!-- Step Indicator -->
+        <ol class="flex items-center w-full justify-between mb-8">
+            <li
+                class="flex w-full items-center text-space-accent after:content-[''] after:w-full after:h-1 after:border-b after:border-space-accent after:border-4 after:inline-block">
+                <span
+                    class="flex items-center justify-center w-8 h-8 bg-space-900 border-2 border-space-accent rounded-full shrink-0 font-bold z-10">
+                    1
+                </span>
+            </li>
+            <li id="step2-indicator" class="flex items-center text-gray-500">
+                <span
+                    class="flex items-center justify-center w-8 h-8 bg-space-900 border-2 border-gray-500 rounded-full shrink-0 font-bold z-10">
+                    2
+                </span>
+            </li>
+        </ol>
+
+        <!-- STEP 1: Invitation Gate -->
+        <div id="step1-container" class="animate-fade-in-up">
+            <div>
+                <h2 class="text-center text-3xl font-display font-bold text-white tracking-tight">Access Gate</h2>
+                <p class="mt-2 text-center text-sm text-gray-400">
+                    Please enter your valid invitation code to proceed to the scholarship application.
+                </p>
+            </div>
+            <form id="invite-form" class="mt-8 space-y-6" onsubmit="handleInviteSub(event)">
+                <div>
+                    <label for="invitation_code" class="block text-sm font-medium text-gray-300">Invitation Code</label>
+                    <input id="invitation_code" name="invitation_code" type="text" required
+                        class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-white/20 placeholder-gray-500 bg-space-900/50 text-white focus:outline-none focus:ring-2 focus:ring-space-accent focus:border-transparent sm:text-sm mt-1 uppercase"
+                        placeholder="INV-XXXXX">
+                </div>
+                <div id="invite-error" class="text-red-400 text-sm hidden font-medium text-center"></div>
+                <div>
+                    <button type="submit" id="btn-continue"
+                        class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-space-900 bg-space-accent hover:bg-space-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-space-accent focus:ring-offset-space-900 transition-colors shadow-[0_0_15px_rgba(79,209,197,0.3)]">
+                        Continue Application
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- STEP 2: Signup Form -->
+        <div id="step2-container" class="hidden animate-fade-in-up">
+            <div>
+                <h2 class="text-center text-3xl font-display font-bold text-white tracking-tight">Your Profile</h2>
+                <p class="mt-2 text-center text-sm text-gray-400">
+                    Complete your details to create your SpacePoint account.
+                </p>
+            </div>
+            <form id="signup-form" class="mt-8 space-y-6" onsubmit="handleSignup(event)">
+                <div class="space-y-4">
+                    <!-- Standard fields -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">Full Name</label>
+                            <input type="text" id="name" required
+                                class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">Phone (+971)</label>
+                            <input type="tel" id="phone" required value="+971" pattern="^\+971\d{8,9}$"
+                                title="Must start with +971 followed by 8-9 digits"
+                                class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">Email Address</label>
+                            <input type="email" id="email" required
+                                class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">Password</label>
+                            <input type="password" id="password" required minlength="6"
+                                class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                        </div>
+                    </div>
+
+                    <!-- Academic / Location -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">University</label>
+                            <input type="text" id="university" required
+                                class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">Highest Degree</label>
+                            <select id="degree" required onchange="toggleDegreeOther()"
+                                class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                                <option value="" disabled selected>Select...</option>
+                                <option value="Currently Pursuing Bachelors Degree">Currently Pursuing Bachelors Degree
+                                </option>
+                                <option value="Bachelors">Bachelors</option>
+                                <option value="Masters">Masters</option>
+                                <option value="PhD">PhD</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="degree-other-wrapper" class="hidden">
+                        <label class="block text-sm font-medium text-gray-300">Specify Degree</label>
+                        <input type="text" id="degree_other"
+                            class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                    </div>
+
+                    <!-- MultiSelect Checkboxes & Location -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300">City of Residence</label>
+                        <select id="city" required
+                            class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                            <option value="" disabled selected>Select...</option>
+                            <option value="Dubai">Dubai</option>
+                            <option value="Abu Dhabi">Abu Dhabi</option>
+                            <option value="Sharjah">Sharjah</option>
+                            <option value="Al Ain">Al Ain</option>
+                            <option value="Ajman">Ajman</option>
+                            <option value="Umm Al Quwain">Umm Al Quwain</option>
+                            <option value="Fujairah">Fujairah</option>
+                            <option value="Ras Al Khaimah">Ras Al Khaimah</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Can you deliver sessions in any of
+                            the following cities?</label>
+                        <div class="grid grid-cols-2 gap-2 text-sm text-gray-300">
+                            {% for c in ['Dubai','Abu Dhabi','Sharjah','Al Ain','Ajman','Umm Al Quwain','Fujairah','Ras
+                            Al Khaimah'] %}
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="deliver_cities" value="{{ c }}"
+                                    class="form-checkbox h-4 w-4 text-space-accent rounded border-white/20 bg-space-900/50 focus:ring-space-accent focus:ring-offset-space-900">
+                                <span class="ml-2">{{ c }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Which areas best describe your
+                            background?</label>
+                        <div class="flex flex-wrap gap-4 text-sm text-gray-300">
+                            {% for b in ['Engineering','Science','Education','Other'] %}
+                            <label class="inline-flex items-center">
+                                {% if b == 'Other' %}
+                                <input type="checkbox" id="bg-other-chk" name="background" value="{{ b }}"
+                                    onchange="toggleBgOther()"
+                                    class="form-checkbox h-4 w-4 text-space-accent rounded border-white/20 bg-space-900/50 focus:ring-space-accent focus:ring-offset-space-900">
+                                {% else %}
+                                <input type="checkbox" name="background" value="{{ b }}"
+                                    class="form-checkbox h-4 w-4 text-space-accent rounded border-white/20 bg-space-900/50 focus:ring-space-accent focus:ring-offset-space-900">
+                                {% endif %}
+                                <span class="ml-2">{{ b }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div id="bg-other-wrapper" class="hidden">
+                        <label class="block text-sm font-medium text-gray-300">Specify Background</label>
+                        <input type="text" id="bg_other"
+                            class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                    </div>
+
+                </div>
+
+                <div id="signup-error" class="text-red-400 text-sm hidden font-medium text-center"></div>
+
+                <div>
+                    <button type="submit" id="btn-submit"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-space-900 bg-space-accent hover:bg-space-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-space-accent focus:ring-offset-space-900 transition-colors shadow-[0_0_15px_rgba(79,209,197,0.3)]">
+                        Create Account & Start Task
+                    </button>
+                    <button type="button" onclick="goBack()"
+                        class="mt-3 w-full flex justify-center py-2 px-4 border border-white/20 text-sm font-medium rounded-lg text-white hover:bg-white/10 focus:outline-none transition-colors">
+                        Back
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let validInviteCode = "";
+
+    async function handleInviteSub(e) {
+        e.preventDefault();
+        const codeInput = document.getElementById('invitation_code').value.trim();
+        const errDiv = document.getElementById('invite-error');
+        const btn = document.getElementById('btn-continue');
+
+        errDiv.classList.add('hidden');
+        btn.disabled = true;
+        btn.textContent = "Verifying...";
+
+        try {
+            const resp = await fetch(`/api/auth/validate-invite/${codeInput}`);
+            if (resp.ok) {
+                validInviteCode = codeInput;
+                // Transition to Step 2
+                document.getElementById('step1-container').classList.add('hidden');
+                document.getElementById('step2-container').classList.remove('hidden');
+
+                // Update Step Indicator
+                const step2Ind = document.getElementById('step2-indicator');
+                step2Ind.classList.remove('text-gray-500');
+                step2Ind.classList.add('text-space-accent', 'after:content-[""]', 'after:w-full', 'after:h-1', 'after:border-b', 'after:border-space-accent', 'after:border-4', 'after:inline-block');
+                step2Ind.children[0].classList.replace('border-gray-500', 'border-space-accent');
+
+            } else {
+                const data = await resp.json();
+                errDiv.textContent = data.detail || "Invalid code";
+                errDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            errDiv.textContent = "Network error. Please try again.";
+            errDiv.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Continue Application";
+        }
+    }
+
+    function toggleDegreeOther() {
+        const val = document.getElementById('degree').value;
+        const wrapper = document.getElementById('degree-other-wrapper');
+        const input = document.getElementById('degree_other');
+        if (val === 'Other') {
+            wrapper.classList.remove('hidden');
+            input.required = true;
+        } else {
+            wrapper.classList.add('hidden');
+            input.required = false;
+        }
+    }
+
+    function toggleBgOther() {
+        const chk = document.getElementById('bg-other-chk');
+        const wrapper = document.getElementById('bg-other-wrapper');
+        const input = document.getElementById('bg_other');
+        if (chk.checked) {
+            wrapper.classList.remove('hidden');
+            input.required = true;
+        } else {
+            wrapper.classList.add('hidden');
+            input.required = false;
+        }
+    }
+
+    function goBack() {
+        document.getElementById('step2-container').classList.add('hidden');
+        document.getElementById('step1-container').classList.remove('hidden');
+
+        const step2Ind = document.getElementById('step2-indicator');
+        step2Ind.classList.add('text-gray-500');
+        step2Ind.classList.remove('text-space-accent', 'after:content-[""]', 'after:w-full', 'after:h-1', 'after:border-b', 'after:border-space-accent', 'after:border-4', 'after:inline-block');
+        step2Ind.children[0].classList.replace('border-space-accent', 'border-gray-500');
+    }
+
+    async function handleSignup(e) {
+        e.preventDefault();
+        const errDiv = document.getElementById('signup-error');
+        const btn = document.getElementById('btn-submit');
+        errDiv.classList.add('hidden');
+
+        // Multi-select lists
+        const deliverCheckboxes = document.querySelectorAll('input[name="deliver_cities"]:checked');
+        const bgCheckboxes = document.querySelectorAll('input[name="background"]:checked');
+
+        if (deliverCheckboxes.length === 0 || bgCheckboxes.length === 0) {
+            errDiv.textContent = "Please select at least one delivery city and one background area.";
+            errDiv.classList.remove('hidden');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Submitting...";
+
+        const payload = {
+            name: document.getElementById('name').value,
+            phone: document.getElementById('phone').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            invitation_code: validInviteCode,
+            university: document.getElementById('university').value,
+            highest_degree: document.getElementById('degree').value,
+            highest_degree_other: document.getElementById('degree').value === 'Other' ? document.getElementById('degree_other').value : null,
+            city_of_residence: document.getElementById('city').value,
+            deliver_cities: Array.from(deliverCheckboxes).map(c => c.value),
+            background_areas: Array.from(bgCheckboxes).map(c => c.value),
+            background_other: document.getElementById('bg-other-chk').checked ? document.getElementById('bg_other').value : null
+        };
+
+        try {
+            const resp = await fetch("/api/auth/signup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (resp.ok) {
+                // Successfully signed up, go to videos task
+                window.location.href = "/tasks/videos";
+            } else {
+                const data = await resp.json();
+                errDiv.textContent = data.detail || "Error creating account";
+                errDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            errDiv.textContent = "Network error. Please try again.";
+            errDiv.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Create Account & Start Task";
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "base_instructor.html" %}
+
+{% block title %}Profile Settings | SpacePoint Instructor{% endblock %}
+{% block page_title %}Instructor Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8 animate-fade-in-up">
+
+    <div class="glass-panel p-8 rounded-2xl border border-white/5 shadow-2xl">
+        <div class="flex items-center gap-6 mb-8 pb-8 border-b border-white/10">
+            <div
+                class="w-24 h-24 rounded-full bg-space-800 border-2 border-space-accent flex items-center justify-center text-3xl font-display font-bold text-space-accent shadow-[0_0_20px_rgba(79,209,197,0.3)]">
+                {{ user.name[0] }}
+            </div>
+            <div>
+                <h2 class="text-3xl font-display font-bold text-white">{{ user.name }}</h2>
+                <p class="text-space-accent mt-1 tracking-wider uppercase text-sm font-semibold">Certified Instructor
+                </p>
+                <p class="text-gray-400 text-sm mt-1">Joined {{ user.created_at.strftime('%B %Y') }}</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Details -->
+            <div class="space-y-6">
+                <h3 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Account Details</h3>
+
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Email Address</label>
+                    <div class="bg-space-900/50 border border-white/10 p-3 rounded-lg text-gray-300">
+                        {{ user.email }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Phone Number</label>
+                    <div class="bg-space-900/50 border border-white/10 p-3 rounded-lg text-gray-300">
+                        {{ user.phone or 'Not provided' }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Instructor ID</label>
+                    <div class="bg-space-900/50 border border-white/10 p-3 rounded-lg text-space-accent font-mono">
+                        SP-{{ "%04d" % user.id }}-UAE
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings Placeholder -->
+            <div class="space-y-6">
+                <h3 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Security Settings</h3>
+
+                {% if user.must_change_password %}
+                <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4 text-red-200 text-sm">
+                    <strong class="text-red-400 block mb-1">Action Required</strong>
+                    You are currently using a temporary password. Please update it immediately.
+                </div>
+                {% endif %}
+
+                <!-- Form placeholder (Doesn't function yet as requested "UI placeholder only") -->
+                <form class="space-y-4 opacity-75"
+                    onsubmit="event.preventDefault(); alert('Password change endpoint not yet implemented.');">
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Current
+                            Password</label>
+                        <input type="password" placeholder="••••••••••••"
+                            class="w-full bg-space-900 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-space-accent transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">New Password</label>
+                        <input type="password" placeholder="Min 12 characters"
+                            class="w-full bg-space-900 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-space-accent transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Confirm New
+                            Password</label>
+                        <input type="password" placeholder="Confirm password"
+                            class="w-full bg-space-900 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-space-accent transition-colors">
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-space-accent text-space-900 font-bold py-3 rounded-lg hover:bg-space-hover transition-colors shadow-lg shadow-space-accent/20">
+                        Update Password
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+</style>
+{% endblock %}
