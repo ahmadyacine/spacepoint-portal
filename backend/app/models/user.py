@@ -19,5 +19,5 @@ class User(Base):
     invitation_code_used = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login_at = Column(DateTime(timezone=True), nullable=True)
-    must_change_password = Column(Integer, default=False, nullable=False) # Storing boolean as Integer for SQLite/PG compatibility often, but let's use Boolean if imported
+    must_change_password = Column(Integer, default=0, nullable=False)
     temp_password_last_set_at = Column(DateTime(timezone=True), nullable=True)
