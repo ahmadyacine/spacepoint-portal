@@ -67,9 +67,13 @@ def _load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
     for path in candidates:
         if os.path.exists(path):
             try:
-                return ImageFont.truetype(path, size)
-            except Exception:
+                font = ImageFont.truetype(path, size)
+                print(f"[id_card_service] Successfully loaded font: {path}")
+                return font
+            except Exception as e:
+                print(f"[id_card_service] Failed to load font at {path}: {e}")
                 continue
+    print("[id_card_service] WARNING: No system fonts found. Falling back to default (tiny) font.")
     return ImageFont.load_default()
 
 
