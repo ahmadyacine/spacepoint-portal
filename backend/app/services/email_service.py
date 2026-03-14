@@ -7,7 +7,6 @@ from email import encoders
 import docx
 import platform
 import subprocess
-import pythoncom
 from docx2pdf import convert as docx2pdf_convert
 from datetime import datetime
 from app.core.config import settings
@@ -17,7 +16,11 @@ def convert_to_pdf(docx_path: str, pdf_path: str):
     Converts DOCX to PDF. Works on Windows (using docx2pdf) and Linux (using libreoffice).
     """
     if platform.system() == "Windows":
-        pythoncom.CoInitialize()
+        try:
+            import pythoncom
+            pythoncom.CoInitialize()
+        except ImportError:
+            print("[email_service] pythoncom/pywin32 not installed, skipping CoInitialize.")
         try:
             docx2pdf_convert(docx_path, pdf_path)
         except Exception as e:
