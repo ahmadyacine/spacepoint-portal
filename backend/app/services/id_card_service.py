@@ -42,30 +42,48 @@ UPLOADS_BASE = os.path.join(_BACKEND_DIR, "app", "uploads", "instructor_cards")
 # ── Font loader ─────────────────────────────────────────────────────────────
 
 def _load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
-    """Try Windows system fonts; fall back to Pillow default."""
+    """Try Windows fonts, then Linux system fonts, then project-internal venv fonts."""
+    
+    # Calculate path to fonts inside the venv (ReportLab often includes Vera fonts)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.normpath(os.path.join(current_dir, "..", "..", ".."))
+    
+    # Check both Linux and Windows venv structures
+    venv_font_paths = [
+        os.path.join(project_root, "backend", "venv", "lib", "python3.12", "site-packages", "reportlab", "fonts"),
+        os.path.join(project_root, "backend", "venv", "Lib", "site-packages", "reportlab", "fonts"),
+    ]
+    
+    internal_bold = None
+    internal_reg = None
+    
+    for v_path in venv_font_paths:
+        if os.path.exists(v_path):
+            internal_bold = os.path.join(v_path, "VeraBd.ttf")
+            internal_reg = os.path.join(v_path, "Vera.ttf")
+            break
+
     candidates = [
         r"C:\Windows\Fonts\arial.ttf",
         r"C:\Windows\Fonts\calibri.ttf",
-        r"C:\Windows\Fonts\verdana.ttf",
-        r"C:\Windows\Fonts\segoeui.ttf",
         "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
     ]
+    if internal_reg:
+        candidates.append(internal_reg)
     
     if bold:
-        candidates = [
+        bold_candidates = [
             r"C:\Windows\Fonts\arialbd.ttf",
-            r"C:\Windows\Fonts\calibrib.ttf",
-            r"C:\Windows\Fonts\verdanab.ttf",
-            r"C:\Windows\Fonts\segoeuib.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-            "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
-        ] + candidates # Fallback to regular if bold not found
-    
+        ]
+        if internal_bold:
+            bold_candidates.append(internal_bold)
+        candidates = bold_candidates + candidates
+
     for path in candidates:
-        if os.path.exists(path):
+        if path and os.path.exists(path):
             try:
                 font = ImageFont.truetype(path, size)
                 print(f"[id_card_service] Successfully loaded font: {path}", flush=True)
@@ -73,7 +91,8 @@ def _load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
             except Exception as e:
                 print(f"[id_card_service] Failed to load font at {path}: {e}", flush=True)
                 continue
-    print("[id_card_service] WARNING: No system fonts found. Falling back to default (tiny) font.", flush=True)
+
+    print("[id_card_service] WARNING: No system or project fonts found. Falling back to default (tiny) font.", flush=True)
     return ImageFont.load_default()
 
 
