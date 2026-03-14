@@ -43,21 +43,27 @@ UPLOADS_BASE = os.path.join(_BACKEND_DIR, "app", "uploads", "instructor_cards")
 
 def _load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
     """Try Windows system fonts; fall back to Pillow default."""
-    candidates = []
+    candidates = [
+        r"C:\Windows\Fonts\arial.ttf",
+        r"C:\Windows\Fonts\calibri.ttf",
+        r"C:\Windows\Fonts\verdana.ttf",
+        r"C:\Windows\Fonts\segoeui.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+    ]
+    
     if bold:
         candidates = [
             r"C:\Windows\Fonts\arialbd.ttf",
             r"C:\Windows\Fonts\calibrib.ttf",
             r"C:\Windows\Fonts\verdanab.ttf",
             r"C:\Windows\Fonts\segoeuib.ttf",
-        ]
-    else:
-        candidates = [
-            r"C:\Windows\Fonts\arial.ttf",
-            r"C:\Windows\Fonts\calibri.ttf",
-            r"C:\Windows\Fonts\verdana.ttf",
-            r"C:\Windows\Fonts\segoeui.ttf",
-        ]
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+            "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
+        ] + candidates # Fallback to regular if bold not found
+    
     for path in candidates:
         if os.path.exists(path):
             try:
