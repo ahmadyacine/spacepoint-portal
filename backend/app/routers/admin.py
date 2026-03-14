@@ -6,13 +6,16 @@ import os
 import io
 
 from app.routers.deps import get_db, get_current_admin
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.profile import ApplicantProfile
 from app.models.submission import VideoSubmission
 from app.models.review import ApplicationReview
 from app.models.checklist import Module, ModuleSection, ChecklistItem, ModuleSubmission, UserChecklistProgress
+from app.models.invitation import InvitationCode
+from app.models.instructor_profile import InstructorProfile
 from app.schemas.core import AdminReviewUpdate
-from pydantic import BaseModel
+from app.core.security import get_password_hash
+from pydantic import BaseModel, EmailStr
 
 class ChecklistDecisionUpdate(BaseModel):
     status: str # APPROVED or REJECTED
@@ -20,10 +23,54 @@ class ChecklistDecisionUpdate(BaseModel):
 
 router = APIRouter()
 
+class InvitationCodeCreate(BaseModel):
+    code: str
+    max_uses: int = 20
+    is_active: bool = True
+
+class InvitationCodeUpdate(BaseModel):
+    is_active: bool
+
+class FacilitatorCreate(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+
+@router.get("/stats")
+def get_admin_stats(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    total_started = db.query(User).filter(User.role == UserRole.APPLICANT).count()
+    
+    approved = db.query(ApplicationReview).filter(ApplicationReview.status == "APPROVED").count()
+    rejected = db.query(ApplicationReview).filter(ApplicationReview.status == "REJECTED").count()
+    
+    draft = db.query(User).outerjoin(ApplicationReview, User.id == ApplicationReview.user_id).filter(
+        User.role == UserRole.APPLICANT,
+        ApplicationReview.id == None
+    ).count()
+
+    most_used = db.query(InvitationCode).order_by(InvitationCode.used_count.desc()).first()
+    most_used_code = most_used.code if most_used else None
+
+    return {
+        "total_started": total_started,
+        "approved": approved,
+        "rejected": rejected,
+        "draft_unsubmitted": draft,
+        "most_used_invitation_code": most_used_code
+    }
+
 @router.get("/applicants")
-def list_applicants(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
-    # Join users with reviews
-    results = db.query(User, ApplicationReview).join(ApplicationReview, User.id == ApplicationReview.user_id).all()
+def list_applicants(
+    page: int = 1, 
+    limit: int = 10, 
+    admin: User = Depends(get_current_admin), 
+    db: Session = Depends(get_db)
+):
+    skip = (page - 1) * limit
+    
+    query = db.query(User, ApplicationReview).join(ApplicationReview, User.id == ApplicationReview.user_id)
+    total = query.count()
+    results = query.order_by(User.created_at.desc()).offset(skip).limit(limit).all()
     
     applicants = []
     for user, review in results:
@@ -39,7 +86,13 @@ def list_applicants(admin: User = Depends(get_current_admin), db: Session = Depe
             "created_at": user.created_at,
             "invitation_code_used": user.invitation_code_used
         })
-    return applicants
+        
+    return {
+        "data": applicants,
+        "total": total,
+        "page": page,
+        "limit": limit
+    }
 
 @router.get("/applicants/{user_id}")
 def get_applicant_detail(user_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
@@ -162,11 +215,24 @@ def review_applicant(user_id: int, data: AdminReviewUpdate, admin: User = Depend
         user.must_change_password = 1   # INTEGER column — use 1/0 not True/False
         user.temp_password_last_set_at = datetime.utcnow()
         
-        email_sent = send_approval_credentials_email(
+        profile = db.query(ApplicantProfile).filter(ApplicantProfile.user_id == user.id).first()
+        living_area = profile.city_of_residence if profile else "Unknown"
+        
+        email_sent, contract_path = send_approval_credentials_email(
             to_email=user.email,
             name=user.name,
-            temp_password=temp_password
+            temp_password=temp_password,
+            living_area=living_area
         )
+        
+        # Save contract record to the database
+        inst_profile = db.query(InstructorProfile).filter(InstructorProfile.user_id == user.id).first()
+        if not inst_profile:
+            inst_profile = InstructorProfile(user_id=user.id)
+            db.add(inst_profile)
+        
+        inst_profile.contract_path = contract_path
+        # We can also set an initial instructor ID if wanted, or leave it for later
     
     db.commit()
     
@@ -269,3 +335,66 @@ def export_applicant_pdf(user_id: int, admin: User = Depends(get_current_admin),
         media_type="application/pdf", 
         headers={"Content-Disposition": f"attachment; filename=SpacePoint_Application_{user_id}.pdf"}
     )
+
+@router.get("/invitations")
+def list_invitations(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    invitations = db.query(InvitationCode).order_by(InvitationCode.created_at.desc()).all()
+    return invitations
+
+@router.post("/invitations")
+def create_invitation(data: InvitationCodeCreate, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    existing = db.query(InvitationCode).filter(InvitationCode.code == data.code).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Invitation code already exists")
+        
+    new_code = InvitationCode(
+        code=data.code,
+        max_uses=data.max_uses,
+        is_active=data.is_active
+    )
+    db.add(new_code)
+    db.commit()
+    db.refresh(new_code)
+    return new_code
+
+@router.put("/invitations/{invitation_id}")
+def update_invitation(invitation_id: int, data: InvitationCodeUpdate, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    invitation = db.query(InvitationCode).filter(InvitationCode.id == invitation_id).first()
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation code not found")
+        
+    invitation.is_active = data.is_active
+    db.commit()
+    db.refresh(invitation)
+    return invitation
+
+@router.delete("/invitations/{invitation_id}")
+def delete_invitation(invitation_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    invitation = db.query(InvitationCode).filter(InvitationCode.id == invitation_id).first()
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation code not found")
+        
+    db.delete(invitation)
+@router.get("/facilitators")
+def list_facilitators(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    facilitators = db.query(User).filter(User.role == UserRole.FACILITATOR).order_by(User.created_at.desc()).all()
+    return [{"id": f.id, "name": f.name, "email": f.email, "created_at": f.created_at} for f in facilitators]
+
+@router.post("/facilitators")
+def create_facilitator(data: FacilitatorCreate, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.email == data.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="User with this email already exists")
+        
+    hashed_password = get_password_hash(data.password)
+    new_user = User(
+        name=data.name,
+        email=data.email,
+        password_hash=hashed_password,
+        role=UserRole.FACILITATOR,
+        must_change_password=0
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {"id": new_user.id, "name": new_user.name, "email": new_user.email, "role": new_user.role}

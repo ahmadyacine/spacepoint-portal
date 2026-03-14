@@ -12,5 +12,7 @@ class InstructorProfile(Base):
     issue_date      = Column(DateTime(timezone=True), nullable=True)
     front_card_path = Column(String, nullable=True)
     back_card_path  = Column(String, nullable=True)
+    contract_path       = Column(String, nullable=True) # Generated contract (PDF)
+    signed_contract_path = Column(String, nullable=True) # Uploaded by instructor
     created_at      = Column(DateTime(timezone=True), server_default=func.now())
     updated_at      = Column(DateTime(timezone=True), onupdate=func.now())

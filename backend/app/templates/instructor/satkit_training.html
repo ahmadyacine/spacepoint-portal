@@ -25,78 +25,100 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Placeholder Card 1 -->
-        <div
-            class="glass-panel rounded-2xl border border-white/10 overflow-hidden hover:border-space-accent/50 transition-colors group cursor-not-allowed opacity-80">
-            <div class="h-40 bg-space-900 border-b border-white/5 relative flex items-center justify-center">
-                <!-- Fake video thumbnail overlay -->
-                <div
-                    class="w-12 h-12 rounded-full bg-space-accent/20 flex items-center justify-center text-space-accent group-hover:bg-space-accent group-hover:text-space-900 transition-colors">
-                    <svg class="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M4 4l12 6-12 6z"></path>
-                    </svg>
-                </div>
-            </div>
-            <div class="p-6">
-                <div class="text-xs font-bold text-space-accent tracking-wider uppercase mb-2">Module 1</div>
-                <h3 class="font-display font-bold text-lg text-white mb-2">Unboxing & Component Identification</h3>
-                <p class="text-sm text-gray-400 mb-4 line-clamp-2">Learn how to identify the onboard computer, sensors,
-                    and structural frame elements in your newly arrived kit.</p>
-                <div class="flex items-center justify-between text-xs font-medium text-gray-500">
-                    <span>15 mins</span>
-                    <span class="bg-white/5 px-2 py-1 rounded">Pending Data</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Placeholder Card 2 -->
-        <div
-            class="glass-panel rounded-2xl border border-white/10 overflow-hidden hover:border-space-accent/50 transition-colors group cursor-not-allowed opacity-80">
-            <div class="h-40 bg-space-900 border-b border-white/5 relative flex items-center justify-center">
-                <div
-                    class="w-12 h-12 rounded-full bg-space-accent/20 flex items-center justify-center text-space-accent group-hover:bg-space-accent group-hover:text-space-900 transition-colors">
-                    <svg class="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M4 4l12 6-12 6z"></path>
-                    </svg>
-                </div>
-            </div>
-            <div class="p-6">
-                <div class="text-xs font-bold text-space-accent tracking-wider uppercase mb-2">Module 2</div>
-                <h3 class="font-display font-bold text-lg text-white mb-2">Wiring the Subsystems</h3>
-                <p class="text-sm text-gray-400 mb-4 line-clamp-2">Safely connect power distribution modules and data
-                    buses without damaging the main payload interface.</p>
-                <div class="flex items-center justify-between text-xs font-medium text-gray-500">
-                    <span>25 mins</span>
-                    <span class="bg-white/5 px-2 py-1 rounded">Pending Data</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Placeholder Card 3 -->
-        <div
-            class="glass-panel rounded-2xl border border-white/10 overflow-hidden hover:border-space-accent/50 transition-colors group cursor-not-allowed opacity-80">
-            <div class="h-40 bg-space-900 border-b border-white/5 relative flex items-center justify-center">
-                <div
-                    class="w-12 h-12 rounded-full bg-space-accent/20 flex items-center justify-center text-space-accent group-hover:bg-space-accent group-hover:text-space-900 transition-colors">
-                    <svg class="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M4 4l12 6-12 6z"></path>
-                    </svg>
-                </div>
-            </div>
-            <div class="p-6">
-                <div class="text-xs font-bold text-space-accent tracking-wider uppercase mb-2">Module 3</div>
-                <h3 class="font-display font-bold text-lg text-white mb-2">Software Flashing</h3>
-                <p class="text-sm text-gray-400 mb-4 line-clamp-2">Install the SpacePoint OS onto the kit's brain and
-                    verify telemetry connections to the dashboard.</p>
-                <div class="flex items-center justify-between text-xs font-medium text-gray-500">
-                    <span>20 mins</span>
-                    <span class="bg-white/5 px-2 py-1 rounded">Pending Data</span>
-                </div>
-            </div>
-        </div>
+    <div id="modules-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="py-12 col-span-full text-center text-gray-500">Loading training modules...</div>
     </div>
 </div>
+
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", fetchTrainingModules);
+
+    async function fetchTrainingModules() {
+        try {
+            const resp = await fetch('/api/instructor/training/modules');
+            if (!resp.ok) throw new Error("Failed to fetch modules");
+            const data = await resp.json();
+
+            const container = document.getElementById("modules-container");
+            container.innerHTML = "";
+
+            if (data.length === 0) {
+                container.innerHTML = `<div class="py-12 col-span-full text-center text-gray-500">No training modules available at this time.</div>`;
+                return;
+            }
+
+            data.forEach(mod => {
+                const isCompleted = mod.total_count > 0 && mod.completed_count === mod.total_count;
+                const progressPct = mod.total_count > 0 ? Math.round((mod.completed_count / mod.total_count) * 100) : 0;
+
+                // Find next video to play (first uncompleted)
+                let nextVidLink = '#';
+                if (mod.videos.length > 0) {
+                    const nextVid = mod.videos.find(v => !v.is_completed) || mod.videos[0]; // defaults to first if all done
+                    nextVidLink = `/instructor/training/player/${nextVid.id}`;
+                }
+
+                container.innerHTML += `
+                    <div class="glass-panel rounded-2xl border ${isCompleted ? 'border-space-accent/50' : 'border-white/10'} overflow-hidden hover:border-space-accent/50 transition-colors group relative flex flex-col h-full">
+                        
+                        ${isCompleted ? `
+                        <div class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-space-accent flex items-center justify-center text-space-900 shadow-[0_0_15px_rgba(79,209,197,0.5)]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        ` : ''}
+
+                        <div class="h-32 bg-space-900 border-b border-white/5 relative flex items-center justify-center shrink-0">
+                            <a href="${nextVidLink}"
+                                class="w-14 h-14 rounded-full ${isCompleted ? 'bg-space-accent text-space-900' : 'bg-space-accent/20 text-space-accent'} flex items-center justify-center group-hover:bg-space-accent group-hover:text-space-900 transition-all shadow-lg hover:scale-110">
+                                <svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M4 4l12 6-12 6z"></path>
+                                </svg>
+                            </a>
+                        </div>
+
+                        <div class="p-6 flex flex-col flex-grow">
+                            <div class="text-xs font-bold text-space-accent tracking-wider uppercase mb-2">Module ${mod.sort_order}</div>
+                            <h3 class="font-display font-bold text-lg text-white mb-2 line-clamp-1">${mod.title}</h3>
+                            <p class="text-sm text-gray-400 mb-6 flex-grow line-clamp-3">${mod.description || 'No description provided.'}</p>
+                            
+                            <div class="mt-auto">
+                                <div class="flex items-center justify-between text-xs font-medium text-gray-400 mb-2">
+                                    <span>Progress</span>
+                                    <span>${mod.completed_count} / ${mod.total_count} Videos</span>
+                                </div>
+                                <div class="w-full h-2 bg-space-900 rounded-full overflow-hidden border border-white/5">
+                                    <div class="h-full ${isCompleted ? 'bg-space-accent' : 'bg-blue-500'} transition-all duration-500" style="width: ${progressPct}%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                `;
+            });
+        } catch (e) {
+            console.error(e);
+            document.getElementById("modules-container").innerHTML = `<div class="py-12 col-span-full text-center text-red-500">Error loading training modules.</div>`;
+        }
+    }
+</script>
 
 <style>
     @keyframes fadeInUp {

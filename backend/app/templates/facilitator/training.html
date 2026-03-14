@@ -1,0 +1,310 @@
+{% extends "base_facilitator.html" %}
+
+{% block title %}SatKit Training | SpacePoint Facilitator{% endblock %}
+{% block page_title %}SatKit Training Management{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8 animate-fade-in-up">
+
+    <div class="mb-8 border-b border-white/10 pb-6 hidden md:block">
+        <h1 class="text-3xl font-display font-bold text-white mb-2">Training Modules</h1>
+        <p class="text-gray-400">Create training modules and upload instructional videos for instructors.</p>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-8">
+        <!-- Forms Section -->
+        <div class="w-full md:w-1/3 space-y-6">
+
+            <!-- Create Module Form -->
+            <div class="glass-panel p-6 rounded-2xl border border-white/10 shadow-xl">
+                <h3 class="font-display font-bold text-lg text-white mb-4">Create New Module</h3>
+
+                <form id="module-form" onsubmit="handleCreateModule(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Module Title *</label>
+                        <input id="mod-title" type="text" required placeholder="e.g. Assembling the SatKit"
+                            class="w-full rounded-lg border border-white/20 bg-space-900/50 px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-space-accent text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                        <textarea id="mod-desc" rows="2" placeholder="What is this module about?"
+                            class="w-full rounded-lg border border-white/20 bg-space-900/50 px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-space-accent text-sm"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Sort Order *</label>
+                        <input id="mod-order" type="number" required value="1"
+                            class="w-full rounded-lg border border-white/20 bg-space-900/50 px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-space-accent text-sm">
+                    </div>
+
+                    <div id="module-error" class="hidden text-red-400 text-sm font-medium"></div>
+
+                    <button type="submit" id="module-btn"
+                        class="w-full mt-4 py-3 rounded-lg font-bold text-white border border-space-accent/50 hover:bg-space-accent/10 transition-colors shadow-lg flex items-center justify-center">
+                        Create Module
+                    </button>
+                </form>
+            </div>
+
+            <!-- Upload Video Form -->
+            <div class="glass-panel p-6 rounded-2xl border border-white/10 shadow-xl">
+                <h3 class="font-display font-bold text-lg text-white mb-4">Upload Video</h3>
+
+                <form id="upload-form" onsubmit="handleUpload(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Assign to Module *</label>
+                        <select id="vid-module" required
+                            class="w-full rounded-lg border border-white/20 bg-space-900/50 px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-space-accent text-sm">
+                            <option value="" disabled selected>Select a module...</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Video Title *</label>
+                        <input id="vid-title" type="text" required placeholder="e.g. Connecting the ESP32"
+                            class="w-full rounded-lg border border-white/20 bg-space-900/50 px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-space-accent text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Notes / Description (Optional,
+                            supports HTML)</label>
+                        <textarea id="vid-notes" rows="4"
+                            placeholder="Add any important notes, links, or code snippets for this video..."
+                            class="w-full rounded-lg border border-white/20 bg-space-900/50 px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-space-accent text-sm"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Sort Order *</label>
+                        <input id="vid-order" type="number" required value="1"
+                            class="w-full rounded-lg border border-white/20 bg-space-900/50 px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-space-accent text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Video File (.mp4) *</label>
+                        <input id="vid-file" type="file" required accept=".mp4,.webm" class="w-full text-sm text-gray-400
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-full file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-space-accent/10 file:text-space-accent
+                            hover:file:bg-space-accent/20 cursor-pointer">
+                    </div>
+
+                    <div id="upload-error" class="hidden text-red-400 text-sm font-medium"></div>
+
+                    <button type="submit" id="upload-btn"
+                        class="w-full mt-4 py-3 rounded-lg font-bold text-space-900 bg-space-accent hover:bg-space-hover transition-colors shadow-lg flex items-center justify-center">
+                        Upload Video
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modules List Section -->
+        <div class="w-full md:w-2/3">
+            <div class="glass-panel border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                <div class="p-6 border-b border-white/5 bg-space-900/50 flex justify-between items-center">
+                    <h3 class="font-display font-bold text-white">Curriculum Map</h3>
+                </div>
+
+                <div id="modules-container" class="divide-y divide-white/5">
+                    <div class="py-12 text-center text-gray-500">Loading modules...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", fetchModules);
+
+    async function fetchModules() {
+        try {
+            const resp = await fetch('/api/facilitator/training/modules');
+            if (!resp.ok) throw new Error("Failed to fetch");
+            const data = await resp.json();
+
+            // Populate Dropdown
+            const select = document.getElementById("vid-module");
+            select.innerHTML = '<option value="" disabled selected>Select a module...</option>';
+            data.forEach(m => {
+                select.innerHTML += `<option value="${m.id}">[${m.sort_order}] ${m.title}</option>`;
+            });
+
+            // Populate List
+            const container = document.getElementById("modules-container");
+            container.innerHTML = "";
+
+            if (data.length === 0) {
+                container.innerHTML = `<div class="py-12 text-center text-gray-500">No training modules created yet.</div>`;
+                return;
+            }
+
+            data.forEach(mod => {
+                let videosHtml = '';
+                if (mod.videos.length === 0) {
+                    videosHtml = `<div class="p-4 text-sm text-gray-500 italic bg-black/20 text-center">No videos uploaded yet.</div>`;
+                } else {
+                    videosHtml = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <tbody class="divide-y divide-white/5 bg-black/20">
+                                ${mod.videos.map(vid => `
+                                    <tr class="hover:bg-white/5 transition-colors group/row">
+                                        <td class="py-3 px-6 w-16 text-gray-500 font-mono text-center">#${vid.sort_order}</td>
+                                        <td class="py-3 px-6 w-1/2">
+                                            <div class="font-medium text-white">${vid.title}</div>
+                                            <div class="text-xs text-gray-500 mt-1 line-clamp-1 truncate block max-w-sm">${vid.notes || 'No notes provided'}</div>
+                                        </td>
+                                        <td class="py-3 px-6 text-right">
+                                            <button onclick="deleteVideo(${vid.id})" class="text-red-400 hover:text-red-300 transition-colors text-xs font-bold underline opacity-0 group-hover/row:opacity-100">Delete Video</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+                }
+
+                container.innerHTML += `
+                    <div class="mb-2">
+                        <div class="p-6 bg-space-900/30 flex justify-between items-start group">
+                            <div>
+                                <h4 class="font-bold text-white text-lg flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded bg-space-800 text-space-accent border border-space-accent/20 flex items-center justify-center text-xs">${mod.sort_order}</span>
+                                    ${mod.title}
+                                </h4>
+                                ${mod.description ? `<p class="text-xs text-gray-400 mt-1 pl-8">${mod.description}</p>` : ''}
+                            </div>
+                            <button onclick="deleteModule(${mod.id})" class="text-red-400/50 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100" title="Delete Module">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                        ${videosHtml}
+                    </div>
+                `;
+            });
+        } catch (e) {
+            console.error(e);
+            document.getElementById("modules-container").innerHTML = `<div class="py-12 text-center text-red-500">Error loading training modules.</div>`;
+        }
+    }
+
+    async function handleCreateModule(e) {
+        e.preventDefault();
+        const errDiv = document.getElementById('module-error');
+        const btn = document.getElementById('module-btn');
+        errDiv.classList.add('hidden');
+        btn.disabled = true;
+
+        const formData = new FormData();
+        formData.append("title", document.getElementById('mod-title').value);
+        formData.append("description", document.getElementById('mod-desc').value);
+        formData.append("sort_order", document.getElementById('mod-order').value);
+
+        try {
+            const resp = await fetch('/api/facilitator/training/modules', { method: 'POST', body: formData });
+            if (resp.ok) {
+                document.getElementById('module-form').reset();
+                document.getElementById('mod-order').value = 1;
+                fetchModules();
+            } else {
+                const data = await resp.json();
+                errDiv.textContent = data.detail || "Error creating module";
+                errDiv.classList.remove('hidden');
+            }
+        } catch (err) {
+            errDiv.textContent = "Network error";
+            errDiv.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function handleUpload(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('vid-file');
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const errDiv = document.getElementById('upload-error');
+        const btn = document.getElementById('upload-btn');
+        errDiv.classList.add('hidden');
+        const oldText = btn.textContent;
+        btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-space-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Uploading...`;
+        btn.disabled = true;
+
+        const formData = new FormData();
+        formData.append("module_id", document.getElementById('vid-module').value);
+        formData.append("title", document.getElementById('vid-title').value);
+        formData.append("notes", document.getElementById('vid-notes').value);
+        formData.append("sort_order", document.getElementById('vid-order').value);
+        formData.append("file", file);
+
+        try {
+            const resp = await fetch('/api/facilitator/training/videos', { method: 'POST', body: formData });
+            if (resp.ok) {
+                document.getElementById('upload-form').reset();
+                document.getElementById('vid-order').value = 1;
+                fetchModules();
+            } else {
+                const data = await resp.json();
+                errDiv.textContent = data.detail || "Upload failed";
+                errDiv.classList.remove('hidden');
+            }
+        } catch (err) {
+            errDiv.textContent = "Network error or file too large";
+            errDiv.classList.remove('hidden');
+        } finally {
+            btn.innerHTML = oldText;
+            btn.disabled = false;
+        }
+    }
+
+    async function deleteModule(id) {
+        if (!confirm("Are you sure you want to delete this module AND ALL ITS VIDEOS?")) return;
+        try {
+            const resp = await fetch('/api/facilitator/training/modules/' + id, { method: 'DELETE' });
+            if (resp.ok) {
+                fetchModules();
+            } else {
+                const data = await resp.json();
+                alert(data.detail || "Error deleting module");
+            }
+        } catch (e) {
+            alert("Network error");
+        }
+    }
+
+    async function deleteVideo(id) {
+        if (!confirm("Are you sure you want to delete this video?")) return;
+        try {
+            const resp = await fetch('/api/facilitator/training/videos/' + id, { method: 'DELETE' });
+            if (resp.ok) {
+                fetchModules();
+            } else {
+                const data = await resp.json();
+                alert(data.detail || "Error deleting video");
+            }
+        } catch (e) {
+            alert("Network error");
+        }
+    }
+</script>
+{% endblock %}

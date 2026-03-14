@@ -18,6 +18,8 @@ from app.services.id_card_service import (
     generate_front_card, generate_back_card,
     save_instructor_cards,
 )
+from app.models.library import LibraryResource
+from app.models.training import TrainingModule, TrainingVideo, UserTrainingProgress
 
 router = APIRouter()
 
@@ -145,3 +147,114 @@ def get_back_card(
     if not profile or not profile.back_card_path or not os.path.exists(profile.back_card_path):
         raise HTTPException(status_code=404, detail="Back card not generated yet")
     return FileResponse(profile.back_card_path, media_type="image/png")
+
+@router.get("/download/{resource_id}")
+def download_library_resource(
+    resource_id: int,
+    instructor: User = Depends(_require_instructor),
+    db: Session      = Depends(get_db)
+):
+    """Download a library resource file."""
+    resource = db.query(LibraryResource).filter(LibraryResource.id == resource_id).first()
+    if not resource or not os.path.exists(resource.file_path):
+        raise HTTPException(status_code=404, detail="Resource not found")
+        
+    return FileResponse(
+        path=resource.file_path, 
+        filename=os.path.basename(resource.file_path).split('_', 1)[-1], # remove timestamp prefix for download name
+    )
+
+# --------------------------------------------------------------------------------
+# SATKIT TRAINING MODULES (INSTRUCTOR)
+# --------------------------------------------------------------------------------
+
+@router.get("/training/modules")
+def get_instructor_training_modules(db: Session = Depends(get_db), current_user: User = Depends(_require_instructor)):
+    # 1. Fetch all modules and their videos
+    modules = db.query(TrainingModule).order_by(TrainingModule.sort_order.asc(), TrainingModule.id.asc()).all()
+    
+    # 2. Fetch the user's completed videos
+    progress = db.query(UserTrainingProgress).filter(
+        UserTrainingProgress.user_id == current_user.id,
+        UserTrainingProgress.is_completed == True
+    ).all()
+    completed_video_ids = {p.video_id for p in progress}
+
+    result = []
+    for mod in modules:
+        vids = sorted(mod.videos, key=lambda x: x.sort_order)
+        mod_videos = []
+        for v in vids:
+            mod_videos.append({
+                "id": v.id,
+                "title": v.title,
+                "description": v.description,
+                "sort_order": v.sort_order,
+                "is_completed": v.id in completed_video_ids
+            })
+            
+        result.append({
+            "id": mod.id,
+            "title": mod.title,
+            "description": mod.description,
+            "sort_order": mod.sort_order,
+            "videos": mod_videos,
+            "completed_count": sum(1 for v in mod_videos if v["is_completed"]),
+            "total_count": len(mod_videos)
+        })
+        
+    return result
+
+@router.get("/training/videos/{video_id}")
+def get_instructor_training_video(video_id: int, db: Session = Depends(get_db), current_user: User = Depends(_require_instructor)):
+    video = db.query(TrainingVideo).filter(TrainingVideo.id == video_id).first()
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+        
+    completion = db.query(UserTrainingProgress).filter(
+        UserTrainingProgress.user_id == current_user.id,
+        UserTrainingProgress.video_id == video.id
+    ).first()
+    
+    return {
+        "id": video.id,
+        "module_id": video.module_id,
+        "title": video.title,
+        "description": video.description,
+        "notes": video.notes,
+        "is_completed": bool(completion and completion.is_completed)
+    }
+
+@router.get("/training/stream/{video_id}")
+def stream_training_video(video_id: int, db: Session = Depends(get_db), current_user: User = Depends(_require_instructor)):
+    video = db.query(TrainingVideo).filter(TrainingVideo.id == video_id).first()
+    if not video or not os.path.exists(video.video_path):
+        raise HTTPException(status_code=404, detail="Video file not found")
+        
+    # Standard file response is okay for small mp4s, 
+    # but a true streaming response might be better long-term.
+    return FileResponse(video.video_path, media_type="video/mp4")
+
+@router.post("/training/videos/{video_id}/complete")
+def complete_training_video(video_id: int, db: Session = Depends(get_db), current_user: User = Depends(_require_instructor)):
+    video = db.query(TrainingVideo).filter(TrainingVideo.id == video_id).first()
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+        
+    progress = db.query(UserTrainingProgress).filter(
+        UserTrainingProgress.user_id == current_user.id,
+        UserTrainingProgress.video_id == video_id
+    ).first()
+    
+    if not progress:
+        progress = UserTrainingProgress(
+            user_id=current_user.id,
+            video_id=video_id,
+        )
+        db.add(progress)
+        
+    progress.is_completed = True
+    progress.completed_at = datetime.utcnow()
+    db.commit()
+    
+    return {"success": True, "message": "Video marked as complete"}

@@ -2,130 +2,388 @@
 
 {% block title %}Admin Dashboard - SpacePoint{% endblock %}
 
+{% block head %}
+<style>
+    footer {
+        display: none !important;
+    }
+</style>
+<style>
+    /* Rocket Loading Animation */
+    @keyframes rocket-bob {
+        0%, 100% { transform: translateY(0) rotate(45deg); }
+        50% { transform: translateY(-20px) rotate(45deg); }
+    }
+    @keyframes exhaust {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(2); opacity: 0; }
+    }
+    .rocket-container {
+        position: relative;
+        display: inline-block;
+    }
+    .rocket-icon {
+        font-size: 4rem;
+        display: inline-block;
+        animation: rocket-bob 1.5s ease-in-out infinite;
+    }
+    .exhaust-cloud {
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 20px;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        animation: exhaust 0.8s ease-out infinite;
+    }
+</style>
+{% endblock %}
+
 {% block nav_actions %}
 <button onclick="logout()" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">Logout
     Admin</button>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-grow flex flex-col">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-grow flex flex-col gap-8">
 
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-display font-bold text-white tracking-tight">Applicants Review Dashboard</h1>
-        <button onclick="fetchApplicants()"
-            class="text-space-accent hover:text-white transition-colors flex items-center">
-            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                </path>
-            </svg>
-            Refresh
-        </button>
-    </div>
-
-    <!-- Applicants List View -->
-    <div id="list-view" class="w-full glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-xl">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-space-900/80 border-b border-white/10 text-sm tracking-wide text-gray-400 uppercase">
-                        <th class="py-4 px-6 font-semibold">Applicant Name</th>
-                        <th class="py-4 px-6 font-semibold">City</th>
-                        <th class="py-4 px-6 font-semibold">Status</th>
-                        <th class="py-4 px-6 font-semibold">Sub Date</th>
-                        <th class="py-4 px-6 font-semibold text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="applicants-table" class="text-gray-300 divide-y divide-white/5">
-                    <tr>
-                        <td colspan="5" class="py-10 text-center text-gray-500">Loading applicants...</td>
-                    </tr>
-                </tbody>
-            </table>
+    <!-- Overview Stats -->
+    <div id="stats-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="glass-panel p-4 rounded-xl border border-white/10 text-center">
+            <div class="text-sm text-gray-400 mb-1">Total Started</div>
+            <div class="text-2xl font-bold text-white" id="stat-started">...</div>
+        </div>
+        <div class="glass-panel p-4 rounded-xl border border-white/10 text-center">
+            <div class="text-sm text-gray-400 mb-1">Approved</div>
+            <div class="text-2xl font-bold text-green-400" id="stat-approved">...</div>
+        </div>
+        <div class="glass-panel p-4 rounded-xl border border-white/10 text-center">
+            <div class="text-sm text-gray-400 mb-1">Rejected</div>
+            <div class="text-2xl font-bold text-red-400" id="stat-rejected">...</div>
+        </div>
+        <div class="glass-panel p-4 rounded-xl border border-white/10 text-center">
+            <div class="text-sm text-gray-400 mb-1">Draft Apps</div>
+            <div class="text-2xl font-bold text-blue-400" id="stat-draft">...</div>
+        </div>
+        <div class="glass-panel p-4 rounded-xl border border-white/10 text-center">
+            <div class="text-sm text-gray-400 mb-1">Top Code</div>
+            <div class="text-xl font-bold text-space-accent mt-1" id="stat-coupon" style="word-break: break-all;">...
+            </div>
         </div>
     </div>
 
-    <!-- Applicant Detail Modal / View -->
-    <div id="detail-view" class="hidden flex-col gap-8 w-full">
-        <div class="flex items-center text-sm">
-            <button onclick="closeDetail()" class="text-gray-400 hover:text-white transition-colors flex items-center">
-                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Tabs Navigation -->
+    <div class="flex flex-wrap gap-3 border-b border-white/10 pb-4">
+        <button onclick="switchTab('apps')" id="tab-btn-apps"
+            class="px-5 py-2 bg-space-accent text-space-900 rounded-lg font-bold transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]">Applicants</button>
+        <button onclick="switchTab('invites')" id="tab-btn-invites"
+            class="px-5 py-2 bg-space-800 hover:bg-white/10 text-white rounded-lg font-bold transition-colors border border-white/10">Invitation
+            Codes</button>
+        <button onclick="switchTab('facs')" id="tab-btn-facs"
+            class="px-5 py-2 bg-space-800 hover:bg-white/10 text-white rounded-lg font-bold transition-colors border border-white/10">Facilitators</button>
+    </div>
+
+    <!-- TAB: Applicants -->
+    <div id="tab-apps" class="w-full flex-col gap-6 flex">
+        <div class="flex justify-between items-center">
+            <h2 class="text-2xl font-display font-bold text-white tracking-tight">Review Applicants</h2>
+            <button onclick="fetchApplicants(currentPage)"
+                class="text-space-accent hover:text-white transition-colors flex items-center text-sm font-medium">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                    </path>
                 </svg>
-                Back to Applicants List
+                Refresh
             </button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left col: Profile info -->
-            <div class="lg:col-span-1 space-y-6">
-                <div class="glass-panel p-6 rounded-2xl border border-white/10">
-                    <h3 class="text-xl font-display font-bold text-white mb-4">Profile</h3>
-                    <div id="det-profile" class="space-y-4 text-sm text-gray-300">
-                        <!-- injected by JS -->
-                    </div>
+        <div id="list-view" class="w-full glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                        <tr
+                            class="bg-space-900/80 border-b border-white/10 text-sm tracking-wide text-gray-400 uppercase">
+                            <th class="py-4 px-6 font-semibold">Applicant Name</th>
+                            <th class="py-4 px-6 font-semibold">City</th>
+                            <th class="py-4 px-6 font-semibold">Status</th>
+                            <th class="py-4 px-6 font-semibold">Sub Date</th>
+                            <th class="py-4 px-6 font-semibold text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applicants-table" class="text-gray-300 divide-y divide-white/5">
+                        <tr>
+                            <td colspan="5" class="py-10 text-center text-gray-500">Loading applicants...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination Controls -->
+            <div class="flex items-center justify-between border-t border-white/10 bg-space-900/50 px-6 py-3">
+                <div class="text-sm text-gray-400">
+                    Showing <span id="page-info">0-0 of 0</span>
                 </div>
-
-                <div class="glass-panel p-6 rounded-2xl border border-white/10">
-                    <h3 class="text-xl font-display font-bold text-white mb-4">Adjudication</h3>
-                    <form id="review-form" onsubmit="submitReview(event)">
-                        <input type="hidden" id="rev-uid">
-
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Decision</label>
-                        <select id="rev-status"
-                            class="w-full rounded-lg border-white/20 bg-space-900/80 px-3 py-2 text-white focus:ring-space-accent mb-4 border">
-                            <option value="UNDER_REVIEW">Under Review</option>
-                            <option value="APPROVED">Approve</option>
-                            <option value="REJECTED">Reject</option>
-                        </select>
-
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Feedback (Required on
-                            Reject)</label>
-                        <textarea id="rev-feedback" rows="4"
-                            class="w-full rounded-lg border-white/20 bg-space-900/80 px-3 py-2 text-white focus:ring-space-accent mb-4 border resize-none"></textarea>
-
-                        <div id="rev-error" class="text-red-400 text-sm hidden mb-4"></div>
-
-                        <button type="submit"
-                            class="w-full py-2 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]">Save
-                            Decision</button>
-                    </form>
+                <div class="flex gap-2">
+                    <button id="btn-prev" onclick="fetchApplicants(currentPage - 1)"
+                        class="px-3 py-1 bg-space-800 hover:bg-space-700 disabled:opacity-50 disabled:cursor-not-allowed border border-white/10 rounded text-sm text-white transition-colors">Prev</button>
+                    <button id="btn-next" onclick="fetchApplicants(currentPage + 1)"
+                        class="px-3 py-1 bg-space-800 hover:bg-space-700 disabled:opacity-50 disabled:cursor-not-allowed border border-white/10 rounded text-sm text-white transition-colors">Next</button>
                 </div>
             </div>
+        </div>
 
-            <!-- Right col: Submissions -->
-            <div class="lg:col-span-2 space-y-6">
-                <div class="glass-panel p-6 rounded-2xl border border-white/10">
-                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
-                        <h3 class="text-xl font-display font-bold text-white">Modules & Checklist</h3>
-                        <a id="det-dl-btn" href="#" target="_blank"
-                            class="px-4 py-2 bg-space-accent text-space-900 rounded-lg font-bold hover:bg-space-hover transition-colors text-sm flex items-center shadow-[0_0_10px_rgba(79,209,197,0.3)]">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                            </svg>
-                            Export Consolidated PDF
-                        </a>
+        <!-- Applicant Detail Modal / View -->
+        <div id="detail-view" class="hidden flex-col gap-6 w-full">
+            <div class="flex items-center text-sm">
+                <button onclick="closeDetail()"
+                    class="text-gray-400 hover:text-white transition-colors flex items-center">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Applicants List
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left col: Profile info -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="glass-panel p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-xl font-display font-bold text-white mb-4">Profile</h3>
+                        <div id="det-profile" class="space-y-4 text-sm text-gray-300"></div>
                     </div>
 
-                    <div id="det-checklist" class="space-y-6">
-                        <!-- injected by JS -->
+                    <div class="glass-panel p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-xl font-display font-bold text-white mb-4">Adjudication</h3>
+                        <form id="review-form" onsubmit="submitReview(event)">
+                            <input type="hidden" id="rev-uid">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Decision</label>
+                            <select id="rev-status"
+                                class="w-full rounded-lg border-white/20 bg-space-900/80 px-3 py-2 text-white focus:ring-space-accent mb-4 border">
+                                <option value="UNDER_REVIEW">Under Review</option>
+                                <option value="APPROVED">Approve</option>
+                                <option value="REJECTED">Reject</option>
+                            </select>
+
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Feedback (Required on
+                                Reject)</label>
+                            <textarea id="rev-feedback" rows="4"
+                                class="w-full rounded-lg border-white/20 bg-space-900/80 px-3 py-2 text-white focus:ring-space-accent mb-4 border resize-none"></textarea>
+
+                            <div id="rev-error" class="text-red-400 text-sm hidden mb-4"></div>
+
+                            <button type="submit"
+                                class="w-full py-2 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]">Save
+                                Decision</button>
+                        </form>
                     </div>
                 </div>
 
-                <div class="glass-panel p-6 rounded-2xl border border-white/10">
-                    <h3 class="text-xl font-display font-bold text-white mb-6">Video Summaries</h3>
-                    <div id="det-videos" class="space-y-6">
-                        <!-- injected by JS -->
+                <!-- Right col: Submissions -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="glass-panel p-6 rounded-2xl border border-white/10">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+                            <h3 class="text-xl font-display font-bold text-white">Modules & Checklist</h3>
+                            <a id="det-dl-btn" href="#" target="_blank"
+                                class="px-4 py-2 bg-space-accent text-space-900 rounded-lg font-bold hover:bg-space-hover transition-colors text-sm flex items-center shadow-[0_0_10px_rgba(79,209,197,0.3)]">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Export Consolidated PDF
+                            </a>
+                        </div>
+                        <div id="det-checklist" class="space-y-6"></div>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-xl font-display font-bold text-white mb-6">Video Summaries</h3>
+                        <div id="det-videos" class="space-y-6"></div>
                     </div>
                 </div>
             </div>
         </div>
+    </div> <!-- END TAB APPLICANTS -->
+
+    <!-- TAB: Invitation Codes -->
+    <div id="tab-invites" class="w-full flex-col gap-6 hidden">
+        <div class="flex justify-between items-center">
+            <h2 class="text-2xl font-display font-bold text-white tracking-tight">Manage Invitation Codes</h2>
+            <button onclick="document.getElementById('modal-add-invite').classList.remove('hidden')"
+                class="px-4 py-2 bg-space-accent text-space-900 rounded font-bold transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]">+
+                New Code</button>
+        </div>
+
+        <div class="w-full glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                        <tr
+                            class="bg-space-900/80 border-b border-white/10 text-sm tracking-wide text-gray-400 uppercase">
+                            <th class="py-4 px-6 font-semibold">Code</th>
+                            <th class="py-4 px-6 font-semibold text-center">Uses</th>
+                            <th class="py-4 px-6 font-semibold text-center">Status</th>
+                            <th class="py-4 px-6 font-semibold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invites-table" class="text-gray-300 divide-y divide-white/5">
+                        <tr>
+                            <td colspan="4" class="py-10 text-center text-gray-500">Loading codes...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div> <!-- END TAB INVITATIONS -->
+
+    <!-- TAB: Facilitators -->
+    <div id="tab-facs" class="w-full flex-col gap-6 hidden">
+        <div class="flex justify-between items-center">
+            <h2 class="text-2xl font-display font-bold text-white tracking-tight">Manage Facilitators</h2>
+            <button onclick="document.getElementById('modal-add-fac').classList.remove('hidden')"
+                class="px-4 py-2 bg-space-accent text-space-900 rounded font-bold transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]">+
+                New Facilitator</button>
+        </div>
+
+        <div class="w-full glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-xl">
+            <div class="p-4 bg-space-900/50 border-b border-white/10 text-sm text-gray-400 text-center">
+                Facilitators can access their own dashboard to add modules, slides, and manage instructor content.
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                        <tr
+                            class="bg-space-900/80 border-b border-white/10 text-sm tracking-wide text-gray-400 uppercase">
+                            <th class="py-4 px-6 font-semibold">Name</th>
+                            <th class="py-4 px-6 font-semibold">Email</th>
+                            <th class="py-4 px-6 font-semibold">Added Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="facs-table" class="text-gray-300 divide-y divide-white/5">
+                        <tr>
+                            <td colspan="3" class="py-10 text-center text-gray-500">Loading facilitators...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div> <!-- END TAB FACILITATORS -->
+
+</div>
+
+<!-- MODAL: Add Invitation Code -->
+<div id="modal-add-invite"
+    class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-space-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+        <h3 class="text-xl font-bold text-white mb-4">Add Invitation Code</h3>
+        <form onsubmit="submitAddInvite(event)" class="space-y-4">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Code</label>
+                <input type="text" id="add-inv-code" required
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Max Uses</label>
+                <input type="number" id="add-inv-max" required value="20"
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent">
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('modal-add-invite').classList.add('hidden')"
+                    class="flex-1 py-2 bg-space-800 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-colors">Cancel</button>
+                <button type="submit"
+                    class="flex-1 py-2 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: Add Facilitator -->
+<div id="modal-add-fac"
+    class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-space-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+        <h3 class="text-xl font-bold text-white mb-4">Add Facilitator</h3>
+        <form onsubmit="submitAddFacilitator(event)" class="space-y-4">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Full Name</label>
+                <input type="text" id="add-fac-name" required
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Email</label>
+                <input type="email" id="add-fac-email" required
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Password</label>
+                <input type="password" id="add-fac-pass" required
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent">
+            </div>
+            <div id="add-fac-err" class="text-red-400 text-sm hidden"></div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('modal-add-fac').classList.add('hidden')"
+                    class="flex-1 py-2 bg-space-800 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-colors">Cancel</button>
+                <button type="submit"
+                    class="flex-1 py-2 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: Loading Rocket -->
+<div id="loading-overlay" class="hidden fixed inset-0 bg-space-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+    <div class="text-center">
+        <div class="rocket-container mb-6">
+            <span class="rocket-icon">🚀</span>
+            <div class="exhaust-cloud"></div>
+        </div>
+        <h3 class="text-2xl font-display font-bold text-white mb-2">Preparing Contract...</h3>
+        <p class="text-gray-400">Sending personalized email to the instructor. Please wait.</p>
     </div>
 </div>
 
 <script>
+    let currentPage = 1;
+    let limit = 10;
+    let totalApplicants = 0;
+
+    // Tabs logic
+    function switchTab(tab) {
+        // Reset buttons
+        document.getElementById('tab-btn-apps').className = "px-5 py-2 bg-space-800 hover:bg-white/10 text-white rounded-lg font-bold transition-colors border border-white/10";
+        document.getElementById('tab-btn-invites').className = "px-5 py-2 bg-space-800 hover:bg-white/10 text-white rounded-lg font-bold transition-colors border border-white/10";
+        document.getElementById('tab-btn-facs').className = "px-5 py-2 bg-space-800 hover:bg-white/10 text-white rounded-lg font-bold transition-colors border border-white/10";
+
+        // Reset panels
+        document.getElementById('tab-apps').classList.add('hidden');
+        document.getElementById('tab-invites').classList.add('hidden');
+        document.getElementById('tab-facs').classList.add('hidden');
+        document.getElementById('tab-apps').classList.remove('flex');
+        document.getElementById('tab-invites').classList.remove('flex');
+        document.getElementById('tab-facs').classList.remove('flex');
+
+        // Activate selected
+        const activeClassBtn = "px-5 py-2 bg-space-accent text-space-900 rounded-lg font-bold transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]";
+        if (tab === 'apps') {
+            document.getElementById('tab-btn-apps').className = activeClassBtn;
+            document.getElementById('tab-apps').classList.remove('hidden');
+            document.getElementById('tab-apps').classList.add('flex');
+            closeDetail();
+            fetchApplicants(currentPage);
+        } else if (tab === 'invites') {
+            document.getElementById('tab-btn-invites').className = activeClassBtn;
+            document.getElementById('tab-invites').classList.remove('hidden');
+            document.getElementById('tab-invites').classList.add('flex');
+            fetchInvitations();
+        } else if (tab === 'facs') {
+            document.getElementById('tab-btn-facs').className = activeClassBtn;
+            document.getElementById('tab-facs').classList.remove('hidden');
+            document.getElementById('tab-facs').classList.add('flex');
+            fetchFacilitators();
+        }
+    }
+
     function getStatusBadge(st) {
         if (st === 'APPROVED') return `<span class="px-2 py-1 rounded bg-green-500/20 text-green-400 text-xs font-bold border border-green-500/30">APPROVED</span>`;
         if (st === 'REJECTED') return `<span class="px-2 py-1 rounded bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30">REJECTED</span>`;
@@ -133,14 +391,32 @@
         return `<span class="px-2 py-1 rounded bg-gray-500/20 text-gray-400 text-xs font-bold border border-gray-500/30">${st}</span>`;
     }
 
-    async function fetchApplicants() {
+    async function fetchStats() {
         try {
-            const resp = await fetch("/api/admin/applicants");
+            const res = await fetch('/api/admin/stats');
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('stat-started').innerText = data.total_started;
+                document.getElementById('stat-approved').innerText = data.approved;
+                document.getElementById('stat-rejected').innerText = data.rejected;
+                document.getElementById('stat-draft').innerText = data.draft_unsubmitted;
+                document.getElementById('stat-coupon').innerText = data.most_used_invitation_code || 'None';
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function fetchApplicants(page) {
+        if (page < 1) return;
+        try {
+            const resp = await fetch(`/api/admin/applicants?page=${page}&limit=${limit}`);
             if (resp.status === 401 || resp.status === 403) {
                 window.location.href = "/admin/login";
                 return;
             }
-            const data = await resp.json();
+            const payload = await resp.json();
+            const data = payload.data;
+            totalApplicants = payload.total;
+            currentPage = page;
 
             const tbody = document.getElementById('applicants-table');
             tbody.innerHTML = '';
@@ -159,21 +435,162 @@
                         <div class="font-medium text-white">${app.name}</div>
                         <div class="text-xs text-gray-500">${app.email}</div>
                     </td>
-                    <td class="py-4 px-6">${app.city}</td>
+                    <td class="py-4 px-6 text-sm">${app.city}</td>
                     <td class="py-4 px-6">${getStatusBadge(app.status)}</td>
                     <td class="py-4 px-6 text-sm text-gray-400">${d}</td>
                     <td class="py-4 px-6 text-right">
-                        <span class="text-space-accent opacity-0 group-hover:opacity-100 transition-opacity">Review &rarr;</span>
+                        <span class="text-space-accent opacity-0 group-hover:opacity-100 transition-opacity text-sm">Review &rarr;</span>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Update pagination info
+            const startNode = (currentPage - 1) * limit + (totalApplicants > 0 ? 1 : 0);
+            const endNode = Math.min(currentPage * limit, totalApplicants);
+            document.getElementById('page-info').innerText = `${startNode}-${endNode} of ${totalApplicants}`;
+
+            document.getElementById('btn-prev').disabled = currentPage === 1;
+            document.getElementById('btn-next').disabled = currentPage * limit >= totalApplicants;
 
         } catch (e) {
             console.error(e);
         }
     }
 
+    async function fetchInvitations() {
+        try {
+            const res = await fetch('/api/admin/invitations');
+            if (res.ok) {
+                const data = await res.json();
+                const tbody = document.getElementById('invites-table');
+                tbody.innerHTML = '';
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-gray-500">No codes found.</td></tr>`;
+                }
+
+                data.forEach(inv => {
+                    let activeBtnClass = inv.is_active ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-gray-500/20 text-gray-400 border-gray-500/30";
+                    let activeBtnText = inv.is_active ? "Active" : "Inactive";
+                    let tr = document.createElement('tr');
+                    tr.className = "border-b border-white/5 last:border-0";
+                    tr.innerHTML = `
+                        <td class="py-3 px-6 font-mono font-bold text-white text-lg">${inv.code}</td>
+                        <td class="py-3 px-6 text-center text-gray-300 text-sm">${inv.used_count} / ${inv.max_uses}</td>
+                        <td class="py-3 px-6 text-center">
+                            <button onclick="toggleInvite(${inv.id}, ${!inv.is_active})" class="px-3 py-1 text-xs border rounded-full font-bold ${activeBtnClass}">${activeBtnText}</button>
+                        </td>
+                        <td class="py-3 px-6 text-right">
+                            <button onclick="deleteInvite(${inv.id})" class="text-red-400 hover:text-red-300 text-sm font-medium">Delete</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function submitAddInvite(e) {
+        e.preventDefault();
+        const code = document.getElementById('add-inv-code').value;
+        const max = document.getElementById('add-inv-max').value;
+        try {
+            const res = await fetch('/api/admin/invitations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code, max_uses: parseInt(max), is_active: true })
+            });
+            if (res.ok) {
+                document.getElementById('add-inv-code').value = '';
+                document.getElementById('modal-add-invite').classList.add('hidden');
+                fetchInvitations();
+            } else {
+                const text = await res.json();
+                alert("Error: " + text.detail);
+            }
+        } catch (e) { alert("Network error"); }
+    }
+
+    async function toggleInvite(id, newStatus) {
+        try {
+            const res = await fetch(`/api/admin/invitations/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_active: newStatus })
+            });
+            if (res.ok) fetchInvitations();
+        } catch (e) { console.error(e); }
+    }
+
+    async function deleteInvite(id) {
+        if (!confirm("Are you sure you want to delete this invitation code?")) return;
+        try {
+            const res = await fetch(`/api/admin/invitations/${id}`, { method: 'DELETE' });
+            if (res.ok) fetchInvitations();
+        } catch (e) { console.error(e); }
+    }
+
+    async function submitAddFacilitator(e) {
+        e.preventDefault();
+        const err = document.getElementById('add-fac-err');
+        err.classList.add('hidden');
+
+        const name = document.getElementById('add-fac-name').value;
+        const email = document.getElementById('add-fac-email').value;
+        const pass = document.getElementById('add-fac-pass').value;
+
+        try {
+            const res = await fetch('/api/admin/facilitators', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, email: email, password: pass })
+            });
+            if (res.ok) {
+                document.getElementById('add-fac-name').value = '';
+                document.getElementById('add-fac-email').value = '';
+                document.getElementById('add-fac-pass').value = '';
+                document.getElementById('modal-add-fac').classList.add('hidden');
+                alert("Facilitator created successfully.");
+                fetchFacilitators();
+            } else {
+                const text = await res.json();
+                err.innerText = text.detail || "Error occurred";
+                err.classList.remove('hidden');
+            }
+        } catch (e) {
+            err.innerText = "Network error";
+            err.classList.remove('hidden');
+        }
+    }
+
+    async function fetchFacilitators() {
+        try {
+            const res = await fetch('/api/admin/facilitators');
+            if (res.ok) {
+                const data = await res.json();
+                const tbody = document.getElementById('facs-table');
+                tbody.innerHTML = '';
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="py-8 text-center text-gray-500">No facilitators found.</td></tr>`;
+                }
+
+                data.forEach(fac => {
+                    let d = new Date(fac.created_at).toLocaleDateString();
+                    let tr = document.createElement('tr');
+                    tr.className = "border-b border-white/5 last:border-0";
+                    tr.innerHTML = `
+                        <td class="py-4 px-6 font-medium text-white">${fac.name}</td>
+                        <td class="py-4 px-6 text-gray-400">${fac.email}</td>
+                        <td class="py-4 px-6 text-gray-400">${d}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        } catch (e) { console.error(e); }
+    }
+
+
+    /* Detail View Logic Below Here */
     async function openDetail(id) {
         document.getElementById('list-view').classList.add('hidden');
         document.getElementById('detail-view').classList.remove('hidden');
@@ -216,9 +633,7 @@
             try {
                 const checkResp = await fetch(`/api/admin/applicants/${id}/checklist`);
                 const checklistData = await checkResp.json();
-
                 let checkHtml = '';
-
                 if (checklistData.length === 0) {
                     checkHtml = '<p class="text-gray-500 text-sm italic">No checklist data found.</p>';
                 }
@@ -227,10 +642,8 @@
                     let modBadge = '';
                     let modActions = '';
                     let sub = mod.submission;
-
                     if (sub) {
                         modBadge = getStatusBadge(sub.status);
-
                         let d = new Date(sub.submitted_at).toLocaleDateString();
                         modActions = `
                             <div class="mt-4 bg-black/30 p-4 rounded-lg border border-white/5 space-y-4">
@@ -279,12 +692,9 @@
                         const icon = checked
                             ? '<svg class="w-5 h-5 text-space-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
                             : '<svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
-
                         return `
                             <div class="flex items-start gap-3 border-b border-white/5 pb-3 mb-3 last:border-0 last:pb-0 last:mb-0">
-                                <div class="flex-shrink-0 mt-0.5">
-                                    ${icon}
-                                </div>
+                                <div class="flex-shrink-0 mt-0.5">${icon}</div>
                                 <div class="font-medium text-white max-w-lg">
                                     <span class="text-gray-400 mr-2">${item.item_code}</span>
                                     <span class="${checked ? 'text-gray-200' : 'text-gray-500'}">${item.title}</span>
@@ -294,9 +704,7 @@
                     };
 
                     if (mod.items_no_section && mod.items_no_section.length > 0) {
-                        mod.items_no_section.forEach(item => {
-                            checkHtml += renderItem(item);
-                        });
+                        mod.items_no_section.forEach(item => { checkHtml += renderItem(item); });
                     }
 
                     if (mod.sections && mod.sections.length > 0) {
@@ -306,18 +714,14 @@
                                     <h5 class="text-sm font-bold text-gray-400 border-b border-white/10 pb-2 mb-3 tracking-wide uppercase">${sec.title}</h5>
                                     <div class="space-y-3 pl-1">
                             `;
-                            sec.items.forEach(item => {
-                                checkHtml += renderItem(item);
-                            });
+                            sec.items.forEach(item => { checkHtml += renderItem(item); });
                             checkHtml += `</div></div>`;
                         });
                     }
 
                     checkHtml += `</div></div></div>`;
                 });
-
                 document.getElementById('det-checklist').innerHTML = checkHtml;
-
             } catch (e) {
                 console.error(e);
                 document.getElementById('det-checklist').innerHTML = '<p class="text-red-400 text-sm">Error loading checklist data.</p>';
@@ -338,9 +742,7 @@
             });
             document.getElementById('det-videos').innerHTML = vhtml;
 
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     function closeDetail() {
@@ -371,15 +773,10 @@
                 body: JSON.stringify({ status: status, feedback: fb })
             });
             if (resp.ok) {
-                // Refresh detail view
                 const uid = document.getElementById('rev-uid').value;
                 openDetail(uid);
-            } else {
-                alert("Failed to update module decision");
-            }
-        } catch (e) {
-            alert("Error updating decision: " + e.message);
-        }
+            } else { alert("Failed to update module decision"); }
+        } catch (e) { alert("Error updating decision: " + e.message); }
     }
 
     async function submitReview(e) {
@@ -388,14 +785,26 @@
         const st = document.getElementById('rev-status').value;
         const fb = document.getElementById('rev-feedback').value;
         const err = document.getElementById('rev-error');
-
         err.classList.add('hidden');
-
         if (st === 'REJECTED' && fb.trim() === '') {
             err.textContent = "Feedback is required for rejections to help applicants improve.";
             err.classList.remove('hidden');
             return;
         }
+
+        const overlay = document.getElementById('loading-overlay');
+        const loadingHeader = overlay.querySelector('h3');
+        const loadingText = overlay.querySelector('p');
+        
+        if (st === 'APPROVED') {
+            loadingHeader.innerText = "Launching Instructor! 🚀";
+            loadingText.innerText = "Generating contract, converting to PDF, and sending credentials email...";
+        } else {
+            loadingHeader.innerText = "Updating Review...";
+            loadingText.innerText = "Please wait a moment while we process the decision.";
+        }
+
+        overlay.classList.remove('hidden');
 
         try {
             const resp = await fetch(`/api/admin/applicants/${uid}/review`, {
@@ -404,17 +813,20 @@
                 body: JSON.stringify({ status: st, feedback: fb })
             });
             const data = await resp.json();
+            
+            overlay.classList.add('hidden');
 
             if (resp.ok) {
-                // Return to list
                 alert(data.message || "Decision saved successfully.");
                 closeDetail();
-                fetchApplicants();
+                fetchApplicants(currentPage);
+                fetchStats();
             } else {
                 err.textContent = data.detail || "Error saving decision";
                 err.classList.remove('hidden');
             }
         } catch (error) {
+            overlay.classList.add('hidden');
             err.textContent = "Network error";
             err.classList.remove('hidden');
         }
@@ -426,6 +838,7 @@
     }
 
     // Init
-    fetchApplicants();
+    fetchStats();
+    fetchApplicants(1);
 </script>
 {% endblock %}

@@ -1,0 +1,265 @@
+{% extends "base_instructor.html" %}
+
+{% block title %}Training Player | SpacePoint Instructor{% endblock %}
+{% block page_title %}Training Player{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6 animate-fade-in-up">
+
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-2 text-sm text-gray-400 mb-4">
+        <a href="/instructor/satkit-training" class="hover:text-space-accent transition-colors">SatKit Training
+            Modules</a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+        <span id="bc-module" class="text-gray-300">Loading...</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+        <span id="bc-video" class="text-white font-medium">Loading...</span>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-6">
+
+        <!-- Left: Video Player & Notes -->
+        <div class="w-full lg:w-3/4 space-y-6">
+
+            <!-- Video Container -->
+            <div class="glass-panel border border-white/10 rounded-2xl overflow-hidden shadow-2xl bg-black">
+                <video id="video-player" class="w-full aspect-video" controls controlsList="nodownload">
+                    <source id="video-source" src="" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <!-- Video Info & Notes -->
+            <div class="glass-panel border border-white/5 rounded-2xl p-6 md:p-8">
+                <div
+                    class="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-6 border-b border-white/10">
+                    <div>
+                        <h1 id="video-title" class="text-2xl font-display font-bold text-white mb-2">Loading...</h1>
+                        <p id="video-desc" class="text-gray-400"></p>
+                    </div>
+
+                    <button id="complete-btn" onclick="markComplete()"
+                        class="shrink-0 flex items-center gap-2 px-6 py-3 bg-space-accent text-space-900 hover:bg-space-hover font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(79,209,197,0.3)] min-w-[200px] justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                            </path>
+                        </svg>
+                        <span id="complete-text">Mark Complete & Next</span>
+                    </button>
+                </div>
+
+                <div class="mt-8 prose prose-invert prose-space w-full max-w-none">
+                    <h3 class="font-display font-bold text-lg text-white mb-4">Instructor Notes</h3>
+                    <div id="video-notes" class="text-gray-300 leading-relaxed">
+                        Loading notes...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Playlist -->
+        <div class="w-full lg:w-1/4">
+            <div class="glass-panel border border-white/5 rounded-2xl overflow-hidden sticky top-24">
+                <div class="p-5 border-b border-white/5 bg-space-900/80 backdrop-blur">
+                    <h3 class="font-display font-bold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-space-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                            </path>
+                        </svg>
+                        Module Contents
+                    </h3>
+                </div>
+                <div id="playlist-container" class="divide-y divide-white/5 max-h-[600px] overflow-y-auto">
+                    <div class="p-6 text-center text-gray-500">Loading playlist...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    /* Light customization for any injected HTML notes */
+    .prose-space a {
+        color: #4FD1C5;
+        text-decoration: underline;
+    }
+
+    .prose-space code {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-family: monospace;
+    }
+</style>
+
+<script>
+    const CURRENT_VIDEO_ID = {{ video_id }};
+    let currentModuleIndex = -1;
+    let currentVideoIndex = -1;
+    let trainingData = [];
+
+    document.addEventListener("DOMContentLoaded", initPlayer);
+
+    async function initPlayer() {
+        try {
+            // 1. Fetch entire training tree to build the playlist and find "Next"
+            const treeResp = await fetch('/api/instructor/training/modules');
+            if (treeResp.ok) {
+                trainingData = await treeResp.json();
+            }
+
+            // 2. Fetch specific video data
+            const vidResp = await fetch(`/api/instructor/training/videos/${CURRENT_VIDEO_ID}`);
+            if (!vidResp.ok) {
+                document.getElementById('video-title').textContent = "Video not found or access denied";
+                return;
+            }
+            const videoData = await vidResp.json();
+
+            // Setup UI
+            document.getElementById('video-title').textContent = videoData.title;
+            document.getElementById('video-desc').textContent = videoData.description || '';
+            document.getElementById('video-notes').innerHTML = videoData.notes ? videoData.notes.replace(/\n/g, '<br>') : '<i>No notes provided for this video.</i>';
+            document.getElementById('bc-video').textContent = videoData.title;
+
+            // Setup Video element
+            const videoSource = document.getElementById('video-source');
+            videoSource.src = `/api/instructor/training/stream/${CURRENT_VIDEO_ID}`;
+            document.getElementById('video-player').load();
+
+            // Update button if already completed
+            if (videoData.is_completed) {
+                setButtonCompletedState();
+            }
+
+            renderPlaylist(videoData.module_id);
+
+        } catch (e) {
+            console.error(e);
+            alert("Error loading video data.");
+        }
+    }
+
+    function renderPlaylist(activeModuleId) {
+        const container = document.getElementById('playlist-container');
+        container.innerHTML = "";
+
+        // Find the active module to set breadcrumb and track indices
+        const activeModule = trainingData.find(m => m.id === activeModuleId);
+        if (activeModule) {
+            document.getElementById('bc-module').textContent = activeModule.title;
+        }
+
+        trainingData.forEach((mod, mIdx) => {
+            // Only show the playlist for the current module to keep it clean, 
+            // or show all. Let's show all modules but collapse non-active ones.
+            const isActiveMod = mod.id === activeModuleId;
+
+            let videosHtml = mod.videos.map((vid, vIdx) => {
+                const isPlaying = vid.id === CURRENT_VIDEO_ID;
+                if (isPlaying) {
+                    currentModuleIndex = mIdx;
+                    currentVideoIndex = vIdx;
+                }
+
+                return `
+                    <a href="/instructor/training/player/${vid.id}" 
+                        class="flex items-start gap-3 p-4 transition-colors ${isPlaying ? 'bg-space-accent/10 border-l-2 border-space-accent' : 'hover:bg-white/5'}">
+                        <div class="mt-0.5 shrink-0">
+                            ${isPlaying
+                        ? `<svg class="w-5 h-5 text-space-accent" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" fill-rule="evenodd"></path></svg>`
+                        : (vid.is_completed
+                            ? `<svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>`
+                            : `<div class="w-5 h-5 rounded-full border-2 border-gray-600 flex items-center justify-center text-[9px] font-bold text-gray-500">${vid.sort_order}</div>`
+                        )
+                    }
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium ${isPlaying ? 'text-space-accent' : 'text-gray-300'} truncate">${vid.title}</p>
+                            <p class="text-xs text-gray-500 mt-0.5">${vid.is_completed ? 'Completed' : 'Pending'}</p>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+
+            if (isActiveMod || mod.videos.length > 0) {
+                container.innerHTML += `
+                    <div class="${isActiveMod ? '' : 'opacity-60'}">
+                        <div class="px-4 py-3 bg-black/20 text-xs font-bold text-gray-400 uppercase tracking-wider sticky top-0 backdrop-blur z-10">
+                            ${mod.title}
+                        </div>
+                        <div class="divide-y divide-white/5">
+                            ${videosHtml}
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    }
+
+    function setButtonCompletedState() {
+        const btn = document.getElementById('complete-btn');
+        btn.classList.remove('bg-space-accent', 'text-space-900', 'hover:bg-space-hover');
+        btn.classList.add('bg-space-800', 'text-gray-300', 'border', 'border-white/10');
+        document.getElementById('complete-text').textContent = "Completed - Next Video";
+    }
+
+    async function markComplete() {
+        const btn = document.getElementById('complete-btn');
+        btn.disabled = true;
+
+        try {
+            await fetch(`/api/instructor/training/videos/${CURRENT_VIDEO_ID}/complete`, { method: 'POST' });
+
+            // Find next video
+            let nextVidId = null;
+            const currentMod = trainingData[currentModuleIndex];
+
+            // Check if there is a next video in the SAME module
+            if (currentVideoIndex + 1 < currentMod.videos.length) {
+                nextVidId = currentMod.videos[currentVideoIndex + 1].id;
+            }
+            // Else check if there is a next module entirely
+            else if (currentModuleIndex + 1 < trainingData.length) {
+                const nextMod = trainingData[currentModuleIndex + 1];
+                if (nextMod.videos.length > 0) {
+                    nextVidId = nextMod.videos[0].id;
+                }
+            }
+
+            if (nextVidId) {
+                window.location.href = `/instructor/training/player/${nextVidId}`;
+            } else {
+                // End of all training
+                window.location.href = '/instructor/satkit-training';
+            }
+
+        } catch (e) {
+            console.error(e);
+            alert("Error updating progress");
+            btn.disabled = false;
+        }
+    }
+</script>
+{% endblock %}

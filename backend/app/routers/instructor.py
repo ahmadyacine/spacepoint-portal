@@ -48,6 +48,15 @@ def satkit_training(request: Request, instructor: User = Depends(get_current_ins
         "active_page": "satkit"
     })
 
+@router.get("/training/player/{video_id}")
+def training_player(request: Request, video_id: int, instructor: User = Depends(get_current_instructor)):
+    return templates.TemplateResponse("instructor/training_player.html", {
+        "request": request, 
+        "user": instructor,
+        "video_id": video_id,
+        "active_page": "satkit"
+    })
+
 @router.get("/library")
 def library(request: Request, instructor: User = Depends(get_current_instructor)):
     return templates.TemplateResponse("instructor/library.html", {
