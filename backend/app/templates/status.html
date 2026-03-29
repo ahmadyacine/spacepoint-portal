@@ -67,11 +67,41 @@
             const statusTitle = document.getElementById('status-title');
             const statusMsg = document.getElementById('status-msg');
 
-            if (data.status === 'UNDER_REVIEW') {
+            if (data.status === 'PHASE_1_APPROVED') {
+                iconContainer.classList.add('border-purple-500', 'bg-purple-500/20', 'text-purple-400');
+                iconContainer.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>`;
+                statusTitle.textContent = "Phase 1 Approved!";
+                statusMsg.textContent = "Congratulations! Please submit your presentation video link (Google Drive or YouTube) below to proceed to the final review.";
+                
+                // Add Presentation Link Form dynamically
+                const formContainer = document.createElement('div');
+                formContainer.className = "mt-6 bg-space-900/40 p-6 rounded-xl border border-white/5";
+                formContainer.innerHTML = `
+                    <form id="presentation-form" onsubmit="submitPresentation(event)" class="space-y-4">
+                        <div>
+                            <label for="video_url" class="block text-sm font-medium text-gray-300 text-left mb-1">Presentation Video Link (Google Drive / YouTube)</label>
+                            <input type="url" id="video_url" required placeholder="https://..." class="block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                        </div>
+                        <div id="pres-submit-error" class="hidden text-sm text-red-400 text-center font-medium"></div>
+                        <button type="submit" id="btn-pres-submit" class="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-bold rounded-lg text-space-900 bg-space-accent hover:bg-space-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-space-accent focus:ring-offset-space-900 transition-colors shadow-[0_0_15px_rgba(79,209,197,0.3)]">
+                            Submit Presentation
+                        </button>
+                    </form>
+                `;
+                document.getElementById('status-container').appendChild(formContainer);
+
+            } else if (data.status === 'UNDER_REVIEW') {
                 iconContainer.classList.add('border-blue-500', 'bg-blue-500/20', 'text-blue-400');
                 iconContainer.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
                 statusTitle.textContent = "Under Review";
                 statusMsg.textContent = "Your application is under review. We will contact you if you are shortlisted for the next phase.";
+                // Optionally show the link if they just submitted it
+                if (data.presentation_link) {
+                    const presInfo = document.createElement('div');
+                    presInfo.className = "mt-4 text-sm text-gray-400";
+                    presInfo.innerHTML = `Presentation submitted: <a href="${data.presentation_link}" target="_blank" class="text-space-accent hover:underline break-all">${data.presentation_link}</a>`;
+                    document.getElementById('status-msg').appendChild(presInfo);
+                }
             } else if (data.status === 'APPROVED') {
                 iconContainer.classList.add('border-green-500', 'bg-green-500/20', 'text-green-400');
                 iconContainer.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
@@ -97,6 +127,7 @@
                 // IN_PROGRESS
                 window.location.href = "/tasks/videos";
             }
+
 
             if (data.submitted_at) {
                 const d = new Date(data.submitted_at);
@@ -124,6 +155,41 @@
             }
         } catch (e) {
             console.error("Error reopening:", e);
+        }
+    }
+
+    async function submitPresentation(e) {
+        e.preventDefault();
+        const urlInput = document.getElementById('video_url').value;
+        const errDiv = document.getElementById('pres-submit-error');
+        const btn = document.getElementById('btn-pres-submit');
+
+        errDiv.classList.add('hidden');
+        btn.disabled = true;
+        btn.textContent = "Submitting...";
+
+        const formData = new FormData();
+        formData.append("video_link", urlInput);
+
+        try {
+            const resp = await fetch("/api/applicant/presentation/submit", {
+                method: "POST",
+                body: formData
+            });
+
+            if (resp.ok) {
+                window.location.reload();
+            } else {
+                const data = await resp.json();
+                errDiv.textContent = data.detail || "Error submitting presentation.";
+                errDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            errDiv.textContent = "Network error during submission.";
+            errDiv.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Submit Presentation";
         }
     }
 

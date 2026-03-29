@@ -27,3 +27,12 @@ class ResearchSubmission(Base):
     original_filename = Column(String, nullable=False)
     content_text = Column(String, nullable=True)
     submitted_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class PresentationSubmission(Base):
+    __tablename__ = "presentation_submissions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
+    video_link = Column(String, nullable=False)
+    submitted_at = Column(DateTime(timezone=True), server_default=func.now())
+

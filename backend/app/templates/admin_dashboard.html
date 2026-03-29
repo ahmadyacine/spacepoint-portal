@@ -1,13 +1,8 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 
-{% block title %}Admin Dashboard - SpacePoint{% endblock %}
+{% block page_title %}Admin Console{% endblock %}
 
 {% block head %}
-<style>
-    footer {
-        display: none !important;
-    }
-</style>
 <style>
     /* Rocket Loading Animation */
     @keyframes rocket-bob {
@@ -41,11 +36,6 @@
 </style>
 {% endblock %}
 
-{% block nav_actions %}
-<button onclick="logout()" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">Logout
-    Admin</button>
-{% endblock %}
-
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-grow flex flex-col gap-8">
 
@@ -74,16 +64,6 @@
         </div>
     </div>
 
-    <!-- Tabs Navigation -->
-    <div class="flex flex-wrap gap-3 border-b border-white/10 pb-4">
-        <button onclick="switchTab('apps')" id="tab-btn-apps"
-            class="px-5 py-2 bg-space-accent text-space-900 rounded-lg font-bold transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]">Applicants</button>
-        <button onclick="switchTab('invites')" id="tab-btn-invites"
-            class="px-5 py-2 bg-space-800 hover:bg-white/10 text-white rounded-lg font-bold transition-colors border border-white/10">Invitation
-            Codes</button>
-        <button onclick="switchTab('facs')" id="tab-btn-facs"
-            class="px-5 py-2 bg-space-800 hover:bg-white/10 text-white rounded-lg font-bold transition-colors border border-white/10">Facilitators</button>
-    </div>
 
     <!-- TAB: Applicants -->
     <div id="tab-apps" class="w-full flex-col gap-6 flex">
@@ -163,7 +143,8 @@
                             <select id="rev-status"
                                 class="w-full rounded-lg border-white/20 bg-space-900/80 px-3 py-2 text-white focus:ring-space-accent mb-4 border">
                                 <option value="UNDER_REVIEW">Under Review</option>
-                                <option value="APPROVED">Approve</option>
+                                <option value="PHASE_1_APPROVED">Phase 1 Approved</option>
+                                <option value="APPROVED">Final Approval</option>
                                 <option value="REJECTED">Reject</option>
                             </select>
 
@@ -175,9 +156,23 @@
                             <div id="rev-error" class="text-red-400 text-sm hidden mb-4"></div>
 
                             <button type="submit"
-                                class="w-full py-2 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]">Save
+                                class="w-full py-2 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)] mb-4">Save
                                 Decision</button>
+                            
+                            <!-- Delete Button -->
+                            <div class="border-t border-white/10 pt-4">
+                                <button type="button" onclick="openDeleteModal()"
+                                    class="w-full flex items-center justify-center gap-2 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold border border-red-500/50 rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    Delete Application
+                                </button>
+                            </div>
                         </form>
+                    </div>
+
+                    <div id="det-presentation" class="hidden glass-panel p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-xl font-display font-bold text-white mb-4">Phase 2 Presentation</h3>
+                        <div id="det-presentation-link"></div>
                     </div>
                 </div>
 
@@ -206,6 +201,78 @@
             </div>
         </div>
     </div> <!-- END TAB APPLICANTS -->
+
+    <!-- TAB: Instructors -->
+    <div id="tab-instructors" class="w-full flex-col gap-6 hidden">
+        <div class="flex justify-between items-center">
+            <h2 class="text-2xl font-display font-bold text-white tracking-tight">Approved Instructors</h2>
+            <button onclick="fetchInstructors()"
+                class="text-space-accent hover:text-white transition-colors flex items-center text-sm font-medium">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                    </path>
+                </svg>
+                Refresh
+            </button>
+        </div>
+
+        <div id="instructors-list-view" class="w-full glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                        <tr class="bg-space-900/80 border-b border-white/10 text-xs tracking-wide text-gray-400 uppercase">
+                            <th class="py-4 px-6 font-semibold">Name &amp; Email</th>
+                            <th class="py-4 px-6 font-semibold">City</th>
+                            <th class="py-4 px-6 font-semibold">Date Joined</th>
+                            <th class="py-4 px-6 font-semibold text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="instructors-table" class="text-gray-300 divide-y divide-white/5">
+                        <tr>
+                            <td colspan="4" class="py-10 text-center text-gray-500">
+                                <div class="rocket-container"><span class="rocket-icon">🚀</span><div class="exhaust-cloud"></div></div>
+                                <div class="mt-4 animate-pulse">Loading instructors data...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Instructor Detail Modal / View -->
+        <div id="instructor-detail-view" class="hidden flex-col gap-6 w-full">
+            <div class="flex items-center text-sm">
+                <button onclick="closeInstructorDetail()"
+                    class="text-gray-400 hover:text-white transition-colors flex items-center">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Instructors List
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left col: Profile info -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="glass-panel p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-xl font-display font-bold text-white mb-4">Profile</h3>
+                        <div id="inst-det-profile" class="space-y-4 text-sm text-gray-300"></div>
+                    </div>
+                </div>
+
+                <!-- Right col: Documents -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="glass-panel p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-xl font-display font-bold text-white mb-4">Personal Documents</h3>
+                        <div id="inst-documents-list" class="space-y-4">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- END TAB INSTRUCTORS -->
 
     <!-- TAB: Invitation Codes -->
     <div id="tab-invites" class="w-full flex-col gap-6 hidden">
@@ -343,6 +410,25 @@
     </div>
 </div>
 
+<!-- MODAL: Delete Applicant Confirmation -->
+<div id="modal-delete-app"
+    class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-space-900 border border-red-500/30 rounded-2xl p-6 shadow-2xl">
+        <h3 class="text-xl font-bold text-red-500 mb-2 flex items-center gap-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            Delete Application
+        </h3>
+        <p class="text-gray-300 text-sm mb-6 leading-relaxed">Are you sure you want to permanently delete this application? This action cannot be undone and will permanently remove all associated profile data, videos, files, and checklist submissions.</p>
+        <div class="flex gap-3">
+            <button type="button" onclick="document.getElementById('modal-delete-app').classList.add('hidden')"
+                class="flex-1 py-2 bg-space-800 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-colors">Cancel</button>
+            <button type="button" onclick="confirmDeleteApplicant()"
+                id="btn-confirm-delete"
+                class="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors flex items-center justify-center">Yes, Delete All Data</button>
+        </div>
+    </div>
+</div>
+
 <script>
     let currentPage = 1;
     let limit = 10;
@@ -350,34 +436,46 @@
 
     // Tabs logic
     function switchTab(tab) {
-        // Reset buttons
-        document.getElementById('tab-btn-apps').className = "px-5 py-2 bg-space-800 hover:bg-white/10 text-white rounded-lg font-bold transition-colors border border-white/10";
-        document.getElementById('tab-btn-invites').className = "px-5 py-2 bg-space-800 hover:bg-white/10 text-white rounded-lg font-bold transition-colors border border-white/10";
-        document.getElementById('tab-btn-facs').className = "px-5 py-2 bg-space-800 hover:bg-white/10 text-white rounded-lg font-bold transition-colors border border-white/10";
+        // Reset sidebar tabs
+        document.querySelectorAll('.nav-link-desk').forEach(el => {
+            el.className = "nav-link-desk flex items-center whitespace-nowrap gap-3 px-4 py-3 rounded-xl transition-all text-gray-400 hover:text-white hover:bg-white/5 border border-transparent";
+        });
+        document.querySelectorAll('.nav-link-mob').forEach(el => {
+            el.className = "nav-link-mob flex items-center whitespace-nowrap gap-3 px-4 py-3 rounded-xl transition-all text-gray-400 hover:text-white hover:bg-white/5 border border-transparent";
+        });
 
         // Reset panels
-        document.getElementById('tab-apps').classList.add('hidden');
-        document.getElementById('tab-invites').classList.add('hidden');
-        document.getElementById('tab-facs').classList.add('hidden');
-        document.getElementById('tab-apps').classList.remove('flex');
-        document.getElementById('tab-invites').classList.remove('flex');
-        document.getElementById('tab-facs').classList.remove('flex');
+        ['tab-apps', 'tab-instructors', 'tab-invites', 'tab-facs'].forEach(id => {
+            const el = document.getElementById(id);
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+        });
 
         // Activate selected
-        const activeClassBtn = "px-5 py-2 bg-space-accent text-space-900 rounded-lg font-bold transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]";
+        const activeClassBtn = "flex items-center whitespace-nowrap gap-3 px-4 py-3 rounded-xl transition-all bg-space-accent/10 border border-space-accent/30 text-space-accent font-semibold";
         if (tab === 'apps') {
-            document.getElementById('tab-btn-apps').className = activeClassBtn;
+            document.getElementById('nav-desk-apps').className = "nav-link-desk " + activeClassBtn;
+            document.getElementById('nav-mob-apps').className = "nav-link-mob " + activeClassBtn;
             document.getElementById('tab-apps').classList.remove('hidden');
             document.getElementById('tab-apps').classList.add('flex');
             closeDetail();
             fetchApplicants(currentPage);
+        } else if (tab === 'instructors') {
+            document.getElementById('nav-desk-instructors').className = "nav-link-desk " + activeClassBtn;
+            document.getElementById('nav-mob-instructors').className = "nav-link-mob " + activeClassBtn;
+            document.getElementById('tab-instructors').classList.remove('hidden');
+            document.getElementById('tab-instructors').classList.add('flex');
+            closeInstructorDetail();
+            // fetchInstructors(); // Already fetched on init/manual refresh
         } else if (tab === 'invites') {
-            document.getElementById('tab-btn-invites').className = activeClassBtn;
+            document.getElementById('nav-desk-invites').className = "nav-link-desk " + activeClassBtn;
+            document.getElementById('nav-mob-invites').className = "nav-link-mob " + activeClassBtn;
             document.getElementById('tab-invites').classList.remove('hidden');
             document.getElementById('tab-invites').classList.add('flex');
             fetchInvitations();
         } else if (tab === 'facs') {
-            document.getElementById('tab-btn-facs').className = activeClassBtn;
+            document.getElementById('nav-desk-facs').className = "nav-link-desk " + activeClassBtn;
+            document.getElementById('nav-mob-facs').className = "nav-link-mob " + activeClassBtn;
             document.getElementById('tab-facs').classList.remove('hidden');
             document.getElementById('tab-facs').classList.add('flex');
             fetchFacilitators();
@@ -386,6 +484,7 @@
 
     function getStatusBadge(st) {
         if (st === 'APPROVED') return `<span class="px-2 py-1 rounded bg-green-500/20 text-green-400 text-xs font-bold border border-green-500/30">APPROVED</span>`;
+        if (st === 'PHASE_1_APPROVED') return `<span class="px-2 py-1 rounded bg-purple-500/20 text-purple-400 text-xs font-bold border border-purple-500/30">PHASE 1 APP.</span>`;
         if (st === 'REJECTED') return `<span class="px-2 py-1 rounded bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30">REJECTED</span>`;
         if (st === 'UNDER_REVIEW') return `<span class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30">UNDER REVIEW</span>`;
         return `<span class="px-2 py-1 rounded bg-gray-500/20 text-gray-400 text-xs font-bold border border-gray-500/30">${st}</span>`;
@@ -430,10 +529,18 @@
                 let tr = document.createElement('tr');
                 tr.className = "hover:bg-white/5 transition-colors group cursor-pointer border-b border-white/5 last:border-0";
                 tr.onclick = () => openDetail(app.id);
+                
+                let linkIndicator = '';
+                if (app.presentation_link) {
+                    linkIndicator = '<span class="ml-2 px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 text-[10px] font-bold border border-purple-500/30 whitespace-nowrap">Phase 2 Link</span>';
+                }
+
                 tr.innerHTML = `
-                    <td class="py-4 px-6">
-                        <div class="font-medium text-white">${app.name}</div>
-                        <div class="text-xs text-gray-500">${app.email}</div>
+                    <td class="py-4 px-6 flex items-center">
+                        <div>
+                            <div class="font-medium text-white flex items-center">${app.name} ${linkIndicator}</div>
+                            <div class="text-xs text-gray-500">${app.email}</div>
+                        </div>
                     </td>
                     <td class="py-4 px-6 text-sm">${app.city}</td>
                     <td class="py-4 px-6">${getStatusBadge(app.status)}</td>
@@ -626,6 +733,15 @@
             document.getElementById('rev-status').value = data.review.status;
             document.getElementById('rev-feedback').value = data.review.feedback || '';
 
+            // Populate Presentation link block
+            if (data.presentation_link) {
+                document.getElementById('det-presentation').classList.remove('hidden');
+                document.getElementById('det-presentation-link').innerHTML = `<p class="text-sm text-gray-300 mb-2">The applicant has uploaded their presentation link.</p><a href="${data.presentation_link}" target="_blank" class="inline-flex items-center text-sm font-bold bg-space-800 text-space-accent border border-space-accent/30 hover:border-space-accent hover:bg-space-800/80 px-4 py-2 rounded transition-colors break-all shadow-[0_0_10px_rgba(79,209,197,0.1)]"><svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>Open Phase 2 Presentation Link</a>`;
+            } else {
+                document.getElementById('det-presentation').classList.add('hidden');
+                document.getElementById('det-presentation-link').innerHTML = '';
+            }
+
             // Set full PDF export link
             document.getElementById('det-dl-btn').href = `/api/admin/applicants/${id}/export.pdf`;
 
@@ -752,6 +868,35 @@
         document.getElementById('rev-error').classList.add('hidden');
     }
 
+    function openDeleteModal() {
+        document.getElementById('modal-delete-app').classList.remove('hidden');
+    }
+
+    async function confirmDeleteApplicant() {
+        const uid = document.getElementById('rev-uid').value;
+        const btn = document.getElementById('btn-confirm-delete');
+        btn.disabled = true;
+        btn.innerText = "Deleting...";
+
+        try {
+            const resp = await fetch(`/api/admin/applicants/${uid}`, { method: 'DELETE' });
+            if (resp.ok) {
+                document.getElementById('modal-delete-app').classList.add('hidden');
+                closeDetail();
+                fetchApplicants(currentPage); // Refresh list
+            } else {
+                const data = await resp.json();
+                alert(data.detail || "Error deleting applicant");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network error. Could not delete applicant.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Yes, Delete All Data";
+        }
+    }
+
     window.toggleModule = function (modId) {
         const content = document.getElementById(`content-mod-${modId}`);
         const icon = document.getElementById(`icon-mod-${modId}`);
@@ -832,6 +977,148 @@
         }
     }
 
+    // -- Instructors Logic --
+    async function fetchInstructors() {
+        const tbody = document.getElementById('instructors-table');
+        tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-gray-500"><div class="rocket-container"><span class="rocket-icon">🚀</span><div class="exhaust-cloud"></div></div><div class="mt-4 animate-pulse">Loading instructors...</div></td></tr>`;
+        
+        try {
+            const resp = await fetch("/api/admin/instructors");
+            if (resp.status === 401) { window.location.href = "/admin/login"; return; }
+            if (!resp.ok) throw new Error("Failed to load");
+            
+            const data = await resp.json();
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-gray-500">No approved instructors found.</td></tr>`;
+                return;
+            }
+            
+            data.forEach(ins => {
+                let d = new Date(ins.created_at).toLocaleDateString();
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-white/5 transition-colors group cursor-pointer border-b border-white/5 last:border-0";
+                tr.onclick = () => openInstructorDetail(ins.id);
+                
+                tr.innerHTML = `
+                    <td class="py-4 px-6 flex items-center">
+                        <div>
+                            <div class="font-medium text-white">${ins.name}</div>
+                            <div class="text-xs text-gray-500">${ins.email}</div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6 text-sm">${ins.city}</td>
+                    <td class="py-4 px-6 text-sm text-gray-400">${d}</td>
+                    <td class="py-4 px-6 text-right">
+                        <span class="text-space-accent opacity-0 group-hover:opacity-100 transition-opacity text-sm">View Documents &rarr;</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-red-400">Error loading instructors.</td></tr>`;
+        }
+    }
+
+    async function openInstructorDetail(uid) {
+        document.getElementById('instructors-list-view').classList.add('hidden');
+        const detailView = document.getElementById('instructor-detail-view');
+        detailView.classList.remove('hidden');
+        detailView.classList.add('flex');
+        
+        document.getElementById('inst-det-profile').innerHTML = '<p class="text-gray-500 animate-pulse">Loading profile...</p>';
+        document.getElementById('inst-documents-list').innerHTML = '<p class="text-gray-500 animate-pulse">Loading documents...</p>';
+        
+        try {
+            const resp = await fetch(`/api/admin/instructors/${uid}`);
+            if (!resp.ok) throw new Error();
+            const data = await resp.json();
+            
+            const u = data.user;
+            const p = data.profile || {};
+            const dlist = data.documents || [];
+            const iprof = data.inst_profile;
+            
+            // Profile
+            let phtml = `
+                <div class="space-y-4">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-gray-500 text-xs uppercase tracking-wider">Name</span>
+                        <span class="text-white font-medium">${u.name}</span>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-gray-500 text-xs uppercase tracking-wider">Email</span>
+                        <span class="text-white font-medium break-all">${u.email}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-gray-500 text-xs uppercase tracking-wider">Phone</span>
+                            <span class="text-white">${u.phone || '-'}</span>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <span class="text-gray-500 text-xs uppercase tracking-wider">City</span>
+                            <span class="text-white">${p.city_of_residence || '-'}</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-gray-500 text-xs uppercase tracking-wider">School</span>
+                            <span class="text-white">${p.school_name || '-'}</span>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <span class="text-gray-500 text-xs uppercase tracking-wider">T-Shirt</span>
+                            <span class="text-white uppercase">${p.tshirt_size || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            if (iprof && iprof.instructor_id) {
+                phtml += `<div class="mt-4 pt-4 border-t border-white/10"><span class="text-gray-500 block text-xs uppercase tracking-wider">Instructor ID</span><span class="text-space-accent font-bold">${iprof.instructor_id}</span></div>`;
+            }
+            document.getElementById('inst-det-profile').innerHTML = phtml;
+            
+            // Documents
+            if (dlist.length === 0) {
+                document.getElementById('inst-documents-list').innerHTML = '<p class="text-gray-500 text-sm">No personal documents uploaded yet.</p>';
+            } else {
+                let dhtml = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+                dlist.forEach(doc => {
+                    let dDate = new Date(doc.uploaded_at).toLocaleDateString();
+                    dhtml += `
+                        <div class="bg-space-800 border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-space-accent/30 transition-colors">
+                            <div class="flex items-start gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-space-accent/10 flex items-center justify-center text-space-accent shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="text-white font-medium truncate" title="${doc.document_type}">${doc.document_type}</h4>
+                                    <p class="text-xs text-gray-500 mt-1">Uploaded: ${dDate}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 w-full mt-auto pt-2 border-t border-white/5">
+                                <a href="/api/admin/instructors/documents/${doc.id}/view" target="_blank"
+                                    class="flex-1 py-1.5 bg-space-accent/10 hover:bg-space-accent hover:text-space-900 text-space-accent border border-space-accent/30 rounded text-xs font-semibold text-center transition-all">View</a>
+                            </div>
+                        </div>
+                    `;
+                });
+                dhtml += '</div>';
+                document.getElementById('inst-documents-list').innerHTML = dhtml;
+            }
+            
+        } catch (e) {
+            document.getElementById('inst-det-profile').innerHTML = '<p class="text-red-400 text-sm">Error loading details</p>';
+            document.getElementById('inst-documents-list').innerHTML = '<p class="text-red-400 text-sm">Error loading documents</p>';
+        }
+    }
+
+    function closeInstructorDetail() {
+        document.getElementById('instructor-detail-view').classList.add('hidden');
+        document.getElementById('instructor-detail-view').classList.remove('flex');
+        document.getElementById('instructors-list-view').classList.remove('hidden');
+    }
+
     async function logout() {
         await fetch("/api/auth/logout", { method: "POST" });
         window.location.href = "/admin/login";
@@ -840,5 +1127,6 @@
     // Init
     fetchStats();
     fetchApplicants(1);
+    fetchInstructors();
 </script>
 {% endblock %}

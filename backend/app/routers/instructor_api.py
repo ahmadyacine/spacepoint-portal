@@ -20,6 +20,7 @@ from app.services.id_card_service import (
 )
 from app.models.library import LibraryResource
 from app.models.training import TrainingModule, TrainingVideo, UserTrainingProgress
+from app.models.instructor_document import InstructorDocument
 
 router = APIRouter()
 
@@ -33,6 +34,7 @@ def _require_instructor(user: User = Depends(get_current_user)):
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _BACKEND_DIR = os.path.normpath(os.path.join(_THIS_DIR, "..", ".."))
 PHOTO_UPLOAD_DIR = os.path.join(_BACKEND_DIR, "app", "uploads", "instructor_photos")
+DOCUMENTS_UPLOAD_DIR = os.path.join(_BACKEND_DIR, "app", "uploads", "instructor_documents")
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────────
@@ -163,6 +165,109 @@ def download_library_resource(
         path=resource.file_path, 
         filename=os.path.basename(resource.file_path).split('_', 1)[-1], # remove timestamp prefix for download name
     )
+
+@router.get("/view/{resource_id}")
+def view_library_resource(
+    resource_id: int,
+    instructor: User = Depends(_require_instructor),
+    db: Session      = Depends(get_db)
+):
+    """View a library resource file inline in the browser."""
+    resource = db.query(LibraryResource).filter(LibraryResource.id == resource_id).first()
+    if not resource or not os.path.exists(resource.file_path):
+        raise HTTPException(status_code=404, detail="Resource not found")
+        
+    import mimetypes
+    media_type, _ = mimetypes.guess_type(resource.file_path)
+    if not media_type:
+        media_type = "application/octet-stream"
+        
+    # Standard python mimetypes doesn't always know all formats
+    return FileResponse(
+        path=resource.file_path,
+        media_type=media_type,
+        content_disposition_type="inline"
+    )
+
+# --------------------------------------------------------------------------------
+# PERSONAL DOCUMENTS (INSTRUCTOR LIBRARY)
+# --------------------------------------------------------------------------------
+
+@router.post("/library/personal-documents")
+def upload_personal_document(
+    document_type: str = Form(...),
+    file: UploadFile = File(...),
+    instructor: User = Depends(_require_instructor),
+    db: Session = Depends(get_db)
+):
+    os.makedirs(DOCUMENTS_UPLOAD_DIR, exist_ok=True)
+    ext = os.path.splitext(file.filename)[1] if file.filename else ""
+    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    safe_filename = f"{instructor.id}_{document_type.replace(' ', '_')}_{timestamp}{ext}"
+    file_path = os.path.join(DOCUMENTS_UPLOAD_DIR, safe_filename)
+    
+    with open(file_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+        
+    doc = InstructorDocument(
+        user_id=instructor.id,
+        document_type=document_type,
+        file_path=file_path
+    )
+    db.add(doc)
+    db.commit()
+    return {"success": True, "message": "Document uploaded successfully"}
+
+@router.get("/library/personal-documents")
+def get_personal_documents(
+    instructor: User = Depends(_require_instructor),
+    db: Session = Depends(get_db)
+):
+    docs = db.query(InstructorDocument).filter(InstructorDocument.user_id == instructor.id).all()
+    return [
+        {
+            "id": doc.id,
+            "document_type": doc.document_type,
+            "filename": os.path.basename(doc.file_path),
+            "uploaded_at": doc.uploaded_at.isoformat() if doc.uploaded_at else None
+        }
+        for doc in docs
+    ]
+
+@router.delete("/library/personal-documents/{doc_id}")
+def delete_personal_document(
+    doc_id: int,
+    instructor: User = Depends(_require_instructor),
+    db: Session = Depends(get_db)
+):
+    doc = db.query(InstructorDocument).filter(
+        InstructorDocument.id == doc_id, 
+        InstructorDocument.user_id == instructor.id
+    ).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    if os.path.exists(doc.file_path):
+        os.remove(doc.file_path)
+        
+    db.delete(doc)
+    db.commit()
+    return {"success": True}
+
+@router.get("/library/personal-documents/{doc_id}/download")
+def download_personal_document(
+    doc_id: int,
+    instructor: User = Depends(_require_instructor),
+    db: Session = Depends(get_db)
+):
+    doc = db.query(InstructorDocument).filter(
+        InstructorDocument.id == doc_id, 
+        InstructorDocument.user_id == instructor.id
+    ).first()
+    if not doc or not os.path.exists(doc.file_path):
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    return FileResponse(doc.file_path, filename=os.path.basename(doc.file_path))
 
 # --------------------------------------------------------------------------------
 # SATKIT TRAINING MODULES (INSTRUCTOR)

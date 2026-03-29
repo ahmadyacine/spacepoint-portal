@@ -8,3 +8,4 @@ from .checklist import Module, ModuleSection, ChecklistItem, ModuleSubmission, U
 from .library import LibraryResource, LibraryModule
 from .training import TrainingModule, TrainingVideo, UserTrainingProgress
 from .instructor_profile import InstructorProfile
+from .instructor_document import InstructorDocument

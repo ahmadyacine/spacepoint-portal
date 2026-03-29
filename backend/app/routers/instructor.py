@@ -65,6 +65,14 @@ def library(request: Request, instructor: User = Depends(get_current_instructor)
         "active_page": "library"
     })
 
+@router.get("/personal-documents")
+def personal_documents(request: Request, instructor: User = Depends(get_current_instructor)):
+    return templates.TemplateResponse("instructor/personal_documents.html", {
+        "request": request, 
+        "user": instructor,
+        "active_page": "personal_documents"
+    })
+
 @router.get("/profile")
 def profile(request: Request, instructor: User = Depends(get_current_instructor)):
     return templates.TemplateResponse("instructor/profile.html", {

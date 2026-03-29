@@ -96,9 +96,13 @@
                                         <td class="py-4 px-6">
                                             ${getFormatBadge(res.format)}
                                         </td>
-                                        <td class="py-4 px-6 text-right">
+                                        <td class="py-4 px-6 text-right space-x-2">
+                                            <a href="/api/instructor/view/${res.id}" target="_blank"
+                                                class="inline-block text-white bg-space-800 hover:bg-white/10 font-bold px-4 py-2 rounded transition-colors text-xs border border-white/10 shadow-lg text-center min-w-[80px]">
+                                                View
+                                            </a>
                                             <a href="/api/instructor/download/${res.id}" target="_blank"
-                                                class="inline-block text-space-900 bg-space-accent hover:bg-space-hover font-bold px-4 py-2 rounded transition-colors text-xs border border-transparent shadow-lg text-center min-w-[100px]">
+                                                class="inline-block text-space-900 bg-space-accent hover:bg-space-hover font-bold px-4 py-2 rounded transition-colors text-xs border border-transparent shadow-lg text-center min-w-[80px]">
                                                 Download
                                             </a>
                                         </td>

@@ -135,6 +135,128 @@ def generate_contract(instructor_name: str, living_area: str) -> tuple[str, str]
         
     return docx_output, pdf_output
 
+def send_phase1_approval_email(to_email: str, name: str) -> bool:
+    """
+    Sends an email to the applicant notifying them that they passed Phase 1
+    and instructing them to upload their Phase 2 presentation link.
+    """
+    smtp_host = settings.SMTP_HOST
+    smtp_port = settings.SMTP_PORT
+    smtp_user = settings.SMTP_USER
+    smtp_password = settings.SMTP_PASSWORD
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "SpacePoint Instructor Application - Phase 1 Approved"
+    msg["From"] = f"SpacePoint <{smtp_user}>"
+    msg["To"] = to_email
+
+    LOGO_URL = "https://spacepoint.ae/wp-content/uploads/2023/12/SpacePoint-Purple-Logo-e1766489433825-1024x261.png"
+
+    html_body = f"""
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:system-ui,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0;background:#f3f4f6;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border-radius:16px;overflow:hidden;
+                    box-shadow:0 4px 24px rgba(36,17,52,0.12);">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#241134,#653f84);padding:28px 32px;">
+            <img src="{LOGO_URL}" height="44" alt="SpacePoint" style="display:block;">
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 32px;">
+            <h2 style="margin:0 0 6px 0;font-size:20px;font-weight:700;color:#1a1135;">
+              Phase 1 Approved &#10003;
+            </h2>
+            <p style="margin:0 0 24px 0;font-size:12px;font-weight:700;color:#653f84;
+                       text-transform:uppercase;letter-spacing:0.1em;">
+              Instructor Scholarship Programme
+            </p>
+
+            <p style="margin:0 0 12px 0;font-size:15px;color:#374151;line-height:1.7;">
+              Hello <strong>{name}</strong>,
+            </p>
+            <p style="margin:0 0 24px 0;font-size:15px;color:#374151;line-height:1.7;">
+              Congratulations! You have successfully passed Phase 1 of the SpacePoint Instructor Scholarship Application.
+            </p>
+            <p style="margin:0 0 24px 0;font-size:15px;color:#374151;line-height:1.7;">
+              For the final phase of your application, we require you to submit a video recording presenting your research.
+            </p>
+
+            <div style="background:#faf8ff;border:1px solid #ddd6fe;border-radius:12px;
+                         padding:22px 26px;margin:0 0 24px 0;">
+              <p style="margin:0 0 16px 0;font-size:13px;font-weight:700;color:#653f84;">
+                Presentation Requirements:
+              </p>
+              <ul style="margin:0;padding-left:20px;font-size:14px;color:#374151;line-height:1.6;">
+                <li>Cover the following topics: <strong>What is a cubesat?</strong>, <strong>Subsystems</strong>, <strong>Memory types</strong>, and <strong>Communication interfaces</strong>.</li>
+                <li>Maximum of 10 slides.</li>
+                <li>Length should be between 10 to 15 minutes.</li>
+              </ul>
+              <p style="margin:16px 0 0 0;font-size:13px;color:#374151;">
+                Please record your presentation, upload it to Google Drive or YouTube, and submit the link through the applicant portal.
+              </p>
+            </div>
+
+            <!-- CTA button -->
+            <table cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="background:linear-gradient(135deg,#241134,#653f84);border-radius:10px;">
+                  <a href="http://localhost:8000/status"
+                     style="display:inline-block;padding:13px 32px;font-size:14px;
+                            font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.04em;">
+                    Submit Presentation Link &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:28px 0 0 0;font-size:14px;color:#6b7280;line-height:1.7;">
+              Best regards,<br>
+              <strong style="color:#241134;">The SpacePoint Team</strong>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;padding:18px 32px;border-top:1px solid #ede9f7;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.7;">
+              &copy; 2026 SpacePoint &nbsp;&middot;&nbsp; www.spacepoint.ae<br>
+              <em>Do not reply to this email. This mailbox is not monitored.</em>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+"""
+    msg.attach(MIMEText(html_body, "html"))
+
+    try:
+        server = smtplib.SMTP(smtp_host, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_user, to_email, msg.as_string())
+        server.quit()
+        print(f"[email_service] Phase 1 approval email sent successfully to {to_email}")
+        return True
+    except Exception as e:
+        import traceback
+        print(f"[email_service] Failed to send Phase 1 email to {to_email}: {str(e)}")
+        traceback.print_exc()
+        return False
+
 def send_approval_credentials_email(to_email: str, name: str, temp_password: str, living_area: str = "Unknown") -> tuple[bool, str]:
     """
     Sends an HTML email with temporary login credentials and attached PDF contract.

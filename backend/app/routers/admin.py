@@ -66,6 +66,7 @@ def list_applicants(
     admin: User = Depends(get_current_admin), 
     db: Session = Depends(get_db)
 ):
+    from app.models.submission import PresentationSubmission
     skip = (page - 1) * limit
     
     query = db.query(User, ApplicationReview).join(ApplicationReview, User.id == ApplicationReview.user_id)
@@ -75,6 +76,7 @@ def list_applicants(
     applicants = []
     for user, review in results:
         profile = db.query(ApplicantProfile).filter(ApplicantProfile.user_id == user.id).first()
+        presentation = db.query(PresentationSubmission).filter(PresentationSubmission.user_id == user.id).first()
         city = profile.city_of_residence if profile else "Unknown"
         applicants.append({
             "id": user.id,
@@ -84,7 +86,8 @@ def list_applicants(
             "city": city,
             "status": review.status,
             "created_at": user.created_at,
-            "invitation_code_used": user.invitation_code_used
+            "invitation_code_used": user.invitation_code_used,
+            "presentation_link": presentation.video_link if presentation else None
         })
         
     return {
@@ -96,6 +99,7 @@ def list_applicants(
 
 @router.get("/applicants/{user_id}")
 def get_applicant_detail(user_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    from app.models.submission import PresentationSubmission
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -103,13 +107,35 @@ def get_applicant_detail(user_id: int, admin: User = Depends(get_current_admin),
     profile = db.query(ApplicantProfile).filter(ApplicantProfile.user_id == user.id).first()
     videos = db.query(VideoSubmission).filter(VideoSubmission.user_id == user.id).all()
     review = db.query(ApplicationReview).filter(ApplicationReview.user_id == user.id).first()
+    presentation = db.query(PresentationSubmission).filter(PresentationSubmission.user_id == user.id).first()
     
     return {
         "user": user,
         "profile": profile,
         "videos": videos,
-        "review": review
+        "review": review,
+        "presentation_link": presentation.video_link if presentation else None
     }
+
+@router.delete("/applicants/{user_id}")
+def delete_applicant(user_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    from app.models.submission import PresentationSubmission
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Applicant not found")
+        
+    db.query(ApplicantProfile).filter(ApplicantProfile.user_id == user_id).delete()
+    db.query(VideoSubmission).filter(VideoSubmission.user_id == user_id).delete()
+    db.query(ApplicationReview).filter(ApplicationReview.user_id == user_id).delete()
+    db.query(PresentationSubmission).filter(PresentationSubmission.user_id == user_id).delete()
+    db.query(ModuleSubmission).filter(ModuleSubmission.user_id == user_id).delete()
+    db.query(UserChecklistProgress).filter(UserChecklistProgress.user_id == user_id).delete()
+    
+    # Finally, delete user
+    db.delete(user)
+    db.commit()
+    return {"message": "Applicant deleted successfully"}
 
 @router.get("/applicants/{user_id}/checklist")
 def get_applicant_checklist(user_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
@@ -202,7 +228,17 @@ def review_applicant(user_id: int, data: AdminReviewUpdate, admin: User = Depend
     email_sent = False
     user = db.query(User).filter(User.id == user_id).first()
     
-    if data.status == "APPROVED" and user:
+    msg = "Review updated successfully"
+
+    if data.status == "PHASE_1_APPROVED" and user:
+        from app.services.email_service import send_phase1_approval_email
+        email_sent = send_phase1_approval_email(to_email=user.email, name=user.name)
+        if email_sent:
+            msg = f"Phase 1 Approved. Email sent to {user.email}"
+        else:
+            msg = f"Phase 1 Approved, but email failed to send to {user.email}."
+
+    elif data.status == "APPROVED" and user:
         from app.models.user import UserRole
         import secrets
         from app.core.security import get_password_hash
@@ -233,16 +269,13 @@ def review_applicant(user_id: int, data: AdminReviewUpdate, admin: User = Depend
         
         inst_profile.contract_path = contract_path
         # We can also set an initial instructor ID if wanted, or leave it for later
-    
-    db.commit()
-    
-    msg = "Review updated successfully"
-    if data.status == "APPROVED":
+        
         if email_sent:
             msg = f"Approved. Credentials email sent to {user.email}"
         else:
             msg = f"Approved, but credentials email failed to send to {user.email}."
             
+    db.commit()
     return {"message": msg, "email_sent": email_sent}
 
 @router.get("/modules/submissions/{submission_id}/download")
@@ -398,3 +431,58 @@ def create_facilitator(data: FacilitatorCreate, admin: User = Depends(get_curren
     db.commit()
     db.refresh(new_user)
     return {"id": new_user.id, "name": new_user.name, "email": new_user.email, "role": new_user.role}
+
+from app.models.instructor_document import InstructorDocument
+import mimetypes
+
+@router.get("/instructors")
+def list_instructors(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    instructors = db.query(User).filter(User.role == UserRole.INSTRUCTOR).order_by(User.created_at.desc()).all()
+    res = []
+    for ins in instructors:
+        profile = db.query(ApplicantProfile).filter(ApplicantProfile.user_id == ins.id).first()
+        city = profile.city_of_residence if profile else "Unknown"
+        res.append({
+            "id": ins.id,
+            "name": ins.name,
+            "email": ins.email,
+            "phone": ins.phone,
+            "city": city,
+            "created_at": ins.created_at
+        })
+    return res
+
+@router.get("/instructors/{user_id}")
+def get_instructor_detail(user_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id, User.role == UserRole.INSTRUCTOR).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Instructor not found")
+        
+    profile = db.query(ApplicantProfile).filter(ApplicantProfile.user_id == user.id).first()
+    documents = db.query(InstructorDocument).filter(InstructorDocument.user_id == user.id).all()
+    inst_profile = db.query(InstructorProfile).filter(InstructorProfile.user_id == user.id).first()
+    
+    return {
+        "user": user,
+        "profile": profile,
+        "documents": documents,
+        "inst_profile": inst_profile
+    }
+
+@router.get("/instructors/documents/{doc_id}/view")
+def view_instructor_document(doc_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    doc = db.query(InstructorDocument).filter(InstructorDocument.id == doc_id).first()
+    if not doc or not os.path.exists(doc.file_path):
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    mime_type, _ = mimetypes.guess_type(doc.file_path)
+    if not mime_type:
+        mime_type = 'application/octet-stream'
+        
+    filename = os.path.basename(doc.file_path)
+    return FileResponse(
+        path=doc.file_path,
+        media_type=mime_type,
+        filename=filename,
+        content_disposition_type="inline"
+    )

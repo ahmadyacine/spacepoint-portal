@@ -272,15 +272,50 @@ def reopen_application(user: User = Depends(get_current_user), db: Session = Dep
     db.commit()
     return {"message": "Application reopened successfully"}
 
+@router.post("/presentation/submit")
+def submit_presentation_link(
+    video_link: str = Form(...),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    from app.models.submission import PresentationSubmission
+    
+    review = db.query(ApplicationReview).filter(ApplicationReview.user_id == user.id).first()
+    if not review or review.status != ApplicationStatus.PHASE_1_APPROVED:
+        raise HTTPException(status_code=400, detail="Not eligible to submit presentation at this stage.")
+        
+    existing_sub = db.query(PresentationSubmission).filter(PresentationSubmission.user_id == user.id).first()
+    
+    if existing_sub:
+        existing_sub.video_link = video_link
+        existing_sub.submitted_at = datetime.utcnow()
+    else:
+        new_sub = PresentationSubmission(
+            user_id=user.id,
+            video_link=video_link
+        )
+        db.add(new_sub)
+        
+    # Change status back to UNDER_REVIEW so admin knows Phase 2 was submitted
+    review.status = ApplicationStatus.UNDER_REVIEW
+    db.commit()
+    
+    return {"message": "Presentation link submitted successfully"}
+
 @router.get("/status")
 def get_status(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     from app.models.checklist import ModuleSubmission
+    from app.models.submission import PresentationSubmission
+    
     review = db.query(ApplicationReview).filter(ApplicationReview.user_id == user.id).first()
     
     latest_sub = db.query(ModuleSubmission).filter(ModuleSubmission.user_id == user.id).order_by(ModuleSubmission.submitted_at.desc()).first()
     
+    presentation = db.query(PresentationSubmission).filter(PresentationSubmission.user_id == user.id).first()
+    
     return {
         "status": review.status if review else "NOT_STARTED",
         "feedback": review.feedback if review and review.status in [ApplicationStatus.APPROVED, ApplicationStatus.REJECTED] else None,
-        "submitted_at": latest_sub.submitted_at if latest_sub else None
+        "submitted_at": latest_sub.submitted_at if latest_sub else None,
+        "presentation_link": presentation.video_link if presentation else None
     }

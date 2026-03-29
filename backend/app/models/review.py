@@ -5,6 +5,7 @@ from app.core.database import Base
 class ApplicationStatus(str, enum.Enum):
     IN_PROGRESS = "IN_PROGRESS"
     UNDER_REVIEW = "UNDER_REVIEW"
+    PHASE_1_APPROVED = "PHASE_1_APPROVED"
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
 
