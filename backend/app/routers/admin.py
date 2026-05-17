@@ -65,6 +65,7 @@ def get_admin_stats(admin: User = Depends(get_current_admin), db: Session = Depe
 def list_applicants(
     page: int = 1, 
     limit: int = 10, 
+    status: str = None,
     admin: User = Depends(get_current_admin), 
     db: Session = Depends(get_db)
 ):
@@ -72,6 +73,9 @@ def list_applicants(
     skip = (page - 1) * limit
     
     query = db.query(User, ApplicationReview).join(ApplicationReview, User.id == ApplicationReview.user_id)
+    if status and status != "ALL":
+        query = query.filter(ApplicationReview.status == status)
+        
     total = query.count()
     results = query.order_by(User.created_at.desc()).offset(skip).limit(limit).all()
     

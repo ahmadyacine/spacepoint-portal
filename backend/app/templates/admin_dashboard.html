@@ -67,17 +67,27 @@
 
     <!-- TAB: Applicants -->
     <div id="tab-apps" class="w-full flex-col gap-6 flex">
-        <div class="flex justify-between items-center">
+        <div class="flex justify-between items-center flex-wrap gap-4">
             <h2 class="text-2xl font-display font-bold text-white tracking-tight">Review Applicants</h2>
-            <button onclick="fetchApplicants(currentPage)"
-                class="text-space-accent hover:text-white transition-colors flex items-center text-sm font-medium">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                    </path>
-                </svg>
-                Refresh
-            </button>
+            <div class="flex items-center gap-4">
+                <select id="filter-status" onchange="currentPage = 1; fetchApplicants(1)"
+                    class="rounded-lg border-white/20 bg-space-900/80 px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-space-accent border outline-none cursor-pointer">
+                    <option value="ALL">All Statuses</option>
+                    <option value="UNDER_REVIEW">Under Review</option>
+                    <option value="PHASE_1_APPROVED">Phase 1 Approved</option>
+                    <option value="APPROVED">Approved (Final)</option>
+                    <option value="REJECTED">Rejected</option>
+                </select>
+                <button onclick="fetchApplicants(currentPage)"
+                    class="text-space-accent hover:text-white transition-colors flex items-center text-sm font-medium">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                        </path>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
         </div>
 
         <div id="list-view" class="w-full glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-xl">
@@ -534,7 +544,12 @@
     async function fetchApplicants(page) {
         if (page < 1) return;
         try {
-            const resp = await fetch(`/api/admin/applicants?page=${page}&limit=${limit}`);
+            const statusFilter = document.getElementById('filter-status') ? document.getElementById('filter-status').value : 'ALL';
+            let url = `/api/admin/applicants?page=${page}&limit=${limit}`;
+            if (statusFilter && statusFilter !== 'ALL') {
+                url += `&status=${statusFilter}`;
+            }
+            const resp = await fetch(url);
             if (resp.status === 401 || resp.status === 403) {
                 window.location.href = "/admin/login";
                 return;
