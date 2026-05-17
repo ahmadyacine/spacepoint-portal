@@ -209,7 +209,7 @@ def send_phase1_approval_email(to_email: str, name: str) -> bool:
             <table cellpadding="0" cellspacing="0">
               <tr>
                 <td style="background:linear-gradient(135deg,#241134,#653f84);border-radius:10px;">
-                  <a href="http://localhost:8000/status"
+                  <a href="{settings.BASE_URL.rstrip('/')}/status"
                      style="display:inline-block;padding:13px 32px;font-size:14px;
                             font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.04em;">
                     Submit Presentation Link &rarr;
@@ -359,7 +359,7 @@ def send_approval_credentials_email(to_email: str, name: str, temp_password: str
             <table cellpadding="0" cellspacing="0">
               <tr>
                 <td style="background:linear-gradient(135deg,#241134,#653f84);border-radius:10px;">
-                  <a href="http://localhost:8000"
+                  <a href="{settings.BASE_URL.rstrip('/')}"
                      style="display:inline-block;padding:13px 32px;font-size:14px;
                             font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.04em;">
                     Log In to Instructor Portal &rarr;

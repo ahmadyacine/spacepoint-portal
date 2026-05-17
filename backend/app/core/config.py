@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "SpacePoint Portal MVP"
+    BASE_URL: str = "https://portal.spacepoint.ae"
     
     # DB
     DATABASE_URL: str

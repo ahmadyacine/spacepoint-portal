@@ -16,6 +16,7 @@ from app.models.instructor_profile import InstructorProfile
 from app.schemas.core import AdminReviewUpdate
 from app.core.security import get_password_hash
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 class ChecklistDecisionUpdate(BaseModel):
     status: str # APPROVED or REJECTED
@@ -29,7 +30,8 @@ class InvitationCodeCreate(BaseModel):
     is_active: bool = True
 
 class InvitationCodeUpdate(BaseModel):
-    is_active: bool
+    is_active: Optional[bool] = None
+    max_uses: Optional[int] = None
 
 class FacilitatorCreate(BaseModel):
     name: str
@@ -396,7 +398,11 @@ def update_invitation(invitation_id: int, data: InvitationCodeUpdate, admin: Use
     if not invitation:
         raise HTTPException(status_code=404, detail="Invitation code not found")
         
-    invitation.is_active = data.is_active
+    if data.is_active is not None:
+        invitation.is_active = data.is_active
+    if data.max_uses is not None:
+        invitation.max_uses = data.max_uses
+        
     db.commit()
     db.refresh(invitation)
     return invitation
@@ -408,6 +414,7 @@ def delete_invitation(invitation_id: int, admin: User = Depends(get_current_admi
         raise HTTPException(status_code=404, detail="Invitation code not found")
         
     db.delete(invitation)
+    db.commit()
 @router.get("/facilitators")
 def list_facilitators(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
     facilitators = db.query(User).filter(User.role == UserRole.FACILITATOR).order_by(User.created_at.desc()).all()

@@ -366,6 +366,33 @@
     </div>
 </div>
 
+<!-- MODAL: Edit Invitation Code -->
+<div id="modal-edit-invite"
+    class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-space-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+        <h3 class="text-xl font-bold text-white mb-4">Edit Invitation Code</h3>
+        <form onsubmit="submitEditInvite(event)" class="space-y-4">
+            <input type="hidden" id="edit-inv-id">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Code</label>
+                <input type="text" id="edit-inv-code" disabled
+                    class="w-full rounded-lg border-white/20 bg-space-800/50 px-3 py-2 text-gray-400 outline-none cursor-not-allowed border">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Max Uses</label>
+                <input type="number" id="edit-inv-max" required
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border">
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('modal-edit-invite').classList.add('hidden')"
+                    class="flex-1 py-2 bg-space-800 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-colors">Cancel</button>
+                <button type="submit"
+                    class="flex-1 py-2 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- MODAL: Add Facilitator -->
 <div id="modal-add-fac"
     class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -587,7 +614,8 @@
                         <td class="py-3 px-6 text-center">
                             <button onclick="toggleInvite(${inv.id}, ${!inv.is_active})" class="px-3 py-1 text-xs border rounded-full font-bold ${activeBtnClass}">${activeBtnText}</button>
                         </td>
-                        <td class="py-3 px-6 text-right">
+                        <td class="py-3 px-6 text-right space-x-3">
+                            <button onclick="openEditInviteModal(${inv.id}, '${inv.code}', ${inv.max_uses})" class="text-space-accent hover:text-space-hover text-sm font-medium">Edit</button>
                             <button onclick="deleteInvite(${inv.id})" class="text-red-400 hover:text-red-300 text-sm font-medium">Delete</button>
                         </td>
                     `;
@@ -610,6 +638,33 @@
             if (res.ok) {
                 document.getElementById('add-inv-code').value = '';
                 document.getElementById('modal-add-invite').classList.add('hidden');
+                fetchInvitations();
+            } else {
+                const text = await res.json();
+                alert("Error: " + text.detail);
+            }
+        } catch (e) { alert("Network error"); }
+    }
+
+    function openEditInviteModal(id, code, maxUses) {
+        document.getElementById('edit-inv-id').value = id;
+        document.getElementById('edit-inv-code').value = code;
+        document.getElementById('edit-inv-max').value = maxUses;
+        document.getElementById('modal-edit-invite').classList.remove('hidden');
+    }
+
+    async function submitEditInvite(e) {
+        e.preventDefault();
+        const id = document.getElementById('edit-inv-id').value;
+        const max = document.getElementById('edit-inv-max').value;
+        try {
+            const res = await fetch(`/api/admin/invitations/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ max_uses: parseInt(max) })
+            });
+            if (res.ok) {
+                document.getElementById('modal-edit-invite').classList.add('hidden');
                 fetchInvitations();
             } else {
                 const text = await res.json();
