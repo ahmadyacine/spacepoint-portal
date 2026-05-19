@@ -61,23 +61,23 @@
                             </path>
                         </svg>
                     </div>
-                    <span class="text-sm font-medium text-white" id="file-name">Click to upload your Submission
-                        (PDF)</span>
-                    <span class="text-xs text-gray-400 mt-1">Maximum file size: 10MB</span>
+                    <span class="text-sm font-medium text-white" id="file-name">Click to upload your Submission (PDF)</span>
+                    <span class="text-xs text-gray-400 mt-2 block">Maximum file size: 10MB. If your file exceeds 10MB, please upload it to Google Drive and paste the shared link in the comments section below.</span>
                 </label>
             </div>
 
             <!-- Optional Text -->
             <div>
-                <label class="block text-sm font-medium text-gray-300">Additional Comments (Optional)</label>
+                <label class="block text-sm font-medium text-gray-300">Additional Comments or Google Drive link (Optional)</label>
                 <textarea id="content_text" rows="3"
-                    class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border resize-none"></textarea>
+                    class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border resize-none"
+                    placeholder="If your file is >10MB, paste your Google Drive link here. Make sure anyone with the link can view it!"></textarea>
             </div>
 
             <div id="submit-error" class="hidden text-sm text-red-400 text-center font-medium"></div>
 
             <button type="submit" id="btn-submit"
-                class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-space-900 bg-space-accent hover:bg-space-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-space-accent focus:ring-offset-space-900 transition-colors shadow-[0_0_15px_rgba(79,209,197,0.3)]">
+                class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-space-900 bg-space-accent hover:bg-space-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-space-accent focus:ring-offset-space-900 transition-colors shadow-[0_0_15px_rgba(167,125,255,0.3)]">
                 Submit Application
             </button>
         </form>

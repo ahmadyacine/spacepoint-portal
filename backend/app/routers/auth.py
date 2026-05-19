@@ -37,6 +37,9 @@ def signup(data: UserCreate, response: Response, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invitation code usage limit reached")
 
     # Check email
+    if not data.email.lower().endswith("@gmail.com"):
+        raise HTTPException(status_code=400, detail="Only Gmail accounts (@gmail.com) are accepted")
+
     existing_user = db.query(User).filter(User.email == data.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -66,7 +69,8 @@ def signup(data: UserCreate, response: Response, db: Session = Depends(get_db)):
         city_of_residence=data.city_of_residence,
         deliver_cities_json=json.dumps(data.deliver_cities),
         background_areas_json=json.dumps(data.background_areas),
-        background_other=data.background_other
+        background_other=data.background_other,
+        has_own_transportation=data.has_own_transportation
     )
     db.add(profile)
     

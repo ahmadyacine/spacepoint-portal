@@ -34,7 +34,7 @@
 
     <div class="mt-12 flex justify-center hidden" id="continue-container">
         <a href="/tasks/modules"
-            class="inline-flex items-center justify-center px-8 py-4 rounded-full font-bold tracking-wide text-space-900 bg-space-accent hover:bg-space-hover transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(79,209,197,0.5)]">
+            class="inline-flex items-center justify-center px-8 py-4 rounded-full font-bold tracking-wide text-space-900 bg-space-accent hover:bg-space-hover transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(167,125,255,0.5)]">
             Continue to Phase 2 (Modules & Checklists)
             <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3">
@@ -43,6 +43,32 @@
         </a>
     </div>
 
+</div>
+
+<!-- AI Humorous Warning Modal -->
+<div id="ai-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-md"></div>
+    <div class="relative glass-panel p-8 rounded-2xl max-w-md w-full border border-space-accent/30 shadow-[0_0_30px_rgba(167,125,255,0.2)] text-center animate-fade-in-up m-4">
+        <div class="w-16 h-16 bg-space-accent/10 border border-space-accent/30 rounded-full flex items-center justify-center mx-auto mb-5 text-space-accent shadow-[0_0_15px_rgba(167,125,255,0.2)]">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+        </div>
+        <h3 class="text-2xl font-display font-bold text-white mb-3">AI Detection Check</h3>
+        <p class="text-gray-300 mb-6 text-sm leading-relaxed">
+            "We are sure that you are not using AI, right? 😉"
+            <br><br>
+            Our systems will run advanced analysis to detect synthetic content. Ensure your summaries are written in your own words.
+        </p>
+        <div class="flex gap-4">
+            <button onclick="confirmSubmission()" class="flex-1 py-3 px-4 bg-space-accent text-space-900 font-bold rounded-xl hover:bg-space-hover transition-colors shadow-[0_0_15px_rgba(167,125,255,0.3)]">
+                I'm Innocent, Submit
+            </button>
+            <button onclick="closeAiModal()" class="flex-1 py-3 px-4 border border-white/10 text-white rounded-xl hover:bg-white/5 transition-colors font-medium">
+                Wait, Edit Summary
+            </button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -78,6 +104,12 @@
         const container = document.getElementById('videos-container');
         container.innerHTML = '';
         container.classList.remove('hidden');
+
+        // Select a random draft video to warn about AI submission
+        const drafts = videos.filter(v => v.status !== 'SUBMITTED').map(v => v.video_no);
+        if (!window.aiWarningVideoNo && drafts.length > 0) {
+            window.aiWarningVideoNo = drafts[Math.floor(Math.random() * drafts.length)];
+        }
 
         let allSubmitted = true;
 
@@ -117,7 +149,7 @@
                         ${!isSubmitted ? `
                         <div class="flex gap-4 mt-auto">
                             <button onclick="saveVideo(${v.video_no}, 'DRAFT')" class="flex-1 py-2 px-4 border border-white/30 text-white rounded-lg hover:bg-white/10 transition-colors font-medium">Save Draft</button>
-                            <button onclick="saveVideo(${v.video_no}, 'SUBMITTED')" class="flex-1 py-2 px-4 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]">Submit</button>
+                            <button onclick="saveVideo(${v.video_no}, 'SUBMITTED')" class="flex-1 py-2 px-4 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors shadow-[0_0_10px_rgba(167,125,255,0.3)]">Submit</button>
                         </div>
                         ` : ''}
                     </div>
@@ -158,6 +190,14 @@
             return;
         }
 
+        if (status === 'SUBMITTED') {
+            if (vno === window.aiWarningVideoNo && !window.aiModalConfirmed) {
+                window.pendingSubmitVno = vno;
+                document.getElementById('ai-modal').classList.remove('hidden');
+                return;
+            }
+        }
+
         errSpan.classList.add('hidden');
 
         try {
@@ -168,6 +208,11 @@
             });
 
             if (resp.ok) {
+                // Clear state so another random can be assigned if needed on render
+                if (status === 'SUBMITTED') {
+                    window.aiWarningVideoNo = null;
+                    window.aiModalConfirmed = false;
+                }
                 fetchVideos(); // re-render
             } else {
                 const data = await resp.json();
@@ -178,6 +223,17 @@
             errSpan.textContent = "Network error.";
             errSpan.classList.remove('hidden');
         }
+    }
+
+    function confirmSubmission() {
+        window.aiModalConfirmed = true;
+        const vno = window.pendingSubmitVno;
+        document.getElementById('ai-modal').classList.add('hidden');
+        saveVideo(vno, 'SUBMITTED');
+    }
+
+    function closeAiModal() {
+        document.getElementById('ai-modal').classList.add('hidden');
     }
 
     async function logout() {

@@ -37,12 +37,17 @@ pip install -r backend/requirements.txt
 
 ---
 
-## 3. Run Database Migrations
-We added new columns to save the contract paths. You must update your database schema:
+## 3. Run Database Migrations & Structure Repair
+We added new columns (contract paths, transportation options, etc.) to the database. You must update your database schema and structure:
 
 ```bash
 cd /var/www/spacepoint/backend
+
+# 1. Run migrations via Alembic
 alembic upgrade head
+
+# 2. Run the ultimate repair script to sync missing columns & custom types
+python ultimate_fix.py
 ```
 
 ---

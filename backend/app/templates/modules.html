@@ -115,7 +115,7 @@
                             <span class="${isComplete ? 'text-space-accent font-bold' : 'text-gray-300'}">${mod.completed_items} / ${mod.total_items} Items</span>
                         </div>
                         <div class="w-full bg-space-900 rounded-full h-2.5 outline outline-1 outline-white/10">
-                            <div class="${isComplete ? 'bg-space-accent shadow-[0_0_10px_rgba(79,209,197,0.5)]' : 'bg-blue-500'} h-2.5 rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
+                            <div class="${isComplete ? 'bg-space-accent shadow-[0_0_10px_rgba(167,125,255,0.5)]' : 'bg-blue-500'} h-2.5 rounded-full transition-all duration-1000" style="width: ${percent}%"></div>
                         </div>
                     </div>
                 `;
@@ -126,7 +126,7 @@
             if (allComplete && appStatus.status === 'IN_PROGRESS') {
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('bg-gray-500', 'cursor-not-allowed', 'text-space-900');
-                submitBtn.classList.add('bg-space-accent', 'hover:bg-space-hover', 'hover:scale-105', 'shadow-[0_0_15px_rgba(79,209,197,0.4)]', 'text-space-900');
+                submitBtn.classList.add('bg-space-accent', 'hover:bg-space-hover', 'hover:scale-105', 'shadow-[0_0_15px_rgba(167,125,255,0.4)]', 'text-space-900');
 
                 submitBtn.addEventListener('click', async () => {
                     const confirmSubmit = confirm("Are you sure you want to submit your final application? You will not be able to edit your checklist uploads after this.");

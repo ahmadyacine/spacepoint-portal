@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;900&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
     <!-- Tailwind CSS CDN -->
@@ -24,15 +24,15 @@
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                        display: ['Orbitron', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
                     },
                     colors: {
                         space: {
-                            900: '#0B0B1A',
-                            800: '#15152F',
-                            700: '#1D1D42',
-                            accent: '#4FD1C5',
-                            hover: '#38B2AC'
+                            900: '#05030A',
+                            800: '#1A0F26',
+                            700: '#2D1C3F',
+                            accent: '#A77DFF',
+                            hover: '#C0A0FF'
                         }
                     },
                     backgroundImage: {
@@ -45,12 +45,15 @@
 
     <style>
         body {
-            background-color: #0B0B1A;
+            background-color: #05030A;
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(167, 125, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(35, 17, 52, 0.4) 0%, transparent 50%);
             color: #E2E8F0;
         }
 
         .glass-panel {
-            background: rgba(21, 21, 47, 0.7);
+            background: rgba(26, 15, 38, 0.7);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -80,7 +83,7 @@
                         Log In
                     </button>
                     <a href="/apply"
-                        class="px-5 py-2 rounded-full font-medium tracking-wide text-space-900 bg-space-accent hover:bg-space-hover transition-colors shadow-[0_0_15px_rgba(79,209,197,0.4)]">
+                        class="px-5 py-2 rounded-full font-medium tracking-wide text-space-900 bg-space-accent hover:bg-space-hover transition-colors shadow-[0_0_15px_rgba(167,125,255,0.4)]">
                         Apply Now
                     </a>
                     {% endblock %}

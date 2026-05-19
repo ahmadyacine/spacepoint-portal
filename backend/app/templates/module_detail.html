@@ -26,8 +26,10 @@
     <div id="module-upload-container"
         class="glass-panel p-8 rounded-2xl mb-10 border border-white/20 shadow-2xl bg-space-900/40 relative hidden">
         <h3 class="text-xl font-display font-bold text-white mb-2">Module PDF Submission</h3>
-        <p class="text-sm text-gray-400 mb-6">Upload a single, consolidated PDF containing all required research and
-            findings for this entire module.</p>
+        <p class="text-sm text-gray-400 mb-6">
+            Upload a single, consolidated PDF containing all required research and findings for this entire module. 
+            <span class="text-space-accent font-semibold block mt-1">Maximum file size: 10MB. If your file exceeds 10MB, please upload it to Google Drive and paste the shared link in the notes section below.</span>
+        </p>
 
         <div id="module-submission-status" class="mb-6 hidden">
             <!-- Dynamic Status Badge -->
@@ -47,14 +49,14 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Notes / Summary (Optional)</label>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Notes / Google Drive link (Optional)</label>
                 <textarea id="module-notes-input" rows="3"
                     class="w-full bg-space-900 border border-white/10 rounded-xl p-3 text-white placeholder-gray-500 focus:border-space-accent focus:ring-1 focus:ring-space-accent outline-none transition-colors"
-                    placeholder="Any brief notes regarding this module's findings..."></textarea>
+                    placeholder="If your file is >10MB, paste your Google Drive link here. Make sure anyone with the link can view it!"></textarea>
             </div>
 
             <button type="submit" id="module-submit-btn"
-                class="flex justify-center py-3 px-8 rounded-full font-bold text-space-900 bg-space-accent hover:bg-space-hover transition-all transform hover:scale-[1.02] shadow-[0_0_15px_rgba(79,209,197,0.3)]">
+                class="flex justify-center py-3 px-8 rounded-full font-bold text-space-900 bg-space-accent hover:bg-space-hover transition-all transform hover:scale-[1.02] shadow-[0_0_15px_rgba(167,125,255,0.3)]">
                 Upload Module Submission
             </button>
         </form>

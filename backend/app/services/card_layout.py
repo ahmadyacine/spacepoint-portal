@@ -25,7 +25,7 @@ import os
 # _HERE = backend/app/services -> 3 levels up = PortalV2
 # ─────────────────────────────────────────────────────────
 _HERE = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE_DIR = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
+TEMPLATE_DIR = os.path.normpath(os.path.join(_HERE, "..", "static", "templates"))
 
 FRONT_TEMPLATE_PATH = os.path.join(TEMPLATE_DIR, "newID_Front.png")
 BACK_TEMPLATE_PATH  = os.path.join(TEMPLATE_DIR, "newID_Back.png")

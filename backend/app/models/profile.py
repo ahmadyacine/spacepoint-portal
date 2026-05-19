@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.dialects.postgresql import JSON
 from app.core.database import Base
 
@@ -13,3 +13,5 @@ class ApplicantProfile(Base):
     deliver_cities_json = Column(String, nullable=False) # Storing as JSON string
     background_areas_json = Column(String, nullable=False) # Storing as JSON string
     background_other = Column(String, nullable=True)
+    has_own_transportation = Column(Boolean, default=False, nullable=True)
+

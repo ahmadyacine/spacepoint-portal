@@ -65,8 +65,95 @@
     </div>
 
 
+    <!-- TAB: Overview -->
+    <div id="tab-overview" class="w-full flex-col gap-8 flex">
+        <!-- Dashboard Stats grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="glass-panel p-6 rounded-2xl border border-white/10 flex items-center justify-between shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-space-accent">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <span class="text-sm font-semibold text-gray-400 block mb-1">Total Applicants</span>
+                    <span class="text-3xl font-bold text-white tracking-tight" id="dash-total-applicants">0</span>
+                </div>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl border border-white/10 flex items-center justify-between shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-space-accent">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <span class="text-sm font-semibold text-gray-400 block mb-1">Total Instructors</span>
+                    <span class="text-3xl font-bold text-space-accent tracking-tight" id="dash-total-instructors">0</span>
+                </div>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl border border-white/10 flex items-center justify-between shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-space-accent">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <span class="text-sm font-semibold text-gray-400 block mb-1">Total Facilitators</span>
+                    <span class="text-3xl font-bold text-white tracking-tight" id="dash-total-facilitators">0</span>
+                </div>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl border border-white/10 flex items-center justify-between shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-space-accent">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <span class="text-sm font-semibold text-gray-400 block mb-1">Active Users (30d)</span>
+                    <span class="text-3xl font-bold text-green-400 tracking-tight" id="dash-active-users">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Universities Chart -->
+            <div class="glass-panel p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col min-h-[400px]">
+                <h3 class="text-lg font-display font-bold text-white mb-4 flex items-center">
+                    <span class="w-1.5 h-6 bg-space-accent rounded-full mr-3"></span>
+                    Universities Distribution
+                </h3>
+                <div class="flex-grow flex items-center justify-center relative min-h-[300px] w-full">
+                    <canvas id="uniChart" class="w-full max-h-[320px]"></canvas>
+                </div>
+            </div>
+
+            <!-- Cities Chart -->
+            <div class="glass-panel p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col min-h-[400px]">
+                <h3 class="text-lg font-display font-bold text-white mb-4 flex items-center">
+                    <span class="w-1.5 h-6 bg-space-accent rounded-full mr-3"></span>
+                    Cities Distribution
+                </h3>
+                <div class="flex-grow flex items-center justify-center relative min-h-[300px] w-full">
+                    <canvas id="cityChart" class="w-full max-h-[320px]"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Line Chart: Comparison between months regarding the joined users -->
+        <div class="glass-panel p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col min-h-[400px] w-full">
+            <h3 class="text-lg font-display font-bold text-white mb-4 flex items-center">
+                <span class="w-1.5 h-6 bg-space-accent rounded-full mr-3"></span>
+                Joined Users Trend (Comparison Between Months)
+            </h3>
+            <div class="flex-grow relative min-h-[300px] w-full">
+                <canvas id="signupTrendChart" class="w-full max-h-[320px]"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- TAB: Applicants -->
-    <div id="tab-apps" class="w-full flex-col gap-6 flex">
+    <div id="tab-apps" class="w-full flex-col gap-6 hidden">
         <div class="flex justify-between items-center flex-wrap gap-4">
             <h2 class="text-2xl font-display font-bold text-white tracking-tight">Review Applicants</h2>
             <div class="flex items-center gap-4">
@@ -166,7 +253,7 @@
                             <div id="rev-error" class="text-red-400 text-sm hidden mb-4"></div>
 
                             <button type="submit"
-                                class="w-full py-2 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)] mb-4">Save
+                                class="w-full py-2 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors shadow-[0_0_10px_rgba(167,125,255,0.3)] mb-4">Save
                                 Decision</button>
                             
                             <!-- Delete Button -->
@@ -192,7 +279,7 @@
                         <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
                             <h3 class="text-xl font-display font-bold text-white">Modules & Checklist</h3>
                             <a id="det-dl-btn" href="#" target="_blank"
-                                class="px-4 py-2 bg-space-accent text-space-900 rounded-lg font-bold hover:bg-space-hover transition-colors text-sm flex items-center shadow-[0_0_10px_rgba(79,209,197,0.3)]">
+                                class="px-4 py-2 bg-space-accent text-space-900 rounded-lg font-bold hover:bg-space-hover transition-colors text-sm flex items-center shadow-[0_0_10px_rgba(167,125,255,0.3)]">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -289,7 +376,7 @@
         <div class="flex justify-between items-center">
             <h2 class="text-2xl font-display font-bold text-white tracking-tight">Manage Invitation Codes</h2>
             <button onclick="document.getElementById('modal-add-invite').classList.remove('hidden')"
-                class="px-4 py-2 bg-space-accent text-space-900 rounded font-bold transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]">+
+                class="px-4 py-2 bg-space-accent text-space-900 rounded font-bold transition-colors shadow-[0_0_10px_rgba(167,125,255,0.3)]">+
                 New Code</button>
         </div>
 
@@ -320,7 +407,7 @@
         <div class="flex justify-between items-center">
             <h2 class="text-2xl font-display font-bold text-white tracking-tight">Manage Facilitators</h2>
             <button onclick="document.getElementById('modal-add-fac').classList.remove('hidden')"
-                class="px-4 py-2 bg-space-accent text-space-900 rounded font-bold transition-colors shadow-[0_0_10px_rgba(79,209,197,0.3)]">+
+                class="px-4 py-2 bg-space-accent text-space-900 rounded font-bold transition-colors shadow-[0_0_10px_rgba(167,125,255,0.3)]">+
                 New Facilitator</button>
         </div>
 
@@ -347,6 +434,37 @@
             </div>
         </div>
     </div> <!-- END TAB FACILITATORS -->
+
+    <!-- TAB: Users Management -->
+    <div id="tab-users" class="w-full flex-col gap-6 hidden">
+        <div class="flex justify-between items-center">
+            <h2 class="text-2xl font-display font-bold text-white tracking-tight">Manage System Users</h2>
+            <button onclick="openAddUserModal()"
+                class="px-4 py-2 bg-space-accent text-space-900 rounded font-bold transition-colors shadow-[0_0_10px_rgba(167,125,255,0.3)]">+
+                New User</button>
+        </div>
+
+        <div class="w-full glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                        <tr class="bg-space-900/80 border-b border-white/10 text-sm tracking-wide text-gray-400 uppercase">
+                            <th class="py-4 px-6 font-semibold">Name &amp; Phone</th>
+                            <th class="py-4 px-6 font-semibold">Email</th>
+                            <th class="py-4 px-6 font-semibold">Role</th>
+                            <th class="py-4 px-6 font-semibold">Created Date</th>
+                            <th class="py-4 px-6 font-semibold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table" class="text-gray-300 divide-y divide-white/5">
+                        <tr>
+                            <td colspan="5" class="py-10 text-center text-gray-500">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div> <!-- END TAB USERS -->
 
 </div>
 
@@ -466,10 +584,285 @@
     </div>
 </div>
 
+<!-- MODAL: Add User -->
+<div id="modal-add-user"
+    class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-space-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+        <h3 class="text-xl font-bold text-white mb-4">Add New User</h3>
+        <form onsubmit="submitAddUser(event)" class="space-y-4">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Full Name</label>
+                <input type="text" id="add-user-name" required
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Email</label>
+                <input type="email" id="add-user-email" required
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Phone (Optional)</label>
+                <input type="text" id="add-user-phone"
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Role</label>
+                <select id="add-user-role" required
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border">
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="FACILITATOR">FACILITATOR</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Password</label>
+                <input type="password" id="add-user-password" required
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border">
+            </div>
+            <div id="add-user-err" class="text-red-400 text-sm hidden"></div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('modal-add-user').classList.add('hidden')"
+                    class="flex-1 py-2 bg-space-800 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-colors">Cancel</button>
+                <button type="submit"
+                    class="flex-1 py-2 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors">Create User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: Edit User & Change Password -->
+<div id="modal-edit-user"
+    class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-space-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+        <h3 class="text-xl font-bold text-white mb-4">Edit User &amp; Password</h3>
+        <form onsubmit="submitEditUser(event)" class="space-y-4">
+            <input type="hidden" id="edit-user-id">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Full Name</label>
+                <input type="text" id="edit-user-name" required
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Email</label>
+                <input type="email" id="edit-user-email" required
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Phone (Optional)</label>
+                <input type="text" id="edit-user-phone"
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Role</label>
+                <select id="edit-user-role" required
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border">
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="FACILITATOR">FACILITATOR</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">New Password (Leave blank to keep current)</label>
+                <input type="password" id="edit-user-password" placeholder="••••••••"
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Existing Password (Required to change password)</label>
+                <input type="password" id="edit-user-existing-password" placeholder="••••••••"
+                    class="w-full rounded-lg border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border">
+            </div>
+            <div id="edit-user-err" class="text-red-400 text-sm hidden"></div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('modal-edit-user').classList.add('hidden')"
+                    class="flex-1 py-2 bg-space-800 text-white border border-white/20 rounded-lg hover:bg-white/10 transition-colors">Cancel</button>
+                <button type="submit"
+                    class="flex-1 py-2 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     let currentPage = 1;
     let limit = 10;
     let totalApplicants = 0;
+
+    let uniChartInstance = null;
+    let cityChartInstance = null;
+    let trendChartInstance = null;
+
+    async function fetchDashboardAnalytics() {
+        try {
+            const res = await fetch('/api/admin/dashboard-analytics');
+            if (!res.ok) return;
+            const data = await res.json();
+
+            // Set metric cards
+            document.getElementById('dash-total-applicants').innerText = data.roles.APPLICANT || 0;
+            document.getElementById('dash-total-instructors').innerText = data.roles.INSTRUCTOR || 0;
+            document.getElementById('dash-total-facilitators').innerText = data.roles.FACILITATOR || 0;
+            document.getElementById('dash-active-users').innerText = data.active_users_30d || 0;
+
+            // Render charts
+            renderUniChart(data.universities);
+            renderCityChart(data.cities);
+            renderTrendChart(data.monthly_signups);
+        } catch (e) {
+            console.error('Error fetching dashboard analytics:', e);
+        }
+    }
+
+    function renderUniChart(unis) {
+        const ctx = document.getElementById('uniChart').getContext('2d');
+        if (uniChartInstance) {
+            uniChartInstance.destroy();
+        }
+        
+        const labels = unis.map(u => u.university || 'Unknown');
+        const counts = unis.map(u => u.count);
+
+        uniChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Applicants',
+                    data: counts,
+                    backgroundColor: 'rgba(167, 125, 255, 0.6)',
+                    borderColor: 'rgba(167, 125, 255, 1)',
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1A0F26',
+                        titleColor: '#fff',
+                        bodyColor: '#A77DFF',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#9CA3AF' },
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: { color: '#9CA3AF', stepSize: 1 },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderCityChart(cities) {
+        const ctx = document.getElementById('cityChart').getContext('2d');
+        if (cityChartInstance) {
+            cityChartInstance.destroy();
+        }
+
+        const labels = cities.map(c => c.city || 'Unknown');
+        const counts = cities.map(c => c.count);
+
+        const colors = [
+            'rgba(167, 125, 255, 0.7)',
+            'rgba(101, 63, 132, 0.7)',
+            'rgba(192, 160, 255, 0.7)',
+            'rgba(239, 68, 68, 0.7)',
+            'rgba(59, 130, 246, 0.7)',
+            'rgba(16, 185, 129, 0.7)',
+            'rgba(245, 158, 11, 0.7)'
+        ];
+
+        cityChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: colors.slice(0, cities.length),
+                    borderColor: '#1A0F26',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: '#9CA3AF', font: { family: 'Inter' } }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1A0F26',
+                        titleColor: '#fff',
+                        bodyColor: '#A77DFF',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1
+                    }
+                }
+            }
+        });
+    }
+
+    function renderTrendChart(trends) {
+        const ctx = document.getElementById('signupTrendChart').getContext('2d');
+        if (trendChartInstance) {
+            trendChartInstance.destroy();
+        }
+
+        const labels = trends.map(t => t.month);
+        const counts = trends.map(t => t.count);
+
+        trendChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Joined Users',
+                    data: counts,
+                    borderColor: 'rgba(167, 125, 255, 1)',
+                    backgroundColor: 'rgba(167, 125, 255, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: 'rgba(167, 125, 255, 1)',
+                    pointBorderColor: '#05030A',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1A0F26',
+                        titleColor: '#fff',
+                        bodyColor: '#A77DFF',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#9CA3AF' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    },
+                    y: {
+                        ticks: { color: '#9CA3AF', stepSize: 1 },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    }
+                }
+            }
+        });
+    }
 
     // Tabs logic
     function switchTab(tab) {
@@ -482,15 +875,25 @@
         });
 
         // Reset panels
-        ['tab-apps', 'tab-instructors', 'tab-invites', 'tab-facs'].forEach(id => {
+        ['tab-overview', 'tab-apps', 'tab-instructors', 'tab-invites', 'tab-facs', 'tab-users'].forEach(id => {
             const el = document.getElementById(id);
-            el.classList.add('hidden');
-            el.classList.remove('flex');
+            if (el) {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            }
         });
 
         // Activate selected
         const activeClassBtn = "flex items-center whitespace-nowrap gap-3 px-4 py-3 rounded-xl transition-all bg-space-accent/10 border border-space-accent/30 text-space-accent font-semibold";
-        if (tab === 'apps') {
+        if (tab === 'overview') {
+            const deskEl = document.getElementById('nav-desk-overview');
+            const mobEl = document.getElementById('nav-mob-overview');
+            if (deskEl) deskEl.className = "nav-link-desk " + activeClassBtn;
+            if (mobEl) mobEl.className = "nav-link-mob " + activeClassBtn;
+            document.getElementById('tab-overview').classList.remove('hidden');
+            document.getElementById('tab-overview').classList.add('flex');
+            fetchDashboardAnalytics();
+        } else if (tab === 'apps') {
             document.getElementById('nav-desk-apps').className = "nav-link-desk " + activeClassBtn;
             document.getElementById('nav-mob-apps').className = "nav-link-mob " + activeClassBtn;
             document.getElementById('tab-apps').classList.remove('hidden');
@@ -503,7 +906,6 @@
             document.getElementById('tab-instructors').classList.remove('hidden');
             document.getElementById('tab-instructors').classList.add('flex');
             closeInstructorDetail();
-            // fetchInstructors(); // Already fetched on init/manual refresh
         } else if (tab === 'invites') {
             document.getElementById('nav-desk-invites').className = "nav-link-desk " + activeClassBtn;
             document.getElementById('nav-mob-invites').className = "nav-link-mob " + activeClassBtn;
@@ -516,6 +918,12 @@
             document.getElementById('tab-facs').classList.remove('hidden');
             document.getElementById('tab-facs').classList.add('flex');
             fetchFacilitators();
+        } else if (tab === 'users') {
+            document.getElementById('nav-desk-users').className = "nav-link-desk " + activeClassBtn;
+            document.getElementById('nav-mob-users').className = "nav-link-mob " + activeClassBtn;
+            document.getElementById('tab-users').classList.remove('hidden');
+            document.getElementById('tab-users').classList.add('flex');
+            fetchUsers();
         }
     }
 
@@ -786,6 +1194,7 @@
                 <div><span class="text-gray-500">University:</span> <span class="text-white">${data.profile.university}</span></div>
                 <div><span class="text-gray-500">Degree:</span> <span class="text-white">${data.profile.highest_degree}${data.profile.highest_degree_other ? ' (' + data.profile.highest_degree_other + ')' : ''}</span></div>
                 <div><span class="text-gray-500">City:</span> <span class="text-white">${data.profile.city_of_residence}</span></div>
+                <div><span class="text-gray-500">Own Transportation:</span> <span class="text-white">${data.profile.has_own_transportation ? 'Yes' : 'No'}</span></div>
                 <div class="h-px bg-white/10 my-2"></div>
                 <div><span class="text-gray-500 block mb-1">Deliver Cities:</span> 
                     <div class="flex flex-wrap gap-1">${JSON.parse(data.profile.deliver_cities_json).map(c => `<span class="bg-white/10 px-2 py-0.5 rounded text-xs">${c}</span>`).join('')}</div>
@@ -806,7 +1215,7 @@
             // Populate Presentation link block
             if (data.presentation_link) {
                 document.getElementById('det-presentation').classList.remove('hidden');
-                document.getElementById('det-presentation-link').innerHTML = `<p class="text-sm text-gray-300 mb-2">The applicant has uploaded their presentation link.</p><a href="${data.presentation_link}" target="_blank" class="inline-flex items-center text-sm font-bold bg-space-800 text-space-accent border border-space-accent/30 hover:border-space-accent hover:bg-space-800/80 px-4 py-2 rounded transition-colors break-all shadow-[0_0_10px_rgba(79,209,197,0.1)]"><svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>Open Phase 2 Presentation Link</a>`;
+                document.getElementById('det-presentation-link').innerHTML = `<p class="text-sm text-gray-300 mb-2">The applicant has uploaded their presentation link.</p><a href="${data.presentation_link}" target="_blank" class="inline-flex items-center text-sm font-bold bg-space-800 text-space-accent border border-space-accent/30 hover:border-space-accent hover:bg-space-800/80 px-4 py-2 rounded transition-colors break-all shadow-[0_0_10px_rgba(167,125,255,0.1)]"><svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>Open Phase 2 Presentation Link</a>`;
             } else {
                 document.getElementById('det-presentation').classList.add('hidden');
                 document.getElementById('det-presentation-link').innerHTML = '';
@@ -1189,6 +1598,170 @@
         document.getElementById('instructors-list-view').classList.remove('hidden');
     }
 
+    // -- Users Management Logic --
+    async function fetchUsers() {
+        const tbody = document.getElementById('users-table');
+        tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-gray-500">Loading users...</td></tr>';
+        try {
+            const res = await fetch('/api/admin/users');
+            if (res.ok) {
+                const data = await res.json();
+                tbody.innerHTML = '';
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-gray-500">No users found.</td></tr>';
+                    return;
+                }
+                data.forEach(u => {
+                    let d = new Date(u.created_at).toLocaleDateString();
+                    let tr = document.createElement('tr');
+                    tr.className = "border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors";
+                    
+                    let roleBadge = '';
+                    if (u.role === 'ADMIN') roleBadge = '<span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30 font-display">ADMIN</span>';
+                    else if (u.role === 'FACILITATOR') roleBadge = '<span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs font-bold border border-green-500/30 font-display">FACILITATOR</span>';
+                    else if (u.role === 'INSTRUCTOR') roleBadge = '<span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30 font-display">INSTRUCTOR</span>';
+                    else roleBadge = '<span class="px-2 py-0.5 rounded bg-gray-500/20 text-gray-400 text-xs font-bold border border-gray-500/30 font-display">APPLICANT</span>';
+
+                    tr.innerHTML = `
+                        <td class="py-4 px-6">
+                            <div class="font-medium text-white">${u.name}</div>
+                            <div class="text-xs text-gray-500">${u.phone || '-'}</div>
+                        </td>
+                        <td class="py-4 px-6 text-gray-300 text-sm">${u.email}</td>
+                        <td class="py-4 px-6">${roleBadge}</td>
+                        <td class="py-4 px-6 text-sm text-gray-400">${d}</td>
+                        <td class="py-4 px-6 text-right space-x-3">
+                            <button onclick="openEditUserModal(${u.id}, '${u.name.replace(/'/g, "\\'")}', '${u.email}', '${u.phone || ''}', '${u.role}')" class="text-space-accent hover:text-space-hover text-sm font-medium">Edit</button>
+                            <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-300 text-sm font-medium">Delete</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-red-400">Error loading users.</td></tr>';
+        }
+    }
+
+    function openAddUserModal() {
+        document.getElementById('add-user-name').value = '';
+        document.getElementById('add-user-email').value = '';
+        document.getElementById('add-user-phone').value = '';
+        document.getElementById('add-user-role').value = 'ADMIN';
+        document.getElementById('add-user-password').value = '';
+        document.getElementById('add-user-err').classList.add('hidden');
+        document.getElementById('modal-add-user').classList.remove('hidden');
+    }
+
+    async function submitAddUser(e) {
+        e.preventDefault();
+        const err = document.getElementById('add-user-err');
+        err.classList.add('hidden');
+        
+        const name = document.getElementById('add-user-name').value;
+        const email = document.getElementById('add-user-email').value;
+        const phone = document.getElementById('add-user-phone').value;
+        const role = document.getElementById('add-user-role').value;
+        const password = document.getElementById('add-user-password').value;
+
+        try {
+            const res = await fetch('/api/admin/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, phone: phone || null, role, password })
+            });
+            if (res.ok) {
+                document.getElementById('modal-add-user').classList.add('hidden');
+                fetchUsers();
+                fetchFacilitators();
+                fetchInstructors();
+            } else {
+                const data = await res.json();
+                err.innerText = data.detail || "Error creating user";
+                err.classList.remove('hidden');
+            }
+        } catch (e) {
+            err.innerText = "Network error";
+            err.classList.remove('hidden');
+        }
+    }
+
+    function openEditUserModal(id, name, email, phone, role) {
+        document.getElementById('edit-user-id').value = id;
+        document.getElementById('edit-user-name').value = name;
+        document.getElementById('edit-user-email').value = email;
+        document.getElementById('edit-user-phone').value = phone;
+        document.getElementById('edit-user-role').value = role;
+        document.getElementById('edit-user-password').value = '';
+        document.getElementById('edit-user-existing-password').value = '';
+        document.getElementById('edit-user-err').classList.add('hidden');
+        document.getElementById('modal-edit-user').classList.remove('hidden');
+    }
+
+    async function submitEditUser(e) {
+        e.preventDefault();
+        const err = document.getElementById('edit-user-err');
+        err.classList.add('hidden');
+
+        const id = document.getElementById('edit-user-id').value;
+        const name = document.getElementById('edit-user-name').value;
+        const email = document.getElementById('edit-user-email').value;
+        const phone = document.getElementById('edit-user-phone').value;
+        const role = document.getElementById('edit-user-role').value;
+        const password = document.getElementById('edit-user-password').value;
+        const existingPassword = document.getElementById('edit-user-existing-password').value;
+
+        const payload = { name, email, phone: phone || null, role };
+        if (password.trim() !== '') {
+            if (existingPassword.trim() === '') {
+                err.innerText = "Existing password is required to change password.";
+                err.classList.remove('hidden');
+                return;
+            }
+            payload.password = password;
+            payload.existing_password = existingPassword;
+        }
+
+        try {
+            const res = await fetch(`/api/admin/users/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                document.getElementById('modal-edit-user').classList.add('hidden');
+                fetchUsers();
+                fetchFacilitators();
+                fetchInstructors();
+            } else {
+                const data = await res.json();
+                err.innerText = data.detail || "Error updating user";
+                err.classList.remove('hidden');
+            }
+        } catch (e) {
+            err.innerText = "Network error";
+            err.classList.remove('hidden');
+        }
+    }
+
+    async function deleteUser(id) {
+        if (!confirm("Are you sure you want to permanently delete this user? This will also cascade delete any applicant submissions, profile information, or instructor records associated with this account. This cannot be undone.")) return;
+        try {
+            const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                fetchUsers();
+                fetchFacilitators();
+                fetchInstructors();
+                fetchApplicants(currentPage);
+            } else {
+                const data = await res.json();
+                alert(data.detail || "Error deleting user");
+            }
+        } catch (e) {
+            alert("Network error");
+        }
+    }
+
     async function logout() {
         await fetch("/api/auth/logout", { method: "POST" });
         window.location.href = "/admin/login";
@@ -1196,7 +1769,6 @@
 
     // Init
     fetchStats();
-    fetchApplicants(1);
-    fetchInstructors();
+    switchTab('overview');
 </script>
 {% endblock %}

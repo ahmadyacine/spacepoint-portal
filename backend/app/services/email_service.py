@@ -59,7 +59,7 @@ def generate_contract(instructor_name: str, living_area: str) -> tuple[str, str]
     current_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
     
-    template_path = os.path.join(project_root, "SPACE.-FC-AGREEMENTLETTER-EN - November.docx")
+    template_path = os.path.join(current_dir, "..", "static", "templates", "SPACE.-FC-AGREEMENTLETTER-EN - November.docx")
     output_dir = os.path.join(project_root, "backend", "app", "uploads", "contracts")
     
     if not os.path.exists(output_dir):

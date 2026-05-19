@@ -58,6 +58,13 @@ def fix():
                 if col_name not in cols:
                     print(f"Adding missing column '{col_name}' to instructor_profiles...")
                     conn.execute(text(f"ALTER TABLE instructor_profiles ADD COLUMN {col_name} VARCHAR"))
+
+    if "applicant_profiles" in table_names:
+        cols = [c['name'] for c in inspector.get_columns("applicant_profiles")]
+        if "has_own_transportation" not in cols:
+            print("Adding missing column 'has_own_transportation' to applicant_profiles...")
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE applicant_profiles ADD COLUMN has_own_transportation BOOLEAN DEFAULT FALSE"))
     
     # 3. ENUM Role Synchronization
     print("\nPhase 3: Synchronizing UserRole ENUM...")

@@ -18,6 +18,8 @@ class UserCreate(BaseModel):
     deliver_cities: List[str]
     background_areas: List[str]
     background_other: Optional[str] = None
+    has_own_transportation: bool
+
 
 class UserLogin(BaseModel):
     email: EmailStr

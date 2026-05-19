@@ -61,6 +61,48 @@ def get_admin_stats(admin: User = Depends(get_current_admin), db: Session = Depe
         "most_used_invitation_code": most_used_code
     }
 
+@router.get("/dashboard-analytics")
+def get_dashboard_analytics(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    from sqlalchemy import func
+    import collections
+    from datetime import datetime, timedelta
+
+    # 1. Total users per role
+    roles_count = db.query(User.role, func.count(User.id)).group_by(User.role).all()
+    roles_data = {r[0].value if hasattr(r[0], 'value') else str(r[0]): r[1] for r in roles_count}
+
+    # 2. Universities distribution
+    unis = db.query(ApplicantProfile.university, func.count(ApplicantProfile.user_id)).group_by(ApplicantProfile.university).order_by(func.count(ApplicantProfile.user_id).desc()).limit(10).all()
+    unis_data = [{"university": u[0], "count": u[1]} for u in unis]
+
+    # 3. Cities distribution
+    cities = db.query(ApplicantProfile.city_of_residence, func.count(ApplicantProfile.user_id)).group_by(ApplicantProfile.city_of_residence).order_by(func.count(ApplicantProfile.user_id).desc()).all()
+    cities_data = [{"city": c[0], "count": c[1]} for c in cities]
+
+    # 4. Monthly signups comparison
+    all_users_dates = db.query(User.created_at).all()
+    monthly_counts = collections.defaultdict(int)
+    for (c_date,) in all_users_dates:
+        if c_date:
+            month_key = c_date.strftime("%Y-%m")  # e.g., "2026-05"
+            monthly_counts[month_key] += 1
+
+    sorted_months = sorted(monthly_counts.keys())
+    monthly_signups = [{"month": m, "count": monthly_counts[m]} for m in sorted_months]
+
+    # 5. Active users (logged in within last 30 days)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    active_users = db.query(User).filter(User.last_login_at >= thirty_days_ago).count()
+
+    return {
+        "roles": roles_data,
+        "universities": unis_data,
+        "cities": cities_data,
+        "monthly_signups": monthly_signups,
+        "active_users_30d": active_users,
+        "total_users": db.query(User).count()
+    }
+
 @router.get("/applicants")
 def list_applicants(
     page: int = 1, 
@@ -497,3 +539,123 @@ def view_instructor_document(doc_id: int, admin: User = Depends(get_current_admi
         filename=filename,
         content_disposition_type="inline"
     )
+
+class UserCreateAdmin(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    role: UserRole
+    phone: Optional[str] = None
+
+class UserUpdateAdmin(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    existing_password: Optional[str] = None
+    role: Optional[UserRole] = None
+    phone: Optional[str] = None
+
+@router.get("/users")
+def list_users(admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    users = db.query(User).filter(User.role.in_([UserRole.ADMIN, UserRole.FACILITATOR])).order_by(User.created_at.desc()).all()
+    return [{
+        "id": u.id,
+        "name": u.name,
+        "email": u.email,
+        "phone": u.phone,
+        "role": u.role,
+        "created_at": u.created_at
+    } for u in users]
+
+@router.post("/users")
+def create_user(data: UserCreateAdmin, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.email == data.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="User with this email already exists")
+    
+    hashed_password = get_password_hash(data.password)
+    new_user = User(
+        name=data.name,
+        email=data.email,
+        phone=data.phone,
+        password_hash=hashed_password,
+        role=data.role,
+        must_change_password=0
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {
+        "id": new_user.id,
+        "name": new_user.name,
+        "email": new_user.email,
+        "role": new_user.role
+    }
+
+@router.put("/users/{user_id}")
+def update_user(user_id: int, data: UserUpdateAdmin, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if data.email and data.email != user.email:
+        existing = db.query(User).filter(User.email == data.email).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already taken")
+        user.email = data.email
+        
+    if data.name is not None:
+        user.name = data.name
+    if data.phone is not None:
+        user.phone = data.phone
+    if data.role is not None:
+        user.role = data.role
+    if data.password:
+        if not data.existing_password:
+            raise HTTPException(status_code=400, detail="Existing password is required to change password")
+        from app.core.security import verify_password
+        if not verify_password(data.existing_password, user.password_hash):
+            raise HTTPException(status_code=400, detail="Incorrect existing password")
+        user.password_hash = get_password_hash(data.password)
+        
+    db.commit()
+    db.refresh(user)
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role
+    }
+
+@router.delete("/users/{user_id}")
+def delete_user(user_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    if user_id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own admin account")
+        
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    from app.models.profile import ApplicantProfile
+    from app.models.submission import VideoSubmission, PresentationSubmission
+    from app.models.review import ApplicationReview
+    from app.models.checklist import ModuleSubmission, UserChecklistProgress
+    from app.models.instructor_profile import InstructorProfile
+    from app.models.instructor_document import InstructorDocument
+    from app.models.training import UserTrainingProgress
+    
+    # Cascade delete references to avoid constraint violations
+    db.query(ApplicantProfile).filter(ApplicantProfile.user_id == user_id).delete()
+    db.query(VideoSubmission).filter(VideoSubmission.user_id == user_id).delete()
+    db.query(ApplicationReview).filter(ApplicationReview.user_id == user_id).delete()
+    db.query(PresentationSubmission).filter(PresentationSubmission.user_id == user_id).delete()
+    db.query(ModuleSubmission).filter(ModuleSubmission.user_id == user_id).delete()
+    db.query(UserChecklistProgress).filter(UserChecklistProgress.user_id == user_id).delete()
+    db.query(InstructorProfile).filter(InstructorProfile.user_id == user_id).delete()
+    db.query(InstructorDocument).filter(InstructorDocument.user_id == user_id).delete()
+    db.query(UserTrainingProgress).filter(UserTrainingProgress.user_id == user_id).delete()
+    
+    db.delete(user)
+    db.commit()
+    return {"message": "User deleted successfully"}
+
