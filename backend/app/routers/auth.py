@@ -66,11 +66,12 @@ def signup(data: UserCreate, response: Response, db: Session = Depends(get_db)):
         university=data.university,
         highest_degree=data.highest_degree,
         highest_degree_other=data.highest_degree_other,
-        city_of_residence=data.city_of_residence,
-        deliver_cities_json=json.dumps(data.deliver_cities),
+        city_of_residence=data.city_of_residence if data.city_of_residence else None,
+        deliver_cities_json=json.dumps(data.deliver_cities) if data.deliver_cities else json.dumps([]),
         background_areas_json=json.dumps(data.background_areas),
         background_other=data.background_other,
-        has_own_transportation=data.has_own_transportation
+        has_own_transportation=data.has_own_transportation if data.has_own_transportation is not None else False,
+        country=data.country if data.country else "United Arab Emirates"
     )
     db.add(profile)
     

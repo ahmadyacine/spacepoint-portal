@@ -125,7 +125,7 @@ def list_applicants(
     for user, review in results:
         profile = db.query(ApplicantProfile).filter(ApplicantProfile.user_id == user.id).first()
         presentation = db.query(PresentationSubmission).filter(PresentationSubmission.user_id == user.id).first()
-        city = profile.city_of_residence if profile else "Unknown"
+        city = profile.city_of_residence if (profile and profile.city_of_residence) else (profile.country if (profile and profile.country) else "Outside UAE")
         applicants.append({
             "id": user.id,
             "name": user.name,
@@ -300,7 +300,7 @@ def review_applicant(user_id: int, data: AdminReviewUpdate, admin: User = Depend
         user.temp_password_last_set_at = datetime.utcnow()
         
         profile = db.query(ApplicantProfile).filter(ApplicantProfile.user_id == user.id).first()
-        living_area = profile.city_of_residence if profile else "Unknown"
+        living_area = profile.city_of_residence if (profile and profile.city_of_residence) else (profile.country if (profile and profile.country) else "Outside UAE")
         
         email_sent, contract_path = send_approval_credentials_email(
             to_email=user.email,

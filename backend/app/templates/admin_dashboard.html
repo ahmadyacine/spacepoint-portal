@@ -1191,16 +1191,19 @@
                 <div><span class="text-gray-500">Email:</span> <span class="text-white">${data.user.email}</span></div>
                 <div><span class="text-gray-500">Phone:</span> <span class="text-white">${data.user.phone}</span></div>
                 <div class="h-px bg-white/10 my-2"></div>
+                <div><span class="text-gray-500">Country:</span> <span class="text-white">${data.profile.country || 'United Arab Emirates'}</span></div>
                 <div><span class="text-gray-500">University:</span> <span class="text-white">${data.profile.university}</span></div>
                 <div><span class="text-gray-500">Degree:</span> <span class="text-white">${data.profile.highest_degree}${data.profile.highest_degree_other ? ' (' + data.profile.highest_degree_other + ')' : ''}</span></div>
-                <div><span class="text-gray-500">City:</span> <span class="text-white">${data.profile.city_of_residence}</span></div>
-                <div><span class="text-gray-500">Own Transportation:</span> <span class="text-white">${data.profile.has_own_transportation ? 'Yes' : 'No'}</span></div>
+                ${data.profile.city_of_residence ? `<div><span class="text-gray-500">City:</span> <span class="text-white">${data.profile.city_of_residence}</span></div>` : ''}
+                ${data.profile.city_of_residence ? `<div><span class="text-gray-500">Own Transportation:</span> <span class="text-white">${data.profile.has_own_transportation ? 'Yes' : 'No'}</span></div>` : ''}
                 <div class="h-px bg-white/10 my-2"></div>
+                ${data.profile.city_of_residence ? `
                 <div><span class="text-gray-500 block mb-1">Deliver Cities:</span> 
-                    <div class="flex flex-wrap gap-1">${JSON.parse(data.profile.deliver_cities_json).map(c => `<span class="bg-white/10 px-2 py-0.5 rounded text-xs">${c}</span>`).join('')}</div>
+                    <div class="flex flex-wrap gap-1">${JSON.parse(data.profile.deliver_cities_json || '[]').map(c => `<span class="bg-white/10 px-2 py-0.5 rounded text-xs">${c}</span>`).join('')}</div>
                 </div>
+                ` : ''}
                 <div class="mt-2"><span class="text-gray-500 block mb-1">Background:</span> 
-                    <div class="flex flex-wrap gap-1">${JSON.parse(data.profile.background_areas_json).map(c => `<span class="bg-space-accent/20 text-space-accent px-2 py-0.5 rounded text-xs">${c}</span>`).join('')}</div>
+                    <div class="flex flex-wrap gap-1">${JSON.parse(data.profile.background_areas_json || '[]').map(c => `<span class="bg-space-accent/20 text-space-accent px-2 py-0.5 rounded text-xs">${c}</span>`).join('')}</div>
                 </div>
                 ${data.profile.background_other ? `<div><span class="text-gray-500 text-xs">Other: ${data.profile.background_other}</span></div>` : ''}
                 <div class="mt-4"><span class="text-gray-500">Invite Code:</span> <span class="font-mono text-xs text-white">${data.user.invitation_code_used}</span></div>

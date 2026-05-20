@@ -5,7 +5,19 @@ This document tracks all version releases, feature additions, layout modificatio
 ---
 
 ## [v1.1.0] - 2026-05-20
+### Fixed
+- **Invitation Code Case Insensitivity**:
+  - Enforced automatic conversion of typed invitation codes to uppercase on the frontend (`apply.html`). This fixes validation failures caused by inputting lowercase letters even when CSS transformation displays them as uppercase.
+
 ### Added
+- **International Applicants (Outside UAE) Support**:
+  - Implemented a location toggle at the top of the `/apply` form to differentiate between applicants residing **Within UAE** and **Outside UAE**.
+  - Conditionally hides UAE-specific fields (City of Residence, Own Transportation/Car, and Deliver Cities checkboxes) for international applicants.
+  - Implemented a **Country of Residence** dropdown select element populated dynamically with all countries, which is displayed and required for **both** domestic and international applicants.
+  - Relaxed phone validation logic across the frontend form and backend schema (no longer mandates the `+971` UAE country code).
+  - Added a new `country` column to the `ApplicantProfile` model, populated with the user's selected country from the countries dropdown.
+  - Integrated `country` details inside the Admin Dashboard table view, stats aggregations, and applicant profile drawer.
+
 - **Admin Dashboard Overview Section & Charts**:
   - Integrated `Chart.js` libraries in the admin template suite.
   - Implemented a premium glassmorphic statistics overview tab featuring active users metrics, total counts per role, and high-fidelity interactive visualization charts.

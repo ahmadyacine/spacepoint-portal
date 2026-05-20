@@ -61,10 +61,19 @@ def fix():
 
     if "applicant_profiles" in table_names:
         cols = [c['name'] for c in inspector.get_columns("applicant_profiles")]
-        if "has_own_transportation" not in cols:
-            print("Adding missing column 'has_own_transportation' to applicant_profiles...")
-            with engine.begin() as conn:
+        with engine.begin() as conn:
+            if "has_own_transportation" not in cols:
+                print("Adding missing column 'has_own_transportation' to applicant_profiles...")
                 conn.execute(text("ALTER TABLE applicant_profiles ADD COLUMN has_own_transportation BOOLEAN DEFAULT FALSE"))
+            if "country" not in cols:
+                print("Adding missing column 'country' to applicant_profiles...")
+                conn.execute(text("ALTER TABLE applicant_profiles ADD COLUMN country VARCHAR DEFAULT 'United Arab Emirates'"))
+            if engine.dialect.name == "postgresql":
+                try:
+                    conn.execute(text("ALTER TABLE applicant_profiles ALTER COLUMN city_of_residence DROP NOT NULL"))
+                    conn.execute(text("ALTER TABLE applicant_profiles ALTER COLUMN deliver_cities_json DROP NOT NULL"))
+                except Exception as e:
+                    print(f"Note dropping NOT NULL constraints: {e}")
     
     # 3. ENUM Role Synchronization
     print("\nPhase 3: Synchronizing UserRole ENUM...")
@@ -85,7 +94,7 @@ def fix():
     except Exception as e:
         print(f"Note: {e}")
 
-    print("\n✅ CORE REPAIR COMPLETE: Database structure now matches your backend code.")
+    print("\n[SUCCESS] CORE REPAIR COMPLETE: Database structure now matches your backend code.")
 
 if __name__ == "__main__":
     fix()

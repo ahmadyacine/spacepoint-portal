@@ -39,6 +39,7 @@
                 <div>
                     <label for="invitation_code" class="block text-sm font-medium text-gray-300">Invitation Code</label>
                     <input id="invitation_code" name="invitation_code" type="text" required
+                        oninput="this.value = this.value.toUpperCase()"
                         class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-white/20 placeholder-gray-500 bg-space-900/50 text-white focus:outline-none focus:ring-2 focus:ring-space-accent focus:border-transparent sm:text-sm mt-1 uppercase"
                         placeholder="INV-XXXXX">
                 </div>
@@ -61,6 +62,25 @@
                 </p>
             </div>
             <form id="signup-form" class="mt-8 space-y-6" onsubmit="handleSignup(event)">
+                <!-- UAE vs Outside UAE selection -->
+                <div class="glass-panel p-5 rounded-2xl border border-white/5 space-y-3">
+                    <label class="block text-sm font-medium text-gray-300">Are you applying from within the UAE or outside the UAE?</label>
+                    <div class="flex gap-4">
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="apply_location" value="within" class="sr-only peer" checked onchange="toggleLocationFields()">
+                            <div class="py-3 rounded-xl bg-space-900/50 border border-white/10 text-gray-400 peer-checked:bg-space-accent peer-checked:text-space-900 peer-checked:border-space-accent font-bold transition-all shadow-[0_0_10px_rgba(0,0,0,0.2)] peer-checked:shadow-[0_0_15px_rgba(167,125,255,0.4)]">
+                                Within UAE
+                            </div>
+                        </label>
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="apply_location" value="outside" class="sr-only peer" onchange="toggleLocationFields()">
+                            <div class="py-3 rounded-xl bg-space-900/50 border border-white/10 text-gray-400 peer-checked:bg-space-accent peer-checked:text-space-900 peer-checked:border-space-accent font-bold transition-all shadow-[0_0_10px_rgba(0,0,0,0.2)] peer-checked:shadow-[0_0_15px_rgba(167,125,255,0.4)]">
+                                Outside UAE
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <div class="space-y-4">
                     <!-- Standard fields -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -70,9 +90,8 @@
                                 class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-300">Phone (+971)</label>
-                            <input type="tel" id="phone" required value="+971" pattern="^\+971\d{8,9}$"
-                                title="Must start with +971 followed by 8-9 digits"
+                            <label class="block text-sm font-medium text-gray-300">Phone Number</label>
+                            <input type="tel" id="phone" required placeholder="e.g., +971 50 123 4567"
                                 class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
                         </div>
                     </div>
@@ -118,8 +137,17 @@
                             class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
                     </div>
 
+                    <!-- Country of Residence -->
+                    <div id="country-wrapper">
+                        <label class="block text-sm font-medium text-gray-300">Country of Residence</label>
+                        <select id="country" required
+                            class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
+                            <option value="" disabled>Select...</option>
+                        </select>
+                    </div>
+
                     <!-- MultiSelect Checkboxes & Location -->
-                    <div>
+                    <div id="city-wrapper">
                         <label class="block text-sm font-medium text-gray-300">City of Residence</label>
                         <select id="city" required
                             class="mt-1 block w-full rounded-lg border-white/20 bg-space-900/50 px-3 py-2 text-white focus:ring-space-accent focus:border-space-accent sm:text-sm border">
@@ -136,7 +164,7 @@
                     </div>
 
                     <!-- Own Transportation Selection -->
-                    <div class="glass-panel p-5 rounded-2xl border border-white/5 space-y-3">
+                    <div id="transport-wrapper" class="glass-panel p-5 rounded-2xl border border-white/5 space-y-3">
                         <label class="block text-sm font-medium text-gray-300">Do you have a car / own transportation?</label>
                         <div class="flex gap-4">
                             <label class="flex-1 text-center cursor-pointer">
@@ -154,7 +182,7 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div id="deliver-cities-wrapper">
                         <label class="block text-sm font-medium text-gray-300 mb-3">Can you deliver sessions in any of the following cities?</label>
                         <div class="grid grid-cols-2 gap-3">
                             {% for c in ['Dubai','Abu Dhabi','Sharjah','Al Ain','Ajman','Umm Al Quwain','Fujairah','Ras Al Khaimah'] %}
@@ -222,7 +250,7 @@
 
     async function handleInviteSub(e) {
         e.preventDefault();
-        const codeInput = document.getElementById('invitation_code').value.trim();
+        const codeInput = document.getElementById('invitation_code').value.trim().toUpperCase();
         const errDiv = document.getElementById('invite-error');
         const btn = document.getElementById('btn-continue');
 
@@ -255,6 +283,46 @@
         } finally {
             btn.disabled = false;
             btn.textContent = "Continue Application";
+        }
+    }
+
+    function toggleLocationFields() {
+        const loc = document.querySelector('input[name="apply_location"]:checked').value;
+        const countryInput = document.getElementById('country');
+        const cityWrapper = document.getElementById('city-wrapper');
+        const citySelect = document.getElementById('city');
+        const transportWrapper = document.getElementById('transport-wrapper');
+        const transportRadioYes = document.querySelector('input[name="has_own_transportation"][value="true"]');
+        const transportRadioNo = document.querySelector('input[name="has_own_transportation"][value="false"]');
+        const deliverCitiesWrapper = document.getElementById('deliver-cities-wrapper');
+
+        if (loc === 'outside') {
+            // Hide UAE specific fields
+            cityWrapper.classList.add('hidden');
+            citySelect.required = false;
+            citySelect.value = "";
+
+            transportWrapper.classList.add('hidden');
+            transportRadioYes.required = false;
+            transportRadioNo.required = false;
+
+            deliverCitiesWrapper.classList.add('hidden');
+
+            if (countryInput.value === "United Arab Emirates") {
+                countryInput.value = "";
+            }
+        } else {
+            // Show UAE specific fields
+            cityWrapper.classList.remove('hidden');
+            citySelect.required = true;
+
+            transportWrapper.classList.remove('hidden');
+            transportRadioYes.required = true;
+            transportRadioNo.required = true;
+
+            deliverCitiesWrapper.classList.remove('hidden');
+
+            countryInput.value = "United Arab Emirates";
         }
     }
 
@@ -300,12 +368,31 @@
         const btn = document.getElementById('btn-submit');
         errDiv.classList.add('hidden');
 
-        // Multi-select lists
-        const deliverCheckboxes = document.querySelectorAll('input[name="deliver_cities"]:checked');
-        const bgCheckboxes = document.querySelectorAll('input[name="background"]:checked');
+        const loc = document.querySelector('input[name="apply_location"]:checked').value;
 
-        if (deliverCheckboxes.length === 0 || bgCheckboxes.length === 0) {
-            errDiv.textContent = "Please select at least one delivery city and one background area.";
+        // Multi-select lists
+        let deliverCheckboxes = [];
+        let transportRadio = null;
+
+        if (loc === 'within') {
+            deliverCheckboxes = document.querySelectorAll('input[name="deliver_cities"]:checked');
+            if (deliverCheckboxes.length === 0) {
+                errDiv.textContent = "Please select at least one delivery city.";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            transportRadio = document.querySelector('input[name="has_own_transportation"]:checked');
+            if (!transportRadio) {
+                errDiv.textContent = "Please specify if you have own transportation/car.";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+        }
+
+        const bgCheckboxes = document.querySelectorAll('input[name="background"]:checked');
+        if (bgCheckboxes.length === 0) {
+            errDiv.textContent = "Please select at least one background area.";
             errDiv.classList.remove('hidden');
             return;
         }
@@ -314,14 +401,6 @@
         const emailVal = document.getElementById('email').value.trim();
         if (!emailVal.toLowerCase().endsWith('@gmail.com')) {
             errDiv.textContent = "Only Gmail accounts (@gmail.com) are accepted.";
-            errDiv.classList.remove('hidden');
-            return;
-        }
-
-        // Transportation check
-        const transportRadio = document.querySelector('input[name="has_own_transportation"]:checked');
-        if (!transportRadio) {
-            errDiv.textContent = "Please specify if you have own transportation/car.";
             errDiv.classList.remove('hidden');
             return;
         }
@@ -338,11 +417,12 @@
             university: document.getElementById('university').value,
             highest_degree: document.getElementById('degree').value,
             highest_degree_other: document.getElementById('degree').value === 'Other' ? document.getElementById('degree_other').value : null,
-            city_of_residence: document.getElementById('city').value,
-            deliver_cities: Array.from(deliverCheckboxes).map(c => c.value),
+            city_of_residence: loc === 'within' ? document.getElementById('city').value : null,
+            deliver_cities: loc === 'within' ? Array.from(deliverCheckboxes).map(c => c.value) : [],
             background_areas: Array.from(bgCheckboxes).map(c => c.value),
             background_other: document.getElementById('bg-other-chk').checked ? document.getElementById('bg_other').value : null,
-            has_own_transportation: transportRadio.value === "true"
+            has_own_transportation: loc === 'within' ? (transportRadio.value === "true") : false,
+            country: document.getElementById('country').value
         };
 
         try {
@@ -368,6 +448,48 @@
             btn.textContent = "Create Account & Start Task";
         }
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const countrySelect = document.getElementById("country");
+        if (countrySelect) {
+            const countries = [
+                "United Arab Emirates", "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", 
+                "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", 
+                "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", 
+                "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", 
+                "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", 
+                "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Democratic Republic of the Congo", 
+                "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", 
+                "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", 
+                "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", 
+                "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", 
+                "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", 
+                "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", 
+                "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", 
+                "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", 
+                "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", 
+                "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", 
+                "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", 
+                "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", 
+                "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+                "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", 
+                "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", 
+                "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", 
+                "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", 
+                "Tuvalu", "Uganda", "Ukraine", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", 
+                "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+            ];
+            countries.forEach(c => {
+                const opt = document.createElement("option");
+                opt.value = c;
+                opt.textContent = c;
+                if (c === "United Arab Emirates") {
+                    opt.selected = true;
+                }
+                countrySelect.appendChild(opt);
+            });
+        }
+    });
 </script>
 
 <style>

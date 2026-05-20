@@ -14,11 +14,12 @@ class UserCreate(BaseModel):
     university: str
     highest_degree: str
     highest_degree_other: Optional[str] = None
-    city_of_residence: str
-    deliver_cities: List[str]
+    city_of_residence: Optional[str] = None
+    deliver_cities: Optional[List[str]] = None
     background_areas: List[str]
     background_other: Optional[str] = None
-    has_own_transportation: bool
+    has_own_transportation: Optional[bool] = None
+    country: Optional[str] = "United Arab Emirates"
 
 
 class UserLogin(BaseModel):
