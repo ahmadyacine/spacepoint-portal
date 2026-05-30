@@ -7,7 +7,7 @@ import os
 import shutil
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.routers.deps import get_db, get_current_user
@@ -149,6 +149,56 @@ def get_back_card(
     if not profile or not profile.back_card_path or not os.path.exists(profile.back_card_path):
         raise HTTPException(status_code=404, detail="Back card not generated yet")
     return FileResponse(profile.back_card_path, media_type="image/png")
+
+
+@router.get("/id-card/pdf")
+def get_id_card_pdf(
+    instructor: User = Depends(_require_instructor),
+    db: Session      = Depends(get_db),
+):
+    """Generate and return a PDF containing front and back cards, sized to CR80 format."""
+    profile = db.query(InstructorProfile).filter(
+        InstructorProfile.user_id == instructor.id
+    ).first()
+    if (
+        not profile
+        or not profile.front_card_path
+        or not os.path.exists(profile.front_card_path)
+        or not profile.back_card_path
+        or not os.path.exists(profile.back_card_path)
+    ):
+        raise HTTPException(status_code=404, detail="ID card not generated yet")
+    
+    # CR80 standard is 3.375" x 2.125". Since the card is in portrait layout,
+    # we use 2.125" x 3.375" (153.0 x 243.0 points).
+    width = 2.125 * 72
+    height = 3.375 * 72
+    
+    import io
+    from reportlab.pdfgen import canvas
+    
+    pdf_buffer = io.BytesIO()
+    can = canvas.Canvas(pdf_buffer, pagesize=(width, height))
+    
+    # Page 1: Front Card
+    can.drawImage(profile.front_card_path, 0, 0, width=width, height=height)
+    can.showPage()
+    
+    # Page 2: Back Card
+    can.drawImage(profile.back_card_path, 0, 0, width=width, height=height)
+    can.showPage()
+    
+    can.save()
+    pdf_buffer.seek(0)
+    
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=SpacePoint_ID_Card_{instructor.id}.pdf"
+        }
+    )
+
 
 @router.get("/download/{resource_id}")
 def download_library_resource(

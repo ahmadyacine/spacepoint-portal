@@ -15,11 +15,11 @@
         </div>
     </div>
 
-    <!-- Form + Preview Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Form + Preview Stack -->
+    <div class="space-y-8">
 
-        <!-- LEFT: Form -->
-        <div class="glass-panel p-8 rounded-2xl border border-white/5 space-y-6">
+        <!-- ROW 1: Card Details Form -->
+        <div class="glass-panel p-8 rounded-3xl border border-white/5 space-y-6">
             <h2 class="text-xl font-display font-bold text-white flex items-center gap-2">
                 <svg class="w-5 h-5 text-space-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -27,38 +27,45 @@
                 Card Details
             </h2>
 
-            <!-- Instructor Name (display only) -->
-            <div>
-                <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Full Name</label>
-                <div class="bg-space-900/50 border border-white/10 p-3 rounded-lg text-gray-300 font-medium">{{ user.name }}</div>
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Left side of form details -->
+                <div class="space-y-6">
+                    <!-- Instructor Name (display only) -->
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Full Name</label>
+                        <div class="bg-space-900/50 border border-white/10 p-3 rounded-lg text-gray-300 font-medium">{{ user.name }}</div>
+                    </div>
 
-            <!-- LinkedIn URL -->
-            <div>
-                <label for="linkedin_url" class="block text-xs uppercase tracking-wider text-gray-500 mb-1">LinkedIn Profile URL <span class="text-red-400">*</span></label>
-                <input
-                    type="url"
-                    id="linkedin_url"
-                    placeholder="https://linkedin.com/in/yourprofile"
-                    value="{{ id_card.linkedin_url if id_card and id_card.linkedin_url else '' }}"
-                    class="w-full bg-space-900 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-space-accent transition-colors"
-                >
-            </div>
-
-            <!-- Profile Photo Upload -->
-            <div>
-                <label for="profile_photo" class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Profile Photo <span class="text-red-400">*</span></label>
-                <div id="drop-zone"
-                    class="border-2 border-dashed border-white/10 rounded-xl p-6 text-center cursor-pointer hover:border-space-accent/40 transition-colors"
-                    onclick="document.getElementById('profile_photo').click()">
-                    <svg class="w-10 h-10 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    <p class="text-gray-500 text-sm" id="photo-label">Click to upload JPG or PNG</p>
-                    <input type="file" id="profile_photo" accept=".jpg,.jpeg,.png" class="hidden" onchange="onPhotoChange(this)">
+                    <!-- LinkedIn URL -->
+                    <div>
+                        <label for="linkedin_url" class="block text-xs uppercase tracking-wider text-gray-500 mb-1">LinkedIn Profile URL <span class="text-red-400">*</span></label>
+                        <input
+                            type="url"
+                            id="linkedin_url"
+                            placeholder="https://linkedin.com/in/yourprofile"
+                            value="{{ id_card.linkedin_url if id_card and id_card.linkedin_url else '' }}"
+                            class="w-full bg-space-900 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-space-accent transition-colors"
+                        >
+                    </div>
                 </div>
-                <div id="photo-preview-wrap" class="mt-3 text-center hidden">
-                    <img id="photo-preview" class="w-20 h-20 rounded-full object-cover mx-auto border-2 border-space-accent/40" src="" alt="Preview">
+
+                <!-- Right side of form details: Photo Upload -->
+                <div class="flex flex-col justify-between">
+                    <div>
+                        <label for="profile_photo" class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Profile Photo <span class="text-red-400">*</span></label>
+                        <div id="drop-zone"
+                            class="border-2 border-dashed border-white/10 rounded-xl p-6 text-center cursor-pointer hover:border-space-accent/40 transition-colors flex flex-col justify-center items-center h-32"
+                            onclick="document.getElementById('profile_photo').click()">
+                            <svg class="w-8 h-8 text-gray-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <p class="text-gray-500 text-sm" id="photo-label">Click to upload JPG or PNG</p>
+                            <input type="file" id="profile_photo" accept=".jpg,.jpeg,.png" class="hidden" onchange="onPhotoChange(this)">
+                        </div>
+                    </div>
+                    <div id="photo-preview-wrap" class="mt-3 text-center hidden">
+                        <img id="photo-preview" class="w-16 h-16 rounded-full object-cover mx-auto border-2 border-space-accent/40" src="" alt="Preview">
+                    </div>
                 </div>
             </div>
 
@@ -66,20 +73,44 @@
             <div id="msg-error"   class="hidden text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3"></div>
             <div id="msg-success" class="hidden text-sm text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg px-4 py-3"></div>
 
-            <!-- Generate Button -->
-            <button id="generate-btn" onclick="generateCard()"
-                class="w-full bg-space-accent text-space-900 font-bold py-3 rounded-xl hover:bg-space-hover transition-all shadow-lg shadow-space-accent/20 flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
-                <span id="generate-btn-text">
-                    {% if id_card and id_card.front_card_path %}Regenerate ID Card{% else %}Generate ID Card{% endif %}
-                </span>
-            </button>
+            <!-- Generate and Download Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                <button id="generate-btn" onclick="generateCard()"
+                    class="w-full bg-space-accent text-space-900 font-bold py-3 rounded-xl hover:bg-space-hover transition-all shadow-lg shadow-space-accent/20 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    <span id="generate-btn-text">
+                        {% if id_card and id_card.front_card_path %}Regenerate ID Card{% else %}Generate ID Card{% endif %}
+                    </span>
+                </button>
+
+                <div id="download-pdf-section" class="{% if not (id_card and id_card.front_card_path) %}hidden{% endif %}">
+                    <a href="/api/instructor/id-card/pdf" id="download-pdf-btn"
+                        class="w-full bg-white/10 border border-white/20 text-white font-bold py-3 rounded-xl hover:bg-white/20 transition-all flex items-center justify-center gap-2 h-full min-h-[48px]">
+                        <svg class="w-5 h-5 text-space-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        <span>Download ID Card as PDF</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Note section (always visible) -->
+            <div class="bg-space-800/40 border border-space-accent/15 rounded-2xl p-5 text-sm text-gray-300">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-space-accent shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p>
+                        <strong class="text-white">Note:</strong> You can download and print this card in a standard <strong class="text-space-accent">CR80 format</strong> (measures 3.375" x 2.125" / 85.60 mm x 54.00 mm) and place it in a card holder to be used in the workshops you deliver.
+                    </p>
+                </div>
+            </div>
         </div>
 
-        <!-- RIGHT: Preview -->
-        <div class="space-y-6">
+        <!-- ROW 2: Card Preview -->
+        <div class="glass-panel p-8 rounded-3xl border border-white/5 space-y-6">
             <h2 class="text-xl font-display font-bold text-white flex items-center gap-2">
                 <svg class="w-5 h-5 text-space-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -90,14 +121,16 @@
 
             {% if id_card and id_card.front_card_path %}
             <!-- Already generated — show existing -->
-            <div class="space-y-4">
-                <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
-                    <div class="px-4 pt-4 pb-1 text-xs uppercase tracking-wider text-gray-500 font-medium">Front</div>
-                    <img id="front-preview" src="/api/instructor/id-card/front?t={{ id_card.updated_at or '' }}" alt="Front Card" class="w-full rounded-b-2xl">
-                </div>
-                <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
-                    <div class="px-4 pt-4 pb-1 text-xs uppercase tracking-wider text-gray-500 font-medium">Back</div>
-                    <img id="back-preview" src="/api/instructor/id-card/back?t={{ id_card.updated_at or '' }}" alt="Back Card" class="w-full rounded-b-2xl">
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+                        <div class="px-4 pt-4 pb-1 text-xs uppercase tracking-wider text-gray-500 font-medium">Front</div>
+                        <img id="front-preview" src="/api/instructor/id-card/front?t={{ id_card.updated_at or '' }}" alt="Front Card" class="w-full rounded-b-2xl">
+                    </div>
+                    <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+                        <div class="px-4 pt-4 pb-1 text-xs uppercase tracking-wider text-gray-500 font-medium">Back</div>
+                        <img id="back-preview" src="/api/instructor/id-card/back?t={{ id_card.updated_at or '' }}" alt="Back Card" class="w-full rounded-b-2xl">
+                    </div>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="text-xs text-gray-500">ID: <span class="text-space-accent font-mono font-bold">{{ id_card.instructor_id }}</span></span>
@@ -113,14 +146,16 @@
                 </svg>
                 <p class="text-gray-600 text-sm">Your ID card will appear here after generation.</p>
             </div>
-            <div id="preview-cards" class="hidden space-y-4">
-                <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
-                    <div class="px-4 pt-4 pb-1 text-xs uppercase tracking-wider text-gray-500 font-medium">Front</div>
-                    <img id="front-preview" src="" alt="Front Card" class="w-full rounded-b-2xl">
-                </div>
-                <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
-                    <div class="px-4 pt-4 pb-1 text-xs uppercase tracking-wider text-gray-500 font-medium">Back</div>
-                    <img id="back-preview" src="" alt="Back Card" class="w-full rounded-b-2xl">
+            <div id="preview-cards" class="hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+                        <div class="px-4 pt-4 pb-1 text-xs uppercase tracking-wider text-gray-500 font-medium">Front</div>
+                        <img id="front-preview" src="" alt="Front Card" class="w-full rounded-b-2xl">
+                    </div>
+                    <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+                        <div class="px-4 pt-4 pb-1 text-xs uppercase tracking-wider text-gray-500 font-medium">Back</div>
+                        <img id="back-preview" src="" alt="Back Card" class="w-full rounded-b-2xl">
+                    </div>
                 </div>
                 <div id="card-meta" class="flex items-center gap-3">
                     <span class="text-xs text-gray-500">ID: <span id="card-id-display" class="text-space-accent font-mono font-bold"></span></span>
@@ -199,6 +234,10 @@ async function generateCard() {
         const cards       = document.getElementById('preview-cards');
         if (placeholder) placeholder.classList.add('hidden');
         if (cards)       cards.classList.remove('hidden');
+
+        // Show download PDF section
+        const downloadSection = document.getElementById('download-pdf-section');
+        if (downloadSection) downloadSection.classList.remove('hidden');
 
         okBox.textContent = `✓ ID Card generated successfully! Your instructor ID is ${data.instructor_id}.`;
         okBox.classList.remove('hidden');

@@ -13,32 +13,91 @@
 
     <!-- Personal Documents Section -->
     <div id="section-personal">
-        <div class="glass-panel border border-white/5 rounded-2xl overflow-hidden shadow-2xl p-6">
-            <h3 class="font-display font-bold text-white mb-4">Upload Personal Document</h3>
-            <form id="uploadDocForm" class="flex flex-wrap gap-4 items-end mb-8" onsubmit="uploadPersonalDocument(event)">
-                <div class="flex-1 min-w-[200px]">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Document Type</label>
-                    <select id="docType" required class="w-full bg-space-900 border border-white/10 rounded-lg px-4 py-2 text-white">
-                        <option value="ID Card">ID Card</option>
-                        <option value="Passport">Passport</option>
-                        <option value="Personal Picture">Personal Picture</option>
-                        <option value="Contract">Contract</option>
-                        <option value="Visa">Visa</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div class="flex-1 min-w-[200px]">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">File</label>
-                    <input type="file" id="docFile" required class="w-full bg-space-900 border border-white/10 rounded-lg px-4 py-1.5 text-white file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-space-accent file:text-space-900 hover:file:bg-space-hover cursor-pointer">
-                </div>
-                <div>
-                    <button type="submit" id="uploadDocBtn" class="bg-space-accent hover:bg-space-hover text-space-900 font-bold py-2 px-6 rounded-lg transition-colors border border-transparent shadow-[0_0_15px_rgba(0,240,255,0.3)]">
-                        Upload
-                    </button>
-                </div>
-            </form>
+        <div class="glass-panel border border-white/5 rounded-3xl overflow-hidden shadow-2xl p-8 space-y-8">
+            <div>
+                <h3 class="font-display font-bold text-xl text-white mb-2">Upload Personal Document</h3>
+                <p class="text-sm text-gray-400">Select a document type, select or drop your file, and upload it to your library.</p>
+            </div>
 
-            <h3 class="font-display font-bold text-white mb-4 border-t border-white/10 pt-6">Your Documents</h3>
+            <!-- Upload Grid Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <!-- Left 2 Cols: Document Type Selection & Guidance Checklist -->
+                <div class="lg:col-span-2 space-y-4">
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-gray-500 mb-2 font-semibold">Document Type</label>
+                        <select id="docType" required class="w-full bg-space-900 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-space-accent transition-colors">
+                            <option value="ID Card">ID Card</option>
+                            <option value="Passport">Passport</option>
+                            <option value="Personal Picture">Personal Picture</option>
+                            <option value="Contract">Contract</option>
+                            <option value="Visa">Visa</option>
+                            <option value="CV">CV</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Checklist / Notes Box explaining options -->
+                    <div class="bg-space-800/40 border border-space-accent/15 rounded-2xl p-5 space-y-3">
+                        <h4 class="text-xs uppercase tracking-wider text-space-accent font-bold">Required Documents Checklist:</h4>
+                        <ul class="space-y-3 text-xs text-gray-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-space-accent mt-0.5">•</span>
+                                <div><strong class="text-white">ID Card:</strong> UAE Emirates ID (front & back copy) or National ID card.</div>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-space-accent mt-0.5">•</span>
+                                <div><strong class="text-white">Passport:</strong> High-quality copy of your passport information page.</div>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-space-accent mt-0.5">•</span>
+                                <div><strong class="text-white">Personal Picture:</strong> Professional high-resolution headshot for portal.</div>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-space-accent mt-0.5">•</span>
+                                <div><strong class="text-white">Contract:</strong> Signed copy of your SpacePoint Instructor contract.</div>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-space-accent mt-0.5">•</span>
+                                <div><strong class="text-white">Visa:</strong> UAE Residency Visa copy (if applicable).</div>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-space-accent mt-0.5">•</span>
+                                <div><strong class="text-white">CV:</strong> Your latest professional CV or resume.</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Right 3 Cols: File Upload Drag & Drop Uploader -->
+                <div class="lg:col-span-3">
+                    <form id="uploadDocForm" class="space-y-4" onsubmit="uploadPersonalDocument(event)">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-gray-500 mb-2 font-semibold">File Upload</label>
+                            <div id="drop-zone"
+                                class="border-2 border-dashed border-white/10 rounded-2xl p-8 text-center cursor-pointer hover:border-space-accent/40 transition-all flex flex-col justify-center items-center h-48 bg-space-900/40 relative overflow-hidden"
+                                onclick="document.getElementById('docFile').click()">
+                                
+                                <svg class="w-12 h-12 text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                                <p class="text-gray-300 font-medium text-sm" id="photo-label">Drag and drop file here, or click to browse</p>
+                                <p class="text-gray-500 text-xs mt-1">Supports PDF, JPG, JPEG, PNG, DOC, DOCX (max 10MB)</p>
+                                <input type="file" id="docFile" required class="hidden" onchange="onFileChange(this)">
+                            </div>
+                        </div>
+
+                        <!-- Upload Button -->
+                        <button type="submit" id="uploadDocBtn" class="w-full bg-space-accent hover:bg-space-hover text-space-900 font-bold py-3.5 px-6 rounded-xl transition-all shadow-[0_0_15px_rgba(167,125,255,0.3)] flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                            </svg>
+                            <span>Upload Document</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <h3 class="font-display font-bold text-white mb-4 border-t border-white/10 pt-8">Your Documents</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
@@ -81,7 +140,47 @@
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         fetchPersonalDocuments();
+        setupDragAndDrop();
     });
+
+    function setupDragAndDrop() {
+        const dropZone = document.getElementById('drop-zone');
+        if (!dropZone) return;
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-space-accent/60', 'bg-space-accent/5');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-space-accent/60', 'bg-space-accent/5');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            const fileInput = document.getElementById('docFile');
+            
+            if (files && files.length > 0) {
+                fileInput.files = files;
+                onFileChange(fileInput);
+            }
+        }, false);
+    }
+
+    function onFileChange(input) {
+        if (input.files && input.files[0]) {
+            const sizeMB = (input.files[0].size / 1024 / 1024).toFixed(2);
+            document.getElementById('photo-label').innerHTML = `<span class="text-space-accent font-semibold">${input.files[0].name}</span> (${sizeMB} MB)`;
+        } else {
+            document.getElementById('photo-label').textContent = "Drag and drop file here, or click to browse";
+        }
+    }
 
     async function fetchPersonalDocuments() {
         try {
@@ -144,6 +243,7 @@
             const data = await resp.json();
             if (resp.ok && data.success) {
                 fileInput.value = '';
+                document.getElementById('photo-label').textContent = "Drag and drop file here, or click to browse";
                 await fetchPersonalDocuments();
             } else {
                 alert(data.detail || "Failed to upload document.");
