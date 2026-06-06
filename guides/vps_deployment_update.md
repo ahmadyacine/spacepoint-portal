@@ -87,6 +87,22 @@ systemctl status spacepoint
 ---
 
 ### Troubleshooting
+*   **Alembic Multiple Head Revisions Error?**: 
+    If you get an error saying *"Multiple head revisions are present for given argument 'head'"*, it means there are extra untracked migration scripts on your VPS that are not in Git (e.g. from running an autogenerate command on the VPS).
+    To fix this, check for untracked files and delete them:
+    ```bash
+    # 1. Check for untracked migration files on the VPS
+    git status backend/alembic/versions/
+    
+    # 2. Delete any untracked files (e.g. untracked_migration.py)
+    rm backend/alembic/versions/some_untracked_migration_file.py
+    
+    # 3. Verify there is only one head now
+    alembic heads
+    
+    # 4. Run the upgrade again
+    alembic upgrade head
+    ```
 *   **PDF not generating?**: Check if LibreOffice is working: `libreoffice --version`.
 *   **Rocket icon not showing?**: Refresh your browser cache (Ctrl + F5).
 *   **Service won't start?**: Check logs: `journalctl -u spacepoint -f`.

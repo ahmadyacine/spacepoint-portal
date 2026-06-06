@@ -30,6 +30,7 @@ from app.models.checklist import Module, ModuleSection, ChecklistItem, UserCheck
 from app.models.invitation import InvitationCode
 from app.models.profile import ApplicantProfile
 from app.models.review import ApplicationReview
+from app.models.payment import PaymentBatch, PaymentLetter, PaymentSession, PaymentAddon, InstructorBankDetails, PortalSetting
 
 # Use a separate engine with AUTOCOMMIT for the ENUM fix
 # ENUM updates in Postgres cannot run inside a normal transaction
