@@ -33,6 +33,13 @@
         border-radius: 50%;
         animation: exhaust 0.8s ease-out infinite;
     }
+    @keyframes modal-scale {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    .animate-modal {
+        animation: modal-scale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
 </style>
 {% endblock %}
 
@@ -61,6 +68,30 @@
             <div class="text-sm text-gray-400 mb-1">Top Code</div>
             <div class="text-xl font-bold text-space-accent mt-1" id="stat-coupon" style="word-break: break-all;">...
             </div>
+        </div>
+    </div>
+
+    <!-- Payment Overview Stats -->
+    <div id="payment-stats-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 hidden">
+        <div class="glass-panel p-4 rounded-xl border border-white/10 text-center">
+            <div class="text-sm text-gray-400 mb-1">Total Spent (Paid)</div>
+            <div class="text-2xl font-bold text-emerald-400" id="pstat-spent">AED 0</div>
+        </div>
+        <div class="glass-panel p-4 rounded-xl border border-white/10 text-center">
+            <div class="text-sm text-gray-400 mb-1">Pending Payment</div>
+            <div class="text-2xl font-bold text-sky-400" id="pstat-pending">AED 0</div>
+        </div>
+        <div class="glass-panel p-4 rounded-xl border border-white/10 text-center">
+            <div class="text-sm text-gray-400 mb-1">Awaiting Signature</div>
+            <div class="text-2xl font-bold text-amber-400" id="pstat-awaiting">AED 0</div>
+        </div>
+        <div class="glass-panel p-4 rounded-xl border border-white/10 text-center">
+            <div class="text-sm text-gray-400 mb-1">Total Sessions</div>
+            <div class="text-2xl font-bold text-white" id="pstat-sessions">0</div>
+        </div>
+        <div class="glass-panel p-4 rounded-xl border border-white/10 text-center">
+            <div class="text-sm text-gray-400 mb-1">Total Hours</div>
+            <div class="text-2xl font-bold text-purple-400" id="pstat-hours">0h</div>
         </div>
     </div>
 
@@ -468,6 +499,178 @@
 
 </div>
 
+    <!-- TAB: Payments -->
+    <div id="tab-payments" class="w-full flex-col gap-6 hidden">
+        <div class="flex justify-between items-center flex-wrap gap-4">
+            <h2 class="text-2xl font-display font-bold text-white tracking-tight">Instructor Payments</h2>
+            <div class="flex items-center gap-3">
+                <a href="/api/admin/payments/bulk-import/template"
+                   class="px-4 py-2 rounded-xl border border-space-accent/30 text-space-accent text-sm font-semibold hover:bg-space-accent/10 transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Download Excel Template
+                </a>
+                <button onclick="openCreateLetterModal()"
+                    class="px-4 py-2 bg-space-accent text-space-900 rounded-xl font-bold transition-colors shadow-[0_0_10px_rgba(167,125,255,0.3)] flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    New Letter
+                </button>
+            </div>
+        </div>
+
+        <!-- Sub-tabs -->
+        <div class="flex gap-2 border-b border-white/10 pb-0">
+            <button onclick="showPaymentSubTab('letters')" id="ptab-letters"
+                class="px-4 py-2.5 text-sm font-semibold text-space-accent border-b-2 border-space-accent -mb-px transition-all">All Letters</button>
+            <button onclick="showPaymentSubTab('batches')" id="ptab-batches"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-400 border-b-2 border-transparent -mb-px hover:text-white transition-all">Batches</button>
+            <button onclick="showPaymentSubTab('bulk')" id="ptab-bulk"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-400 border-b-2 border-transparent -mb-px hover:text-white transition-all">Bulk Import</button>
+            <button onclick="showPaymentSubTab('settings')" id="ptab-settings"
+                class="px-4 py-2.5 text-sm font-semibold text-gray-400 border-b-2 border-transparent -mb-px hover:text-white transition-all">Settings</button>
+        </div>
+
+        <!-- All Letters panel -->
+        <div id="psub-letters">
+            <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+                <div class="flex items-center gap-3 px-5 py-3 border-b border-white/5">
+                    <select id="pay-filter-batch" onchange="loadPaymentLetters()"
+                        class="bg-space-800 border border-white/10 text-sm text-white rounded-lg px-3 py-1.5 outline-none">
+                        <option value="">All Batches</option>
+                    </select>
+                    <select id="pay-filter-status" onchange="loadPaymentLetters()"
+                        class="bg-space-800 border border-white/10 text-sm text-white rounded-lg px-3 py-1.5 outline-none">
+                        <option value="">All Statuses</option>
+                        <option value="DRAFT">Draft</option>
+                        <option value="PUBLISHED">Published</option>
+                        <option value="SIGNED">Signed</option>
+                        <option value="PAID">Paid</option>
+                    </select>
+                    <button onclick="loadPaymentLetters()" class="text-space-accent text-sm hover:text-white transition-colors">↻ Refresh</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-white/5 text-gray-500 uppercase text-xs tracking-wider">
+                                <th class="px-5 py-3 text-left">Instructor</th>
+                                <th class="px-5 py-3 text-left">Date</th>
+                                <th class="px-5 py-3 text-left">Sessions</th>
+                                <th class="px-5 py-3 text-right">Total AED</th>
+                                <th class="px-5 py-3 text-center">Status</th>
+                                <th class="px-5 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pay-letters-tbody" class="divide-y divide-white/5">
+                            <tr><td colspan="6" class="px-5 py-8 text-center text-gray-500">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batches panel -->
+        <div id="psub-batches" class="hidden space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-white">Payment Batches</h3>
+                <button onclick="openCreateBatchModal()" class="px-4 py-2 bg-space-accent text-space-900 rounded-xl text-sm font-bold">+ New Batch</button>
+            </div>
+            <div id="batches-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- Bulk Import panel -->
+        <div id="psub-bulk" class="hidden space-y-6">
+            <div class="glass-panel rounded-2xl border border-white/5 p-6">
+                <h3 class="font-semibold text-white mb-1">Bulk Excel Import</h3>
+                <p class="text-sm text-gray-400 mb-5">Upload a 2-sheet Excel file (Sessions + Add-ons) to create payment letters in bulk.</p>
+
+                <!-- Step 1: Upload -->
+                <div id="bulk-step1">
+                    <div id="bulk-drop-zone"
+                        class="border-2 border-dashed border-white/20 rounded-xl p-10 text-center cursor-pointer hover:border-space-accent/50 transition-all"
+                        ondragover="event.preventDefault(); this.classList.add('border-space-accent/60')"
+                        ondragleave="this.classList.remove('border-space-accent/60')"
+                        ondrop="handleBulkDrop(event)">
+                        <svg class="w-10 h-10 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        <p class="text-gray-400 text-sm">Drag & drop your Excel file here, or</p>
+                        <label class="mt-3 inline-block cursor-pointer px-4 py-2 rounded-lg bg-space-accent/10 border border-space-accent/30 text-space-accent text-sm font-semibold hover:bg-space-accent/20 transition-all">
+                            Browse File
+                            <input type="file" id="bulk-file-input" accept=".xlsx,.xls" class="hidden" onchange="previewBulkImport(this)">
+                        </label>
+                        <p class="text-xs text-gray-600 mt-2">Supported: .xlsx, .xls</p>
+                    </div>
+                </div>
+
+                <!-- Step 2: Preview -->
+                <div id="bulk-step2" class="hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-semibold text-white">Preview</h4>
+                        <button onclick="resetBulkImport()" class="text-sm text-gray-400 hover:text-white">← Upload different file</button>
+                    </div>
+                    <div id="bulk-errors" class="hidden mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                        <p class="text-red-400 text-sm font-semibold mb-1">Validation Errors:</p>
+                        <ul id="bulk-errors-list" class="text-red-300 text-xs space-y-1 list-disc list-inside"></ul>
+                    </div>
+                    <div id="bulk-preview-table" class="overflow-x-auto"></div>
+
+                    <div class="mt-5 flex items-center gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Assign to Batch (optional)</label>
+                            <select id="bulk-batch-select" class="bg-space-800 border border-white/10 text-sm text-white rounded-lg px-3 py-2 outline-none">
+                                <option value="">No batch</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Letter Date</label>
+                            <input type="text" id="bulk-letter-date" placeholder="DD/MM/YYYY"
+                                class="bg-space-800 border border-white/10 text-sm text-white rounded-lg px-3 py-2 outline-none w-36">
+                        </div>
+                        <div class="mt-5">
+                            <button onclick="confirmBulkImport()" id="bulk-confirm-btn"
+                                class="px-6 py-2.5 bg-space-accent text-space-900 rounded-xl text-sm font-bold hover:bg-space-hover transition-all">
+                                Confirm Import
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings panel -->
+        <div id="psub-settings" class="hidden space-y-6">
+            <div class="glass-panel rounded-2xl border border-white/5 p-6">
+                <h3 class="font-semibold text-white mb-4">Portal Settings — Admin Signature</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Admin Signatory Name</label>
+                        <div class="flex gap-3">
+                            <input type="text" id="setting-signatory" placeholder="e.g. Abdullah Alsalmani"
+                                class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-space-accent/60">
+                            <button onclick="saveSignatoryName()" class="px-5 py-2 bg-space-accent text-space-900 rounded-xl font-semibold text-sm">Save</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Admin Signature Image (PNG/JPEG)</label>
+                        <div class="flex items-center gap-3">
+                            <label class="cursor-pointer px-4 py-2 rounded-xl border border-space-accent/30 text-space-accent text-sm font-semibold hover:bg-space-accent/10 transition-all">
+                                Upload Signature
+                                <input type="file" id="sig-upload-input" accept="image/*" class="hidden" onchange="uploadAdminSignature(this)">
+                            </label>
+                            <span id="sig-upload-status" class="text-sm text-gray-400"></span>
+                        </div>
+                    </div>
+                </div>
+                <div id="settings-msg" class="hidden mt-4 px-4 py-3 rounded-xl text-sm font-medium"></div>
+            </div>
+        </div>
+    </div> <!-- END TAB PAYMENTS -->
+
+</div>
+
 <!-- MODAL: Add Invitation Code -->
 <div id="modal-add-invite"
     class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -681,6 +884,117 @@
 </div>
 
 <script>
+function showConfirmModal({ title, message, onConfirm, confirmText = 'Confirm', type = 'info' }) {
+    const existing = document.getElementById('custom-confirm-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'custom-confirm-modal';
+    modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in';
+    
+    let btnColor = 'bg-space-accent hover:bg-space-hover text-space-900';
+    if (type === 'danger') btnColor = 'bg-red-500 hover:bg-red-600 text-white';
+    else if (type === 'success') btnColor = 'bg-emerald-500 hover:bg-emerald-600 text-white';
+
+    modal.innerHTML = `
+        <div class="w-full max-w-sm bg-[#0e0820] border border-white/10 rounded-2xl p-6 shadow-2xl animate-modal pointer-events-auto">
+            <h3 class="text-lg font-bold text-white mb-2">${title}</h3>
+            <p class="text-sm text-gray-400 mb-6">${message}</p>
+            <div class="flex gap-3">
+                <button type="button" onclick="document.getElementById('custom-confirm-modal').remove()"
+                    class="flex-1 py-2.5 bg-space-800 text-white border border-white/20 rounded-xl hover:bg-white/10 transition-colors text-sm font-semibold">
+                    Cancel
+                </button>
+                <button type="button" id="cc-btn"
+                    class="flex-1 py-2.5 ${btnColor} rounded-xl transition-colors text-sm font-bold">
+                    ${confirmText}
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('cc-btn').onclick = async () => {
+        const btn = document.getElementById('cc-btn');
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+        try {
+            await onConfirm();
+        } catch(e) {
+            console.error(e);
+        }
+        modal.remove();
+    };
+}
+
+function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
+    const existing = document.getElementById('custom-prompt-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'custom-prompt-modal';
+    modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in';
+
+    modal.innerHTML = `
+        <div class="w-full max-w-sm bg-[#0e0820] border border-white/10 rounded-2xl p-6 shadow-2xl animate-modal pointer-events-auto">
+            <h3 class="text-lg font-bold text-white mb-4">${title}</h3>
+            <div class="space-y-4">
+                <input type="text" id="cp-input" value="${defaultValue}" placeholder="${placeholder}"
+                    class="w-full rounded-xl border-white/20 bg-space-800 px-4 py-3 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm placeholder-gray-600">
+                <div id="cp-err" class="text-red-400 text-xs hidden"></div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="document.getElementById('custom-prompt-modal').remove()"
+                        class="flex-1 py-2.5 bg-space-800 text-white border border-white/20 rounded-xl hover:bg-white/10 transition-colors text-sm font-semibold">
+                        Cancel
+                    </button>
+                    <button type="button" id="cp-btn"
+                        class="flex-1 py-2.5 bg-space-accent text-space-900 font-bold rounded-xl hover:bg-space-hover transition-colors text-sm">
+                        Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    const input = document.getElementById('cp-input');
+    input.focus();
+    input.select();
+    
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('cp-btn').click();
+    });
+
+    document.getElementById('cp-btn').onclick = async () => {
+        const val = input.value.trim();
+        const errEl = document.getElementById('cp-err');
+        errEl.classList.add('hidden');
+        if (!val) {
+            errEl.textContent = 'Value cannot be empty.';
+            errEl.classList.remove('hidden');
+            return;
+        }
+
+        const btn = document.getElementById('cp-btn');
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+        try {
+            const success = await onConfirm(val);
+            if (success !== false) {
+                modal.remove();
+            } else {
+                btn.disabled = false;
+                btn.textContent = 'Submit';
+            }
+        } catch(e) {
+            errEl.textContent = 'An error occurred.';
+            errEl.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Submit';
+        }
+    };
+}
+
     let currentPage = 1;
     let limit = 10;
     let totalApplicants = 0;
@@ -875,13 +1189,24 @@
         });
 
         // Reset panels
-        ['tab-overview', 'tab-apps', 'tab-instructors', 'tab-invites', 'tab-facs', 'tab-users'].forEach(id => {
+        ['tab-overview', 'tab-apps', 'tab-instructors', 'tab-invites', 'tab-facs', 'tab-users', 'tab-payments'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.classList.add('hidden');
                 el.classList.remove('flex');
             }
         });
+
+        // Hide/Show Overview/Payment Stats at the top
+        const statsContainer = document.getElementById('stats-container');
+        const paymentStatsContainer = document.getElementById('payment-stats-container');
+        if (tab === 'payments') {
+            if (statsContainer) statsContainer.classList.add('hidden');
+            if (paymentStatsContainer) paymentStatsContainer.classList.remove('hidden');
+        } else {
+            if (statsContainer) statsContainer.classList.remove('hidden');
+            if (paymentStatsContainer) paymentStatsContainer.classList.add('hidden');
+        }
 
         // Activate selected
         const activeClassBtn = "flex items-center whitespace-nowrap gap-3 px-4 py-3 rounded-xl transition-all bg-space-accent/10 border border-space-accent/30 text-space-accent font-semibold";
@@ -924,6 +1249,12 @@
             document.getElementById('tab-users').classList.remove('hidden');
             document.getElementById('tab-users').classList.add('flex');
             fetchUsers();
+        } else if (tab === 'payments') {
+            document.getElementById('nav-desk-payments').className = "nav-link-desk " + activeClassBtn;
+            document.getElementById('nav-mob-payments').className = "nav-link-mob " + activeClassBtn;
+            document.getElementById('tab-payments').classList.remove('hidden');
+            document.getElementById('tab-payments').classList.add('flex');
+            loadPaymentsTab();
         }
     }
 
@@ -1107,13 +1438,20 @@
         } catch (e) { console.error(e); }
     }
 
-    async function deleteInvite(id) {
-        if (!confirm("Are you sure you want to delete this invitation code?")) return;
-        try {
-            const res = await fetch(`/api/admin/invitations/${id}`, { method: 'DELETE' });
-            if (res.ok) fetchInvitations();
-        } catch (e) { console.error(e); }
-    }
+    function deleteInvite(id) {
+    showConfirmModal({
+        title: 'Delete Invitation Code',
+        message: 'Are you sure you want to delete this invitation code?',
+        type: 'danger',
+        confirmText: 'Delete',
+        onConfirm: async () => {
+            try {
+                const res = await fetch(`/api/admin/invitations/${id}`, { method: 'DELETE' });
+                if (res.ok) fetchInvitations();
+            } catch (e) { console.error(e); }
+        }
+    });
+}
 
     async function submitAddFacilitator(e) {
         e.preventDefault();
@@ -1747,22 +2085,30 @@
         }
     }
 
-    async function deleteUser(id) {
-        if (!confirm("Are you sure you want to permanently delete this user? This will also cascade delete any applicant submissions, profile information, or instructor records associated with this account. This cannot be undone.")) return;
-        try {
-            const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                fetchUsers();
-                fetchFacilitators();
-                fetchInstructors();
-                fetchApplicants(currentPage);
-            } else {
-                const data = await res.json();
-                alert(data.detail || "Error deleting user");
+    function deleteUser(id) {
+        showConfirmModal({
+            title: 'Delete User Account',
+            message: 'Are you sure you want to permanently delete this user? This will also cascade delete any applicant submissions, profile information, or instructor records associated with this account. This cannot be undone.',
+            type: 'danger',
+            confirmText: 'Delete User',
+            onConfirm: async () => {
+                try {
+                    const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        fetchUsers();
+                        fetchFacilitators();
+                        fetchInstructors();
+                        fetchApplicants(currentPage);
+                        showAdminToast('✅ User deleted successfully');
+                    } else {
+                        const data = await res.json();
+                        showAdminToast('❌ ' + (data.detail || 'Error deleting user'), 'error');
+                    }
+                } catch (e) {
+                    showAdminToast('❌ Network error', 'error');
+                }
             }
-        } catch (e) {
-            alert("Network error");
-        }
+        });
     }
 
     async function logout() {
@@ -1773,5 +2119,1048 @@
     // Init
     fetchStats();
     switchTab('overview');
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PAYMENTS TAB JAVASCRIPT
+    // ═══════════════════════════════════════════════════════════════════
+
+    let bulkFileData = null;   // holds the File object for bulk import
+    let payLetters = [];        // cached letters
+
+    function loadPaymentsTab() {
+        loadPaymentLetters();
+        loadBatchesForSelect();
+    }
+
+    function showPaymentSubTab(name) {
+        ['letters', 'batches', 'bulk', 'settings'].forEach(n => {
+            document.getElementById(`psub-${n}`).classList.toggle('hidden', n !== name);
+            const btn = document.getElementById(`ptab-${n}`);
+            if (n === name) {
+                btn.className = 'px-4 py-2.5 text-sm font-semibold text-space-accent border-b-2 border-space-accent -mb-px transition-all';
+            } else {
+                btn.className = 'px-4 py-2.5 text-sm font-semibold text-gray-400 border-b-2 border-transparent -mb-px hover:text-white transition-all';
+            }
+        });
+        if (name === 'batches') loadBatchesList();
+        if (name === 'settings') loadSettings();
+    }
+
+    // ── Status badge ────────────────────────────────────────────────────
+    function payStatusBadge(s) {
+        const map = {
+            'DRAFT':     '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-gray-500/15 text-gray-400 border border-gray-500/30">Draft</span>',
+            'PUBLISHED': '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">Published</span>',
+            'SIGNED':    '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Signed</span>',
+            'PAID':      '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30">Paid</span>',
+        };
+        return map[s] || `<span class="text-xs text-gray-400">${s}</span>`;
+    }
+
+    // ── Letters ─────────────────────────────────────────────────────────
+    async function loadPaymentLetters() {
+        const tbody = document.getElementById('pay-letters-tbody');
+        const statusFilter = document.getElementById('pay-filter-status')?.value || '';
+        const batchFilter = document.getElementById('pay-filter-batch')?.value || '';
+        tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-500">Loading...</td></tr>';
+        try {
+            let url = '/api/admin/payments/letters';
+            if (batchFilter) {
+                url += `?batch_id=${batchFilter}`;
+            }
+            const r = await fetch(url);
+            if (!r.ok) throw new Error('Failed');
+            payLetters = await r.json();
+
+            // Calculate overview metrics based on the full list of letters for this batch (unfiltered by status)
+            updatePaymentOverviewStats(payLetters);
+
+            // Client-side filtering by status
+            const displayLetters = statusFilter
+                ? payLetters.filter(l => l.status === statusFilter)
+                : payLetters;
+
+            tbody.innerHTML = '';
+            if (!displayLetters.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-500">No payment letters found.</td></tr>';
+                return;
+            }
+            displayLetters.forEach(l => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-white/2 transition-colors';
+                tr.innerHTML = `
+                    <td class="px-5 py-3 text-white font-medium">${l.instructor_name}<br><span class="text-xs text-gray-500">${l.instructor_email}</span></td>
+                    <td class="px-5 py-3 text-gray-400 text-sm">${l.letter_date || '—'}</td>
+                    <td class="px-5 py-3 text-gray-400 text-sm">${l.sessions?.length || 0}</td>
+                    <td class="px-5 py-3 text-right font-mono text-space-accent font-semibold">${Number(l.grand_total||0).toLocaleString()}</td>
+                    <td class="px-5 py-3 text-center">${payStatusBadge(l.status)}</td>
+                    <td class="px-5 py-3 text-right">
+                        <div class="flex items-center justify-end gap-1">
+                            ${l.status === 'DRAFT' ? `
+                            <button onclick="publishLetter(${l.id})"
+                                class="px-2 py-1 text-xs rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 transition-all">
+                                Publish
+                            </button>` : ''}
+                            ${l.status === 'SIGNED' ? `
+                            <button onclick="markPaid(${l.id})"
+                                class="px-2 py-1 text-xs rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400 hover:bg-sky-500/20 transition-all">
+                                Mark Paid
+                            </button>` : ''}
+                            ${l.has_pdf || l.has_signed_pdf ? `
+                            <a href="/api/admin/payments/letters/${l.id}/download${l.has_signed_pdf ? '?signed=true' : ''}"
+                                class="px-2 py-1 text-xs rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-all">
+                                PDF
+                            </a>` : `
+                            <button onclick="generatePdf(${l.id})"
+                                class="px-2 py-1 text-xs rounded-lg border border-white/10 text-gray-400 hover:bg-white/5 transition-all">
+                                Generate PDF
+                            </button>`}
+                            <button onclick="openEditLetterModal(${l.id})"
+                                class="px-2 py-1 text-xs rounded-lg bg-space-accent/10 border border-space-accent/30 text-space-accent hover:bg-space-accent/20 transition-all">
+                                Edit
+                            </button>
+                            <button onclick="deleteLetter(${l.id})"
+                                class="px-2 py-1 text-xs rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all">
+                                Del
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch(e) {
+            tbody.innerHTML = `<tr><td colspan="6" class="px-5 py-8 text-center text-red-400">Failed to load letters.</td></tr>`;
+        }
+    }
+
+    function updatePaymentOverviewStats(letters) {
+        let spent = 0;
+        let pending = 0;
+        let awaiting = 0;
+        let sessionsCount = 0;
+        let hoursCount = 0;
+
+        letters.forEach(l => {
+            if (l.status === 'PAID') {
+                spent += Number(l.grand_total || 0);
+            } else if (l.status === 'SIGNED') {
+                pending += Number(l.grand_total || 0);
+            } else if (l.status === 'PUBLISHED') {
+                awaiting += Number(l.grand_total || 0);
+            }
+
+            if (l.sessions && Array.isArray(l.sessions)) {
+                sessionsCount += l.sessions.length;
+                l.sessions.forEach(s => {
+                    hoursCount += Number(s.duration_hours || 0);
+                });
+            }
+        });
+
+        document.getElementById('pstat-spent').innerText = `AED ${spent.toLocaleString()}`;
+        document.getElementById('pstat-pending').innerText = `AED ${pending.toLocaleString()}`;
+        document.getElementById('pstat-awaiting').innerText = `AED ${awaiting.toLocaleString()}`;
+        document.getElementById('pstat-sessions').innerText = sessionsCount.toLocaleString();
+        document.getElementById('pstat-hours').innerText = `${hoursCount.toLocaleString()}h`;
+    }
+
+    async function generatePdf(id) {
+        const r = await fetch(`/api/admin/payments/letters/${id}/generate-pdf`, { method: 'POST' });
+        if (r.ok) { showAdminToast('✅ PDF generated'); loadPaymentLetters(); }
+        else { const d = await r.json(); showAdminToast('❌ ' + (d.detail || 'Failed'), 'error'); }
+    }
+
+    function publishLetter(id) {
+        showConfirmModal({
+            title: 'Publish Payment Letter',
+            message: 'Publish this letter to the instructor? They will receive an email notification.',
+            type: 'success',
+            confirmText: 'Publish',
+            onConfirm: async () => {
+                const r = await fetch(`/api/admin/payments/letters/${id}/publish`, { method: 'POST' });
+                if (r.ok) { showAdminToast('✅ Letter published and instructor notified'); loadPaymentLetters(); }
+                else { const d = await r.json(); showAdminToast('❌ ' + (d.detail || 'Failed'), 'error'); }
+            }
+        });
+    }
+
+    function markPaid(id) {
+        showConfirmModal({
+            title: 'Mark as Paid',
+            message: 'Are you sure you want to mark this letter as PAID?',
+            type: 'success',
+            confirmText: 'Mark Paid',
+            onConfirm: async () => {
+                const r = await fetch(`/api/admin/payments/letters/${id}/mark-paid`, { method: 'POST' });
+                if (r.ok) { showAdminToast('✅ Marked as paid'); loadPaymentLetters(); }
+                else { showAdminToast('❌ Failed', 'error'); }
+            }
+        });
+    }
+
+    function deleteLetter(id) {
+        showConfirmModal({
+            title: 'Delete Payment Letter',
+            message: 'Are you sure you want to permanently delete this payment letter?',
+            type: 'danger',
+            confirmText: 'Delete',
+            onConfirm: async () => {
+                const r = await fetch(`/api/admin/payments/letters/${id}`, { method: 'DELETE' });
+                if (r.ok) { showAdminToast('✅ Deleted'); loadPaymentLetters(); }
+                else { showAdminToast('❌ Failed', 'error'); }
+            }
+        });
+    }
+
+    // ── Create Letter Modal ─────────────────────────────────────────────
+    function openCreateLetterModal() {
+        // Build and show a simple modal dynamically
+        const existing = document.getElementById('modal-create-letter');
+        if (existing) { existing.classList.remove('hidden'); return; }
+
+        const modal = document.createElement('div');
+        modal.id = 'modal-create-letter';
+        modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="w-full max-w-md bg-space-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+                <h3 class="text-xl font-bold text-white mb-4">Create Payment Letter</h3>
+                <form onsubmit="submitCreateLetter(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Instructor</label>
+                        <select id="cl-instructor" required
+                            class="w-full rounded-xl border-white/20 bg-space-800 px-3 py-2.5 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm">
+                            <option value="">Loading instructors...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Letter Date</label>
+                        <input type="text" id="cl-date" placeholder="DD/MM/YYYY" required
+                            class="w-full rounded-xl border-white/20 bg-space-800 px-3 py-2.5 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Reference</label>
+                        <input type="text" id="cl-reference" value="Facilitator Agreement"
+                            class="w-full rounded-xl border-white/20 bg-space-800 px-3 py-2.5 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm">
+                    </div>
+                    <div id="cl-err" class="text-red-400 text-sm hidden"></div>
+                    <div class="flex gap-3 pt-2">
+                        <button type="button" onclick="document.getElementById('modal-create-letter').classList.add('hidden')"
+                            class="flex-1 py-2.5 bg-space-800 text-white border border-white/20 rounded-xl hover:bg-white/10 transition-colors text-sm">Cancel</button>
+                        <button type="submit"
+                            class="flex-1 py-2.5 bg-space-accent text-space-900 font-bold rounded-xl hover:bg-space-hover transition-colors text-sm">Create</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Populate instructor select
+        fetch('/api/admin/payments/instructors').then(r => r.json()).then(list => {
+            const sel = document.getElementById('cl-instructor');
+            sel.innerHTML = '<option value="">Select instructor...</option>' +
+                list.map(i => `<option value="${i.id}">${i.name} (${i.email})</option>`).join('');
+        });
+
+        // Set today's date
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2,'0');
+        const mm = String(today.getMonth()+1).padStart(2,'0');
+        document.getElementById('cl-date').value = `${dd}/${mm}/${today.getFullYear()}`;
+    }
+
+    async function submitCreateLetter(e) {
+        e.preventDefault();
+        const errEl = document.getElementById('cl-err');
+        errEl.classList.add('hidden');
+        const body = new FormData();
+        body.append('instructor_user_id', document.getElementById('cl-instructor').value);
+        body.append('letter_date', document.getElementById('cl-date').value);
+        body.append('reference', document.getElementById('cl-reference').value);
+
+        const r = await fetch('/api/admin/payments/letters', { method: 'POST', body });
+        const d = await r.json();
+        if (r.ok && d.ok) {
+            document.getElementById('modal-create-letter').classList.add('hidden');
+            showAdminToast('✅ Letter created!');
+            loadPaymentLetters();
+        } else {
+            errEl.textContent = d.detail || 'Failed to create letter';
+            errEl.classList.remove('hidden');
+        }
+    }
+
+    // ── Batches ─────────────────────────────────────────────────────────
+    async function loadBatchesList() {
+        const container = document.getElementById('batches-list');
+        container.innerHTML = '<p class="text-gray-500 text-sm">Loading...</p>';
+        const r = await fetch('/api/admin/payments/batches');
+        if (!r.ok) return;
+        const batches = await r.json();
+        if (!batches.length) {
+            container.innerHTML = '<p class="text-gray-500 text-sm col-span-3">No batches yet.</p>';
+            return;
+        }
+        container.innerHTML = batches.map(b => `
+            <div class="glass-panel rounded-xl border border-white/5 p-5">
+                <div class="flex items-start justify-between mb-2">
+                    <div>
+                        <h4 class="font-semibold text-white">${b.name}</h4>
+                        <p class="text-xs text-gray-500 mt-0.5">${b.letter_count} letter${b.letter_count!==1?'s':''}</p>
+                    </div>
+                    <button onclick="deleteBatch(${b.id})" class="text-red-400/60 hover:text-red-400 text-xs">Delete</button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">${b.description || ''}</p>
+                <button onclick="filterLettersByBatch(${b.id})"
+                    class="mt-3 w-full py-1.5 rounded-lg border border-space-accent/30 text-space-accent text-xs font-semibold hover:bg-space-accent/10 transition-all">
+                    View Letters
+                </button>
+            </div>
+        `).join('');
+    }
+
+    async function loadBatchesForSelect() {
+        const r = await fetch('/api/admin/payments/batches');
+        if (!r.ok) return;
+        const batches = await r.json();
+        
+        const sel = document.getElementById('bulk-batch-select');
+        if (sel) {
+            const currentVal = sel.value;
+            sel.innerHTML = '<option value="">No batch</option>' +
+                batches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+            sel.value = currentVal;
+        }
+
+        const filterSel = document.getElementById('pay-filter-batch');
+        if (filterSel) {
+            const currentVal = filterSel.value;
+            filterSel.innerHTML = '<option value="">All Batches</option>' +
+                batches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+            filterSel.value = currentVal;
+        }
+    }
+
+    function openCreateBatchModal() {
+        const existing = document.getElementById('modal-create-batch');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'modal-create-batch';
+        modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in';
+        modal.innerHTML = `
+            <div class="w-full max-w-md bg-[#0e0820] border border-white/10 rounded-2xl p-6 shadow-2xl animate-modal pointer-events-auto">
+                <h3 class="text-xl font-bold text-white mb-4">Create Payment Batch</h3>
+                <form onsubmit="submitCreateBatch(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Batch Name</label>
+                        <input type="text" id="cb-name" placeholder="e.g. November 2025 Cohorts" required
+                            class="w-full rounded-xl border-white/20 bg-space-800 px-3 py-2.5 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Description (optional)</label>
+                        <textarea id="cb-desc" placeholder="Brief details about this batch..." rows="3"
+                            class="w-full rounded-xl border-white/20 bg-space-800 px-3 py-2.5 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm resize-none"></textarea>
+                    </div>
+                    <div id="cb-err" class="text-red-400 text-sm hidden"></div>
+                    <div class="flex gap-3 pt-2">
+                        <button type="button" onclick="document.getElementById('modal-create-batch').remove()"
+                            class="flex-1 py-2.5 bg-space-800 text-white border border-white/20 rounded-xl hover:bg-white/10 transition-colors text-sm font-semibold">Cancel</button>
+                        <button type="submit" id="cb-submit"
+                            class="flex-1 py-2.5 bg-space-accent text-space-900 font-bold rounded-xl hover:bg-space-hover transition-colors text-sm">Create</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById('cb-name').focus();
+    }
+
+    async function submitCreateBatch(e) {
+        e.preventDefault();
+        const btn = document.getElementById('cb-submit');
+        const errEl = document.getElementById('cb-err');
+        errEl.classList.add('hidden');
+        btn.disabled = true;
+
+        const name = document.getElementById('cb-name').value.trim();
+        const desc = document.getElementById('cb-desc').value.trim();
+
+        const body = new FormData();
+        body.append('name', name);
+        body.append('description', desc);
+
+        try {
+            const r = await fetch('/api/admin/payments/batches', { method: 'POST', body });
+            const d = await r.json();
+            if (r.ok && d.ok) {
+                document.getElementById('modal-create-batch').remove();
+                showAdminToast('✅ Batch created');
+                loadBatchesList();
+            } else {
+                errEl.textContent = d.detail || 'Failed to create batch';
+                errEl.classList.remove('hidden');
+                btn.disabled = false;
+            }
+        } catch(err) {
+            errEl.textContent = 'Network error. Please try again.';
+            errEl.classList.remove('hidden');
+            btn.disabled = false;
+        }
+    }
+
+    function deleteBatch(id) {
+        showConfirmModal({
+            title: 'Delete Batch',
+            message: 'Are you sure you want to delete this batch? The letters inside it will not be deleted.',
+            type: 'danger',
+            confirmText: 'Delete',
+            onConfirm: async () => {
+                const r = await fetch(`/api/admin/payments/batches/${id}`, { method: 'DELETE' });
+                if (r.ok) { showAdminToast('✅ Batch deleted'); loadBatchesList(); }
+                else { showAdminToast('❌ Failed to delete batch', 'error'); }
+            }
+        });
+    }
+
+    function filterLettersByBatch(batchId) {
+        showPaymentSubTab('letters');
+        const filterSel = document.getElementById('pay-filter-batch');
+        if (filterSel) {
+            filterSel.value = batchId;
+        }
+        loadPaymentLetters();
+    }
+
+    // ── Bulk Import ──────────────────────────────────────────────────────
+    function handleBulkDrop(event) {
+        event.preventDefault();
+        document.getElementById('bulk-drop-zone').classList.remove('border-space-accent/60');
+        const file = event.dataTransfer.files[0];
+        if (file) previewBulkImportFile(file);
+    }
+
+    function previewBulkImport(input) {
+        const file = input.files[0];
+        if (file) previewBulkImportFile(file);
+    }
+
+    async function previewBulkImportFile(file) {
+        bulkFileData = file;
+        const body = new FormData();
+        body.append('file', file);
+        const r = await fetch('/api/admin/payments/bulk-import/preview', { method: 'POST', body });
+        const d = await r.json();
+
+        document.getElementById('bulk-step1').classList.add('hidden');
+        document.getElementById('bulk-step2').classList.remove('hidden');
+
+        const errBox = document.getElementById('bulk-errors');
+        const errList = document.getElementById('bulk-errors-list');
+        if (d.errors && d.errors.length) {
+            errList.innerHTML = d.errors.map(e => `<li>${e}</li>`).join('');
+            errBox.classList.remove('hidden');
+        } else {
+            errBox.classList.add('hidden');
+        }
+
+        const previewDiv = document.getElementById('bulk-preview-table');
+        if (!d.preview || !d.preview.length) {
+            previewDiv.innerHTML = '<p class="text-gray-400 text-sm">No valid rows found.</p>';
+            return;
+        }
+
+        previewDiv.innerHTML = `
+            <table class="w-full text-sm border-collapse">
+                <thead>
+                    <tr class="border-b border-white/10 text-gray-500 text-xs uppercase">
+                        <th class="px-3 py-2 text-left">Email</th>
+                        <th class="px-3 py-2 text-left">Instructor</th>
+                        <th class="px-3 py-2 text-center">Found</th>
+                        <th class="px-3 py-2 text-center">Sessions</th>
+                        <th class="px-3 py-2 text-center">Add-ons</th>
+                        <th class="px-3 py-2 text-right">Total AED</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    ${d.preview.map(row => `
+                        <tr class="${row.instructor_found ? '' : 'opacity-50'}">
+                            <td class="px-3 py-2 text-gray-300 text-xs">${row.email}</td>
+                            <td class="px-3 py-2 text-white text-xs">${row.instructor_name || '—'}</td>
+                            <td class="px-3 py-2 text-center">${row.instructor_found ? '✅' : '❌'}</td>
+                            <td class="px-3 py-2 text-center text-gray-400">${row.session_count}</td>
+                            <td class="px-3 py-2 text-center text-gray-400">${row.addon_count}</td>
+                            <td class="px-3 py-2 text-right font-mono text-space-accent">${Number((row.base_total||0)+(row.addons_total||0)).toLocaleString()}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+
+        // Populate batch dropdown
+        loadBatchesForSelect();
+    }
+
+    function resetBulkImport() {
+        bulkFileData = null;
+        document.getElementById('bulk-step1').classList.remove('hidden');
+        document.getElementById('bulk-step2').classList.add('hidden');
+        document.getElementById('bulk-file-input').value = '';
+    }
+
+    async function confirmBulkImport() {
+        if (!bulkFileData) return;
+        const btn = document.getElementById('bulk-confirm-btn');
+        btn.disabled = true;
+        btn.textContent = 'Importing...';
+
+        const body = new FormData();
+        body.append('file', bulkFileData);
+        const batchId = document.getElementById('bulk-batch-select')?.value;
+        const letterDate = document.getElementById('bulk-letter-date')?.value;
+        if (batchId) body.append('batch_id', batchId);
+        if (letterDate) body.append('letter_date', letterDate);
+
+        const r = await fetch('/api/admin/payments/bulk-import/confirm', { method: 'POST', body });
+        const d = await r.json();
+        btn.disabled = false;
+        btn.textContent = 'Confirm Import';
+
+        if (r.ok && d.ok) {
+            showAdminToast(`✅ ${d.created} letter(s) created, ${d.skipped} skipped`);
+            resetBulkImport();
+            showPaymentSubTab('letters');
+            loadPaymentLetters();
+        } else {
+            showAdminToast('❌ Import failed', 'error');
+        }
+    }
+
+    // ── Settings ─────────────────────────────────────────────────────────
+    async function loadSettings() {
+        const r = await fetch('/api/admin/settings');
+        if (!r.ok) return;
+        const d = await r.json();
+        const el = document.getElementById('setting-signatory');
+        if (el) el.value = d.admin_signatory_name || '';
+    }
+
+    async function saveSignatoryName() {
+        const name = document.getElementById('setting-signatory').value.trim();
+        const body = new FormData();
+        body.append('key', 'admin_signatory_name');
+        body.append('value', name);
+        const r = await fetch('/api/admin/settings', { method: 'POST', body });
+        if (r.ok) showAdminToast('✅ Signatory name saved');
+        else showAdminToast('❌ Failed to save', 'error');
+    }
+
+    async function uploadAdminSignature(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const status = document.getElementById('sig-upload-status');
+        status.textContent = 'Uploading...';
+        const body = new FormData();
+        body.append('file', file);
+        const r = await fetch('/api/admin/settings/admin-signature', { method: 'POST', body });
+        if (r.ok) {
+            status.textContent = '✅ Signature uploaded successfully';
+        } else {
+            status.textContent = '❌ Upload failed';
+        }
+    }
+
+        // ── Inline Sessions & Add-ons Editor Modal ────────────────────────────
+    let currentEditLetterId = null;
+
+    async function openEditLetterModal(id) {
+        currentEditLetterId = id;
+        const existing = document.getElementById('modal-edit-payment-letter');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'modal-edit-payment-letter';
+        modal.className = 'fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto';
+        modal.innerHTML = `
+            <div class="w-full max-w-5xl bg-[#0e0820] border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] animate-modal pointer-events-auto">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0">
+                    <div>
+                        <h3 class="font-display font-semibold text-white text-lg">Edit Payment Letter Details</h3>
+                        <p class="text-xs text-gray-500 mt-0.5" id="el-instructor-info">Loading...</p>
+                    </div>
+                    <button onclick="document.getElementById('modal-edit-payment-letter').remove()" class="text-gray-400 hover:text-white transition-colors p-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 overflow-y-auto flex-grow space-y-6">
+                    <!-- Section 1: General Info -->
+                    <div class="glass-panel border border-white/5 rounded-xl p-4 space-y-4">
+                        <h4 class="text-sm font-semibold text-white uppercase tracking-wider text-space-accent">General Information</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Letter Date</label>
+                                <input type="text" id="el-date" placeholder="DD/MM/YYYY" 
+                                    class="w-full rounded-xl border-white/10 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Reference Agreement</label>
+                                <input type="text" id="el-reference" placeholder="e.g. Facilitator Agreement"
+                                    class="w-full rounded-xl border-white/10 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Admin Notes (internal)</label>
+                                <input type="text" id="el-notes" placeholder="e.g. November workshops"
+                                    class="w-full rounded-xl border-white/10 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm">
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button onclick="saveGeneralInfo()" id="el-save-gen-btn"
+                                class="px-4 py-1.5 bg-space-accent text-space-900 font-bold rounded-lg hover:bg-space-hover transition-colors text-xs flex items-center gap-1">
+                                Save General Info
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Workshops / Sessions -->
+                    <div class="glass-panel border border-white/5 rounded-xl p-4 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-sm font-semibold text-white uppercase tracking-wider text-space-accent">Schedule of Workshops</h4>
+                            <button onclick="addSessionRow()" 
+                                class="px-3 py-1 bg-space-accent/10 border border-space-accent/30 text-space-accent font-semibold rounded-lg hover:bg-space-accent/20 transition-all text-xs flex items-center gap-1">
+                                + Add Session Row
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-white/10 text-gray-500">
+                                        <th class="py-2 pr-2 w-[15%]">Session Date</th>
+                                        <th class="py-2 px-2 w-[25%]">Workshop Description</th>
+                                        <th class="py-2 px-2 w-[18%]">Role</th>
+                                        <th class="py-2 px-2 w-[20%]">Location</th>
+                                        <th class="py-2 px-2 w-[10%] text-center">Duration (h)</th>
+                                        <th class="py-2 px-2 w-[10%] text-right">Comp (AED)</th>
+                                        <th class="py-2 pl-2 w-[10%] text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="el-sessions-tbody" class="divide-y divide-white/5">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Optional Add-ons -->
+                    <div class="glass-panel border border-white/5 rounded-xl p-4 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-sm font-semibold text-white uppercase tracking-wider text-space-accent">Optional Add-ons</h4>
+                            <button onclick="addAddonRow()" 
+                                class="px-3 py-1 bg-space-accent/10 border border-space-accent/30 text-space-accent font-semibold rounded-lg hover:bg-space-accent/20 transition-all text-xs flex items-center gap-1">
+                                + Add Add-on Row
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-white/10 text-gray-500">
+                                        <th class="py-2 pr-2 w-[35%]">Description</th>
+                                        <th class="py-2 px-2 w-[15%] text-right">Amount (AED)</th>
+                                        <th class="py-2 px-2 w-[40%]">Notes</th>
+                                        <th class="py-2 pl-2 w-[10%] text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="el-addons-tbody" class="divide-y divide-white/5">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="flex items-center justify-between px-6 py-4 border-t border-white/10 shrink-0 bg-[#0e0820] rounded-b-2xl">
+                    <div class="text-xs text-gray-400">
+                        ⚠️ Generating/updating sessions will invalidate the PDF. Click <strong class="text-white">Generate PDF</strong> to update before publishing.
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="regeneratePdfFromModal()" id="el-pdf-btn"
+                            class="px-4 py-2 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors text-sm flex items-center gap-1">
+                            Generate PDF
+                        </button>
+                        <button onclick="document.getElementById('modal-edit-payment-letter').remove(); loadPaymentLetters();"
+                            class="px-4 py-2 bg-space-800 text-white border border-white/20 rounded-xl hover:bg-white/10 transition-colors text-sm font-semibold">
+                            Close & Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Load data
+        await loadLetterDetailsForEditing();
+    }
+
+    async function loadLetterDetailsForEditing() {
+        const id = currentEditLetterId;
+        try {
+            const r = await fetch(`/api/admin/payments/letters/${id}`);
+            if (!r.ok) throw new Error('Failed');
+            const l = await r.json();
+
+            // Populate header info
+            document.getElementById('el-instructor-info').textContent = `Instructor: ${l.instructor_name} (${l.instructor_email}) | Current Status: ${l.status}`;
+            document.getElementById('el-date').value = l.letter_date || '';
+            document.getElementById('el-reference').value = l.reference || '';
+            document.getElementById('el-notes').value = l.admin_notes || '';
+
+            // Populate sessions
+            const sessTbody = document.getElementById('el-sessions-tbody');
+            sessTbody.innerHTML = '';
+            if (l.sessions.length === 0) {
+                sessTbody.innerHTML = '<tr class="no-sessions-row"><td colspan="7" class="py-4 text-center text-gray-500">No sessions added yet.</td></tr>';
+            } else {
+                l.sessions.forEach(s => appendSessionRowHtml(s));
+            }
+
+            // Populate addons
+            const addonTbody = document.getElementById('el-addons-tbody');
+            addonTbody.innerHTML = '';
+            if (l.addons.length === 0) {
+                addonTbody.innerHTML = '<tr class="no-addons-row"><td colspan="4" class="py-4 text-center text-gray-500">No add-ons added yet.</td></tr>';
+            } else {
+                l.addons.forEach(a => appendAddonRowHtml(a));
+            }
+
+        } catch(err) {
+            showAdminToast('❌ Failed to load letter details', 'error');
+        }
+    }
+
+    function appendSessionRowHtml(s = {}) {
+        const tbody = document.getElementById('el-sessions-tbody');
+        const noRow = tbody.querySelector('.no-sessions-row');
+        if (noRow) noRow.remove();
+
+        const isNew = !s.id;
+        const tr = document.createElement('tr');
+        tr.className = isNew ? 'bg-space-accent/5' : '';
+        tr.dataset.id = s.id || 'new';
+
+        const roleOptions = [
+            { value: 'Lead Facilitator', label: 'Lead Facilitator' },
+            { value: 'Facilitator', label: 'Facilitator' },
+            { value: 'Assistant Facilitator', label: 'Assistant Facilitator' }
+        ];
+
+        const currentRole = s.role || 'Facilitator';
+
+        tr.innerHTML = `
+            <td class="py-2 pr-2">
+                <input type="text" class="row-date w-full bg-space-900 border border-white/10 rounded px-2 py-1 text-white" value="${s.session_date || ''}" placeholder="DD/MM/YYYY">
+            </td>
+            <td class="py-2 px-2">
+                <input type="text" class="row-desc w-full bg-space-900 border border-white/10 rounded px-2 py-1 text-white" value="${s.workshop_description || ''}" placeholder="Description">
+            </td>
+            <td class="py-2 px-2">
+                <select class="row-role w-full bg-space-900 border border-white/10 rounded px-2 py-1 text-white">
+                    ${roleOptions.map(o => '<option value="' + o.value + '"' + (o.value === currentRole ? ' selected' : '') + '>' + o.label + '</option>').join('')}
+                </select>
+            </td>
+            <td class="py-2 px-2">
+                <input type="text" class="row-loc w-full bg-space-900 border border-white/10 rounded px-2 py-1 text-white" value="${s.location || ''}" placeholder="Location">
+            </td>
+            <td class="py-2 px-2 text-center">
+                <input type="number" step="0.5" class="row-hours w-full bg-space-900 border border-white/10 rounded px-2 py-1 text-white text-center" value="${s.duration_hours || 0}">
+            </td>
+            <td class="py-2 px-2 text-right">
+                <input type="number" step="1" class="row-comp w-full bg-space-900 border border-white/10 rounded px-2 py-1 text-white text-right" value="${s.compensation_aed || 0}">
+            </td>
+            <td class="py-2 pl-2 text-right">
+                <div class="flex justify-end gap-1">
+                    <button onclick="saveSessionRow(this)" title="Save Row"
+                        class="p-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </button>
+                    <button onclick="deleteSessionRow(this)" title="Delete Row"
+                        class="p-1 rounded bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    function addSessionRow() {
+        appendSessionRowHtml();
+    }
+
+    function appendAddonRowHtml(a = {}) {
+        const tbody = document.getElementById('el-addons-tbody');
+        const noRow = tbody.querySelector('.no-addons-row');
+        if (noRow) noRow.remove();
+
+        const isNew = !a.id;
+        const tr = document.createElement('tr');
+        tr.className = isNew ? 'bg-space-accent/5' : '';
+        tr.dataset.id = a.id || 'new';
+
+        tr.innerHTML = `
+            <td class="py-2 pr-2">
+                <input type="text" class="row-addon-desc w-full bg-space-900 border border-white/10 rounded px-2 py-1 text-white" value="${a.description || ''}" placeholder="e.g. Travel allowance">
+            </td>
+            <td class="py-2 px-2 text-right">
+                <input type="number" step="1" class="row-addon-amount w-full bg-space-900 border border-white/10 rounded px-2 py-1 text-white text-right" value="${a.amount_aed || 0}">
+            </td>
+            <td class="py-2 px-2">
+                <input type="text" class="row-addon-notes w-full bg-space-900 border border-white/10 rounded px-2 py-1 text-white" value="${a.notes || ''}" placeholder="Notes">
+            </td>
+            <td class="py-2 pl-2 text-right">
+                <div class="flex justify-end gap-1">
+                    <button onclick="saveAddonRow(this)" title="Save Row"
+                        class="p-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </button>
+                    <button onclick="deleteAddonRow(this)" title="Delete Row"
+                        class="p-1 rounded bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    function addAddonRow() {
+        appendAddonRowHtml();
+    }
+
+    async function saveGeneralInfo() {
+        const btn = document.getElementById('el-save-gen-btn');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        const date = document.getElementById('el-date').value.trim();
+        const ref = document.getElementById('el-reference').value.trim();
+        const notes = document.getElementById('el-notes').value.trim();
+
+        const body = new FormData();
+        body.append('letter_date', date);
+        body.append('reference', ref);
+        body.append('admin_notes', notes);
+
+        try {
+            const r = await fetch(`/api/admin/payments/letters/${currentEditLetterId}`, { method: 'PUT', body });
+            if (r.ok) {
+                showAdminToast('✅ General info updated');
+            } else {
+                showAdminToast('❌ Failed to update general info', 'error');
+            }
+        } catch(e) {
+            showAdminToast('❌ Network error', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Save General Info';
+        }
+    }
+
+    async function saveSessionRow(btn) {
+        const tr = btn.closest('tr');
+        const id = tr.dataset.id;
+
+        const date = tr.querySelector('.row-date').value.trim();
+        const desc = tr.querySelector('.row-desc').value.trim();
+        const role = tr.querySelector('.row-role').value;
+        const loc = tr.querySelector('.row-loc').value.trim();
+        const hours = tr.querySelector('.row-hours').value;
+        const comp = tr.querySelector('.row-comp').value;
+
+        if (!date || !desc || !loc) {
+            showAdminToast('⚠️ Please fill out Date, Description, and Location', 'error');
+            return;
+        }
+
+        btn.disabled = true;
+        const body = new FormData();
+        body.append('session_date', date);
+        body.append('workshop_description', desc);
+        body.append('role', role);
+        body.append('location', loc);
+        body.append('duration_hours', hours);
+        body.append('compensation_aed', comp);
+
+        try {
+            let r, d;
+            if (id === 'new') {
+                r = await fetch(`/api/admin/payments/letters/${currentEditLetterId}/sessions`, { method: 'POST', body });
+            } else {
+                r = await fetch(`/api/admin/payments/sessions/${id}`, { method: 'PUT', body });
+            }
+            d = await r.json();
+
+            if (r.ok && d.ok) {
+                showAdminToast('✅ Session saved');
+                await loadLetterDetailsForEditing();
+            } else {
+                showAdminToast('❌ ' + (d.detail || 'Failed to save'), 'error');
+                btn.disabled = false;
+            }
+        } catch(e) {
+            showAdminToast('❌ Network error', 'error');
+            btn.disabled = false;
+        }
+    }
+
+    function deleteSessionRow(btn) {
+        const tr = btn.closest('tr');
+        const id = tr.dataset.id;
+
+        if (id === 'new') {
+            tr.remove();
+            const tbody = document.getElementById('el-sessions-tbody');
+            if (tbody.children.length === 0) {
+                tbody.innerHTML = '<tr class="no-sessions-row"><td colspan="7" class="py-4 text-center text-gray-500">No sessions added yet.</td></tr>';
+            }
+            return;
+        }
+
+        showConfirmModal({
+            title: 'Delete Session Row',
+            message: 'Are you sure you want to delete this session row from the letter?',
+            type: 'danger',
+            confirmText: 'Delete',
+            onConfirm: async () => {
+                try {
+                    const r = await fetch(`/api/admin/payments/sessions/${id}`, { method: 'DELETE' });
+                    if (r.ok) {
+                        showAdminToast('✅ Session deleted');
+                        await loadLetterDetailsForEditing();
+                    } else {
+                        showAdminToast('❌ Failed to delete session', 'error');
+                    }
+                } catch(e) {
+                    showAdminToast('❌ Network error', 'error');
+                }
+            }
+        });
+    }
+
+    async function saveAddonRow(btn) {
+        const tr = btn.closest('tr');
+        const id = tr.dataset.id;
+
+        const desc = tr.querySelector('.row-addon-desc').value.trim();
+        const amount = tr.querySelector('.row-addon-amount').value;
+        const notes = tr.querySelector('.row-addon-notes').value.trim();
+
+        if (!desc) {
+            showAdminToast('⚠️ Please enter a description', 'error');
+            return;
+        }
+
+        btn.disabled = true;
+        const body = new FormData();
+        body.append('description', desc);
+        body.append('amount_aed', amount);
+        body.append('notes', notes);
+
+        try {
+            let r, d;
+            if (id === 'new') {
+                r = await fetch(`/api/admin/payments/letters/${currentEditLetterId}/addons`, { method: 'POST', body });
+            } else {
+                r = await fetch(`/api/admin/payments/addons/${id}`, { method: 'PUT', body });
+            }
+            d = await r.json();
+
+            if (r.ok && d.ok) {
+                showAdminToast('✅ Add-on saved');
+                await loadLetterDetailsForEditing();
+            } else {
+                showAdminToast('❌ ' + (d.detail || 'Failed to save'), 'error');
+                btn.disabled = false;
+            }
+        } catch(e) {
+            showAdminToast('❌ Network error', 'error');
+            btn.disabled = false;
+        }
+    }
+
+    function deleteAddonRow(btn) {
+        const tr = btn.closest('tr');
+        const id = tr.dataset.id;
+
+        if (id === 'new') {
+            tr.remove();
+            const tbody = document.getElementById('el-addons-tbody');
+            if (tbody.children.length === 0) {
+                tbody.innerHTML = '<tr class="no-addons-row"><td colspan="4" class="py-4 text-center text-gray-500">No add-ons added yet.</td></tr>';
+            }
+            return;
+        }
+
+        showConfirmModal({
+            title: 'Delete Add-on Row',
+            message: 'Are you sure you want to delete this add-on row from the letter?',
+            type: 'danger',
+            confirmText: 'Delete',
+            onConfirm: async () => {
+                try {
+                    const r = await fetch(`/api/admin/payments/addons/${id}`, { method: 'DELETE' });
+                    if (r.ok) {
+                        showAdminToast('✅ Add-on deleted');
+                        await loadLetterDetailsForEditing();
+                    } else {
+                        showAdminToast('❌ Failed to delete add-on', 'error');
+                    }
+                } catch(e) {
+                    showAdminToast('❌ Network error', 'error');
+                }
+            }
+        });
+    }
+
+    async function regeneratePdfFromModal() {
+        const btn = document.getElementById('el-pdf-btn');
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+        try {
+            const r = await fetch(`/api/admin/payments/letters/${currentEditLetterId}/generate-pdf`, { method: 'POST' });
+            if (r.ok) {
+                showAdminToast('✅ PDF regenerated successfully');
+            } else {
+                showAdminToast('❌ Failed to generate PDF', 'error');
+            }
+        } catch(e) {
+            showAdminToast('❌ Network error', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Generate PDF';
+        }
+    }
+
+// ── Toast ─────────────────────────────────────────────────────────────
+    function showAdminToast(msg, type = 'success') {
+        const t = document.createElement('div');
+        t.className = `fixed bottom-6 right-6 z-[999] px-5 py-3 rounded-xl text-sm font-semibold shadow-lg
+            ${type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`;
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 4000);
+    }
+
 </script>
 {% endblock %}

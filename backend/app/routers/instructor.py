@@ -96,3 +96,12 @@ def profile_card(
         "active_page": "profile_card",
         "id_card": id_card,
     })
+
+@router.get("/payments")
+def payments_page(request: Request, instructor: User = Depends(get_current_instructor)):
+    return templates.TemplateResponse("instructor/payments.html", {
+        "request": request,
+        "user": instructor,
+        "active_page": "payments",
+    })
+

@@ -131,6 +131,16 @@
                 </svg>
                 Instructor ID Card
             </a>
+            <a href="/instructor/payments"
+                class="flex items-center whitespace-nowrap gap-3 px-4 py-3 rounded-xl transition-all {% if active_page == 'payments' %}bg-space-accent/10 border border-space-accent/30 text-space-accent font-semibold{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %}">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
+                    </path>
+                </svg>
+                <span>Payments</span>
+                <span id="payment-badge" class="ml-auto hidden text-xs bg-amber-500 text-black font-bold px-1.5 py-0.5 rounded-full">!</span>
+            </a>
         </nav>
 
         <div class="px-4 py-6 border-t border-white/10">
@@ -240,6 +250,15 @@
                 </svg>
                 Instructor ID Card
             </a>
+            <a href="/instructor/payments" onclick="closeDrawer()"
+                class="flex items-center whitespace-nowrap gap-3 px-4 py-3 rounded-xl transition-all {% if active_page == 'payments' %}bg-space-accent/10 border border-space-accent/30 text-space-accent font-semibold{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %}">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
+                    </path>
+                </svg>
+                Payments
+            </a>
         </nav>
 
         <!-- Drawer footer / sign out -->
@@ -323,6 +342,21 @@
             await fetch('/api/auth/logout', { method: 'POST' });
             window.location.href = '/';
         }
+
+        // Show payment badge if there are unsigned letters
+        (async function() {
+            try {
+                const r = await fetch('/api/instructor/payments/summary');
+                if (r.ok) {
+                    const d = await r.json();
+                    const badge = document.getElementById('payment-badge');
+                    if (badge && d.pending_signature > 0) {
+                        badge.textContent = d.pending_signature;
+                        badge.classList.remove('hidden');
+                    }
+                }
+            } catch(e) {}
+        })();
     </script>
 </body>
 

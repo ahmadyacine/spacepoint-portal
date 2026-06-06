@@ -150,7 +150,7 @@ def send_phase1_approval_email(to_email: str, name: str) -> bool:
     msg["From"] = f"SpacePoint <{smtp_user}>"
     msg["To"] = to_email
 
-    LOGO_URL = "https://spacepoint.ae/wp-content/uploads/2023/12/SpacePoint-Purple-Logo-e1766489433825-1024x261.png"
+    LOGO_URL = "https://spacepoint.ae/assets/img/SpacePoint%20logo.png"
 
     html_body = f"""
 <!DOCTYPE html>
@@ -276,7 +276,7 @@ def send_approval_credentials_email(to_email: str, name: str, temp_password: str
     msg["From"] = f"SpacePoint <{smtp_user}>"
     msg["To"] = to_email
 
-    LOGO_URL = "https://spacepoint.ae/wp-content/uploads/2023/12/SpacePoint-Purple-Logo-e1766489433825-1024x261.png"
+    LOGO_URL = "https://spacepoint.ae/assets/img/SpacePoint%20logo.png"
 
     html_body = f"""
 <!DOCTYPE html>
@@ -441,3 +441,203 @@ def send_approval_credentials_email(to_email: str, name: str, temp_password: str
         print(f"[email_service] Failed to send email to {to_email}: {str(e)}")
         traceback.print_exc()
         return False, pdf_path
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Payment Letter Notifications
+# ──────────────────────────────────────────────────────────────────────────────
+
+def send_payment_letter_ready_email(to_email: str, instructor_name: str, portal_url: str) -> bool:
+    """
+    Notifies an instructor that their payment letter is ready to review and sign in the portal.
+    Does NOT attach the PDF — instructor signs inside the portal.
+    """
+    smtp_host = settings.SMTP_HOST
+    smtp_port = settings.SMTP_PORT
+    smtp_user = settings.SMTP_USER
+    smtp_password = settings.SMTP_PASSWORD
+
+    LOGO_URL = "https://spacepoint.ae/assets/img/SpacePoint%20logo.png"
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "SpacePoint — Your Payment Letter is Ready for Signature"
+    msg["From"] = f"SpacePoint <{smtp_user}>"
+    msg["To"] = to_email
+
+    html_body = f"""
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:system-ui,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0;background:#f3f4f6;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border-radius:16px;overflow:hidden;
+                    box-shadow:0 4px 24px rgba(36,17,52,0.12);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#241134,#653f84);padding:28px 32px;">
+            <img src="{LOGO_URL}" height="44" alt="SpacePoint" style="display:block;">
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 32px;">
+            <h2 style="margin:0 0 6px 0;font-size:20px;font-weight:700;color:#1a1135;">
+              Payment Letter Ready &#x2709;
+            </h2>
+            <p style="margin:0 0 24px 0;font-size:12px;font-weight:700;color:#653f84;
+                       text-transform:uppercase;letter-spacing:0.1em;">
+              Facilitator Payment
+            </p>
+            <p style="margin:0 0 12px 0;font-size:15px;color:#374151;line-height:1.7;">
+              Hello <strong>{instructor_name}</strong>,
+            </p>
+            <p style="margin:0 0 24px 0;font-size:15px;color:#374151;line-height:1.7;">
+              Your <strong>Facilitator Payment Letter</strong> is now ready for your review and digital signature.
+              Please log in to the SpacePoint Instructor Portal to read the letter and sign it.
+            </p>
+            <div style="background:#faf8ff;border:1px solid #ddd6fe;border-radius:12px;
+                         padding:18px 22px;margin:0 0 28px 0;">
+              <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;">
+                &#x2139;&#xFE0F; Your payment will be processed within <strong>30 working days</strong>
+                after you submit your signed letter through the portal.
+              </p>
+            </div>
+            <table cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="background:linear-gradient(135deg,#241134,#653f84);border-radius:10px;">
+                  <a href="{portal_url}"
+                     style="display:inline-block;padding:13px 32px;font-size:14px;
+                            font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.04em;">
+                    Review &amp; Sign Letter &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:28px 0 0 0;font-size:14px;color:#6b7280;line-height:1.7;">
+              Best regards,<br>
+              <strong style="color:#241134;">The SpacePoint Team</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9fafb;padding:18px 32px;border-top:1px solid #ede9f7;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.7;">
+              &copy; 2026 SpacePoint &nbsp;&middot;&nbsp; www.spacepoint.ae<br>
+              <em>Do not reply to this email. This mailbox is not monitored.</em>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+"""
+    msg.attach(MIMEText(html_body, "html"))
+
+    try:
+        server = smtplib.SMTP(smtp_host, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_user, to_email, msg.as_string())
+        server.quit()
+        print(f"[email_service] Payment letter ready email sent to {to_email}")
+        return True
+    except Exception as e:
+        import traceback
+        print(f"[email_service] Failed to send payment letter email: {e}")
+        traceback.print_exc()
+        return False
+
+
+def send_payment_signed_notification_email(to_email: str, instructor_name: str, portal_url: str) -> bool:
+    """
+    Notifies the admin that an instructor has signed their payment letter.
+    """
+    smtp_host = settings.SMTP_HOST
+    smtp_port = settings.SMTP_PORT
+    smtp_user = settings.SMTP_USER
+    smtp_password = settings.SMTP_PASSWORD
+
+    LOGO_URL = "https://spacepoint.ae/assets/img/SpacePoint%20logo.png"
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"SpacePoint — {instructor_name} Signed Their Payment Letter"
+    msg["From"] = f"SpacePoint <{smtp_user}>"
+    msg["To"] = to_email
+
+    html_body = f"""
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:system-ui,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0;background:#f3f4f6;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border-radius:16px;overflow:hidden;
+                    box-shadow:0 4px 24px rgba(36,17,52,0.12);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#241134,#653f84);padding:28px 32px;">
+            <img src="{LOGO_URL}" height="44" alt="SpacePoint" style="display:block;">
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 32px;">
+            <h2 style="margin:0 0 6px 0;font-size:20px;font-weight:700;color:#1a1135;">
+              Payment Letter Signed &#x2705;
+            </h2>
+            <p style="margin:0 0 24px 0;font-size:12px;font-weight:700;color:#653f84;
+                       text-transform:uppercase;letter-spacing:0.1em;">
+              Admin Notification
+            </p>
+            <p style="margin:0 0 12px 0;font-size:15px;color:#374151;line-height:1.7;">
+              Hello,
+            </p>
+            <p style="margin:0 0 24px 0;font-size:15px;color:#374151;line-height:1.7;">
+              <strong>{instructor_name}</strong> has reviewed and digitally signed their Facilitator Payment Letter.
+              You can now download the signed PDF from the admin portal.
+            </p>
+            <table cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="background:linear-gradient(135deg,#241134,#653f84);border-radius:10px;">
+                  <a href="{portal_url}"
+                     style="display:inline-block;padding:13px 32px;font-size:14px;
+                            font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.04em;">
+                    Open Admin Portal &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:28px 0 0 0;font-size:14px;color:#6b7280;line-height:1.7;">
+              Best regards,<br>
+              <strong style="color:#241134;">SpacePoint Portal</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9fafb;padding:18px 32px;border-top:1px solid #ede9f7;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.7;">
+              &copy; 2026 SpacePoint &nbsp;&middot;&nbsp; www.spacepoint.ae
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+"""
+    msg.attach(MIMEText(html_body, "html"))
+
+    try:
+        server = smtplib.SMTP(smtp_host, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_user, to_email, msg.as_string())
+        server.quit()
+        print(f"[email_service] Payment signed notification sent to {to_email}")
+        return True
+    except Exception as e:
+        import traceback
+        print(f"[email_service] Failed to send payment signed notification: {e}")
+        traceback.print_exc()
+        return False
+

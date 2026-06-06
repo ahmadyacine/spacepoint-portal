@@ -1,0 +1,635 @@
+{% extends "base_instructor.html" %}
+{% block title %}Payments — SpacePoint Instructor{% endblock %}
+{% block page_title %}Payments{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8">
+
+    <!-- ══════════════════════════════════════════════════
+         STATS BAR
+    ══════════════════════════════════════════════════ -->
+    <div id="stats-bar" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-panel rounded-2xl p-5 border border-white/5">
+            <p class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Total Earned</p>
+            <p id="stat-earned" class="text-2xl font-display font-bold text-space-accent">—</p>
+            <p class="text-xs text-gray-500 mt-1">AED</p>
+        </div>
+        <div class="glass-panel rounded-2xl p-5 border border-white/5">
+            <p class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Hours Delivered</p>
+            <p id="stat-hours" class="text-2xl font-display font-bold text-emerald-400">—</p>
+            <p class="text-xs text-gray-500 mt-1">Total hours</p>
+        </div>
+        <div class="glass-panel rounded-2xl p-5 border border-white/5">
+            <p class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Sessions</p>
+            <p id="stat-sessions" class="text-2xl font-display font-bold text-sky-400">—</p>
+            <p class="text-xs text-gray-500 mt-1">Delivered</p>
+        </div>
+        <div class="glass-panel rounded-2xl p-5 border border-white/5">
+            <p class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Pending Signature</p>
+            <p id="stat-pending" class="text-2xl font-display font-bold text-amber-400">—</p>
+            <p class="text-xs text-gray-500 mt-1">Letters to sign</p>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         PAYMENT LETTERS TABLE
+    ══════════════════════════════════════════════════ -->
+    <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+        <div class="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+            <div>
+                <h2 class="font-display font-semibold text-lg text-white">Payment Letters</h2>
+                <p class="text-sm text-gray-400 mt-0.5">Your facilitator payment records</p>
+            </div>
+        </div>
+
+        <div id="letters-loading" class="p-12 text-center text-gray-500">
+            <svg class="w-8 h-8 animate-spin mx-auto mb-3 text-space-accent" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Loading payment letters...
+        </div>
+
+        <div id="letters-empty" class="hidden p-12 text-center">
+            <svg class="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <p class="text-gray-400 font-medium">No payment letters yet</p>
+            <p class="text-gray-600 text-sm mt-1">Your payment letters will appear here once published by the admin.</p>
+        </div>
+
+        <div id="letters-table-wrap" class="hidden overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-white/5 text-gray-500 uppercase text-xs tracking-wider">
+                        <th class="px-6 py-3 text-left font-medium">Letter Date</th>
+                        <th class="px-6 py-3 text-left font-medium">Sessions</th>
+                        <th class="px-6 py-3 text-right font-medium">Total (AED)</th>
+                        <th class="px-6 py-3 text-right font-medium">Hours</th>
+                        <th class="px-6 py-3 text-center font-medium">Status</th>
+                        <th class="px-6 py-3 text-right font-medium">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="letters-tbody" class="divide-y divide-white/5">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         BANK DETAILS SECTION
+    ══════════════════════════════════════════════════ -->
+    <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+        <div class="px-6 py-5 border-b border-white/5">
+            <h2 class="font-display font-semibold text-lg text-white">Bank Details</h2>
+            <p class="text-sm text-gray-400 mt-0.5">Used to populate your payment letters. Keep this up to date.</p>
+        </div>
+        <div class="p-6">
+            <form id="bank-form" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Account Holder Name</label>
+                    <input id="bank-holder" type="text" placeholder="e.g. Ahmad Yacine"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-space-accent/60 focus:ring-1 focus:ring-space-accent/20 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Bank Name</label>
+                    <input id="bank-name" type="text" placeholder="e.g. Emirates NBD"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-space-accent/60 focus:ring-1 focus:ring-space-accent/20 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">IBAN</label>
+                    <input id="bank-iban" type="text" placeholder="AE070331234567890123456"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-space-accent/60 focus:ring-1 focus:ring-space-accent/20 transition-all font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">SWIFT / BIC <span class="text-gray-600 normal-case font-normal">(if applicable)</span></label>
+                    <input id="bank-swift" type="text" placeholder="e.g. EBILAEAD"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-space-accent/60 focus:ring-1 focus:ring-space-accent/20 transition-all font-mono">
+                </div>
+                <div class="md:col-span-2 flex items-center justify-between pt-1">
+                    <p class="text-xs text-gray-500 italic">Any changes must be communicated to SpacePoint in writing.</p>
+                    <button type="submit" id="bank-save-btn"
+                        class="px-6 py-2.5 rounded-xl bg-space-accent text-white text-sm font-semibold hover:bg-space-hover transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Save Bank Details
+                    </button>
+                </div>
+            </form>
+            <div id="bank-msg" class="hidden mt-4 px-4 py-3 rounded-xl text-sm font-medium"></div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     LETTER DETAIL + SIGNING MODAL (MODERNIZED & SCROLL FIXED)
+══════════════════════════════════════════════════════════════ -->
+<div id="letter-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="closeLetterModal()"></div>
+
+    <!-- Panel -->
+    <div class="relative z-10 flex items-center justify-center min-h-screen py-4 md:py-8 px-4 pointer-events-none">
+        <div class="w-full max-w-3xl bg-[#0e0820] border border-white/10 rounded-2xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col max-h-[90vh] md:max-h-[85vh]">
+
+            <!-- Modal header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0">
+                <h3 class="font-display font-semibold text-white text-lg">Facilitator Payment Letter</h3>
+                <button onclick="closeLetterModal()" class="text-gray-400 hover:text-white transition-colors p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Scrollable modal body (unified scroll for letter and signature/actions) -->
+            <div class="overflow-y-auto flex-1 min-h-0 flex flex-col">
+                <!-- Scrollable letter content -->
+                <div class="p-6" id="modal-letter-content">
+                    <!-- Injected dynamically by JS -->
+                </div>
+
+                <!-- Signature pad area (shown only if PUBLISHED status) -->
+                <div id="signature-section" class="px-6 pb-6 border-t border-white/10 pt-5 hidden">
+                    <h4 class="font-semibold text-white mb-1">Your Digital Signature</h4>
+                    <p class="text-sm text-gray-400 mb-3">Please sign in the box below using your mouse or touch screen.</p>
+                    <div class="relative border border-white/20 rounded-xl overflow-hidden bg-white">
+                        <canvas id="sig-canvas" width="640" height="160" class="w-full cursor-crosshair touch-none"></canvas>
+                        <button onclick="clearSignature()"
+                            class="absolute bottom-2 right-2 text-xs text-gray-500 hover:text-gray-800 border border-gray-300 rounded-lg px-2 py-1 bg-white transition-colors">
+                            Clear
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-3 mt-4">
+                        <input type="checkbox" id="confirm-check" class="w-4 h-4 rounded accent-purple-600">
+                        <label for="confirm-check" class="text-sm text-gray-300">
+                            I confirm that I have read and agree to the terms of this Payment Letter.
+                        </label>
+                    </div>
+                    <button id="submit-sig-btn" onclick="submitSignature()"
+                        class="mt-4 w-full py-3 rounded-xl bg-space-accent text-white font-semibold text-sm hover:bg-space-hover transition-all flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                        </svg>
+                        Submit My Signature
+                    </button>
+                    <p id="sign-error" class="hidden text-red-400 text-sm mt-2 text-center"></p>
+                </div>
+
+                <!-- Already signed notice -->
+                <div id="signed-notice" class="px-6 pb-6 border-t border-white/10 pt-5 hidden">
+                    <div class="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                        <svg class="w-6 h-6 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <p class="text-emerald-300 font-semibold text-sm">Letter Signed</p>
+                            <p id="signed-at-text" class="text-emerald-400/70 text-xs mt-0.5"></p>
+                        </div>
+                    </div>
+                    <a id="download-signed-btn" href="#"
+                        class="mt-3 w-full py-3 rounded-xl border border-space-accent/40 text-space-accent font-semibold text-sm hover:bg-space-accent/10 transition-all flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Download Signed PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Signature Pad (lightweight canvas-based implementation)
+// ─────────────────────────────────────────────────────────────────────────────
+let sigCanvas, sigCtx, isDrawing = false, lastX = 0, lastY = 0;
+
+function initSignaturePad() {
+    sigCanvas = document.getElementById('sig-canvas');
+    if (!sigCanvas) return;
+    sigCtx = sigCanvas.getContext('2d');
+    sigCtx.strokeStyle = '#1a1135';
+    sigCtx.lineWidth = 2.5;
+    sigCtx.lineCap = 'round';
+    sigCtx.lineJoin = 'round';
+
+    const rect = () => sigCanvas.getBoundingClientRect();
+    const pos = (e) => {
+        const r = rect();
+        const scaleX = sigCanvas.width / r.width;
+        const scaleY = sigCanvas.height / r.height;
+        const src = e.touches ? e.touches[0] : e;
+        return [(src.clientX - r.left) * scaleX, (src.clientY - r.top) * scaleY];
+    };
+
+    sigCanvas.addEventListener('mousedown', (e) => { isDrawing = true; [lastX, lastY] = pos(e); });
+    sigCanvas.addEventListener('mousemove', (e) => {
+        if (!isDrawing) return;
+        const [x, y] = pos(e);
+        sigCtx.beginPath();
+        sigCtx.moveTo(lastX, lastY);
+        sigCtx.lineTo(x, y);
+        sigCtx.stroke();
+        [lastX, lastY] = [x, y];
+    });
+    sigCanvas.addEventListener('mouseup', () => isDrawing = false);
+    sigCanvas.addEventListener('mouseleave', () => isDrawing = false);
+
+    sigCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); isDrawing = true; [lastX, lastY] = pos(e); }, { passive: false });
+    sigCanvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (!isDrawing) return;
+        const [x, y] = pos(e);
+        sigCtx.beginPath();
+        sigCtx.moveTo(lastX, lastY);
+        sigCtx.lineTo(x, y);
+        sigCtx.stroke();
+        [lastX, lastY] = [x, y];
+    }, { passive: false });
+    sigCanvas.addEventListener('touchend', () => isDrawing = false);
+}
+
+function clearSignature() {
+    if (sigCtx) sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+}
+
+function isSignatureEmpty() {
+    if (!sigCanvas) return true;
+    const data = sigCtx.getImageData(0, 0, sigCanvas.width, sigCanvas.height).data;
+    for (let i = 3; i < data.length; i += 4) {
+        if (data[i] > 0) return false;
+    }
+    return true;
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────────────────────
+let currentLetterId = null;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Load summary stats
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadStats() {
+    try {
+        const r = await fetch('/api/instructor/payments/summary');
+        if (!r.ok) return;
+        const d = await r.json();
+        document.getElementById('stat-earned').textContent = 'AED ' + (d.total_earned_aed || 0).toLocaleString('en-AE', {minimumFractionDigits: 0});
+        document.getElementById('stat-hours').textContent = d.total_hours || 0;
+        document.getElementById('stat-sessions').textContent = d.total_sessions || 0;
+        document.getElementById('stat-pending').textContent = d.pending_signature || 0;
+    } catch(e) {}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Load payment letters
+// ─────────────────────────────────────────────────────────────────────────────
+function statusBadge(status) {
+    const map = {
+        'PUBLISHED': '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">Awaiting Signature</span>',
+        'SIGNED':    '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Signed</span>',
+        'PAID':      '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30">Paid</span>',
+        'DRAFT':     '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-gray-500/15 text-gray-400 border border-gray-500/30">Draft</span>',
+    };
+    return map[status] || `<span class="text-xs text-gray-500">${status}</span>`;
+}
+
+async function loadLetters() {
+    const loading = document.getElementById('letters-loading');
+    const empty = document.getElementById('letters-empty');
+    const tableWrap = document.getElementById('letters-table-wrap');
+    const tbody = document.getElementById('letters-tbody');
+
+    try {
+        const r = await fetch('/api/instructor/payments/letters');
+        if (!r.ok) throw new Error('Failed to load');
+        const letters = await r.json();
+
+        loading.classList.add('hidden');
+        if (!letters.length) {
+            empty.classList.remove('hidden');
+            return;
+        }
+
+        tableWrap.classList.remove('hidden');
+        tbody.innerHTML = '';
+
+        letters.forEach(l => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-white/2 transition-colors';
+            tr.innerHTML = `
+                <td class="px-6 py-4 text-gray-300 font-medium">${l.letter_date || '—'}</td>
+                <td class="px-6 py-4 text-gray-400">${l.session_count} session${l.session_count !== 1 ? 's' : ''}</td>
+                <td class="px-6 py-4 text-right font-mono text-space-accent font-semibold">${Number(l.grand_total).toLocaleString('en-AE')}</td>
+                <td class="px-6 py-4 text-right text-gray-400">${l.total_hours}h</td>
+                <td class="px-6 py-4 text-center">${statusBadge(l.status)}</td>
+                <td class="px-6 py-4 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                        <button onclick="openLetterModal(${l.id})"
+                            class="px-3 py-1.5 text-xs rounded-lg border border-space-accent/30 text-space-accent hover:bg-space-accent/10 transition-all font-medium">
+                            ${l.status === 'PUBLISHED' ? 'Review & Sign' : 'View'}
+                        </button>
+                        ${l.has_signed_pdf ? `
+                        <a href="/api/instructor/payments/letters/${l.id}/download"
+                            class="px-3 py-1.5 text-xs rounded-lg border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-all font-medium">
+                            Download
+                        </a>` : ''}
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch(e) {
+        loading.innerHTML = '<p class="text-red-400">Failed to load payment letters. Please try again.</p>';
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Letter detail modal
+// ─────────────────────────────────────────────────────────────────────────────
+async function openLetterModal(letterId) {
+    currentLetterId = letterId;
+    const modal = document.getElementById('letter-modal');
+    const content = document.getElementById('modal-letter-content');
+    const sigSection = document.getElementById('signature-section');
+    const signedNotice = document.getElementById('signed-notice');
+
+    content.innerHTML = '<div class="text-center text-gray-500 py-8">Loading letter...</div>';
+    sigSection.classList.add('hidden');
+    signedNotice.classList.add('hidden');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    try {
+        const r = await fetch(`/api/instructor/payments/letters/${letterId}`);
+        if (!r.ok) throw new Error('Not found');
+        const l = await r.json();
+
+        // Build HTML rendering of the letter
+        const sessTotal = l.sessions.reduce((s, x) => s + x.compensation_aed, 0);
+        const addTotal = l.addons.reduce((s, x) => s + x.amount_aed, 0);
+        const grandTotal = sessTotal + addTotal;
+
+        let sessRows = l.sessions.map(s => `
+            <tr>
+                <td class="border border-gray-300 px-2 py-2 text-gray-800 text-sm">${s.session_date}</td>
+                <td class="border border-gray-300 px-2 py-2 text-gray-800 text-sm">${s.workshop_description}</td>
+                <td class="border border-gray-300 px-2 py-2 text-gray-800 text-sm">${s.role}</td>
+                <td class="border border-gray-300 px-2 py-2 text-gray-800 text-sm">${s.location}</td>
+                <td class="border border-gray-300 px-2 py-2 text-gray-800 text-sm text-center">${s.duration_hours} hrs</td>
+                <td class="border border-gray-300 px-2 py-2 text-gray-800 text-sm text-right font-medium">${Number(s.compensation_aed).toLocaleString()}</td>
+            </tr>
+        `).join('');
+
+        let addonRows = l.addons.length ? l.addons.map(a => `
+            <tr>
+                <td class="border border-gray-300 px-2 py-2 text-gray-800 text-sm">${a.description}</td>
+                <td class="border border-gray-300 px-2 py-2 text-gray-800 text-sm text-right font-medium">${Number(a.amount_aed).toLocaleString()}</td>
+                <td class="border border-gray-300 px-2 py-2 text-gray-800 text-sm">${a.notes || ''}</td>
+            </tr>
+        `).join('') : '';
+
+        let bankHtml = '';
+        if (l.bank && (l.bank.iban || l.bank.bank_name)) {
+            bankHtml = `
+                <p class="text-xs text-gray-600 mb-2">Please confirm or update your current banking details below:</p>
+                <ul class="space-y-1 text-sm text-gray-800">
+                    <li><strong>Account Holder Name:</strong> ${l.bank.account_holder_name || '—'}</li>
+                    <li><strong>Bank Name:</strong> ${l.bank.bank_name || '—'}</li>
+                    <li><strong>IBAN:</strong> ${l.bank.iban || '—'}</li>
+                    <li><strong>SWIFT/BIC (if applicable):</strong> ${l.bank.swift_bic || '—'}</li>
+                </ul>
+                <p class="text-xs text-gray-500 italic mt-2">Note: Any changes in bank details must be communicated to SpacePoint in writing.</p>
+            `;
+        } else {
+            bankHtml = `<p class="text-sm text-amber-700">⚠️ Please update your bank details below before signing this letter.</p>`;
+        }
+
+        content.innerHTML = `
+            <div class="bg-white text-gray-900 rounded-xl p-6 shadow-sm font-sans text-sm">
+                <!-- Header -->
+                <div class="rounded-t-lg -mx-6 -mt-6 px-6 py-4 mb-5 flex items-center" style="background-color: #231134;">
+                    <img src="/static/SpacePoint%20logo.png" alt="SpacePoint Logo" class="h-8">
+                </div>
+
+                <h2 class="text-center text-base font-bold underline mb-4">SpacePoint's Facilitator Payment Letter</h2>
+
+                <div class="space-y-1 mb-4">
+                    <p><strong>Issued By:</strong> SpacePoint FZC</p>
+                    <p><strong>Date:</strong> ${l.letter_date || '—'}</p>
+                    <p><strong>Facilitator:</strong> ${l.instructor_name}</p>
+                    <p><strong>Reference Agreement:</strong> ${l.reference || 'Facilitator Agreement'}</p>
+                </div>
+
+                <p class="font-bold mb-1">Subject: Confirmation of Scheduled Workshops and Payment Terms</p>
+                <p class="text-gray-600 mb-4">According to the Facilitator Agreement referenced above, this letter confirms the scope of work and agreed compensation for the following workshop sessions delivered by the Facilitator:</p>
+
+                <!-- Sessions table -->
+                <p class="font-bold mb-2">Schedule of Workshops</p>
+                <table class="w-full border-collapse text-xs mb-4">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="border border-gray-300 px-2 py-2 text-left">Session/Course Date</th>
+                            <th class="border border-gray-300 px-2 py-2 text-left">Workshop Description</th>
+                            <th class="border border-gray-300 px-2 py-2 text-left">Role</th>
+                            <th class="border border-gray-300 px-2 py-2 text-left">Location</th>
+                            <th class="border border-gray-300 px-2 py-2 text-center">Duration</th>
+                            <th class="border border-gray-300 px-2 py-2 text-right">Compensation (AED)</th>
+                        </tr>
+                    </thead>
+                    <tbody>${sessRows}</tbody>
+                </table>
+
+                ${l.addons.length ? `
+                <!-- Add-ons table -->
+                <p class="font-bold mb-2">Optional Add-ons</p>
+                <table class="w-full border-collapse text-xs mb-2">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="border border-gray-300 px-2 py-2 text-left">Description</th>
+                            <th class="border border-gray-300 px-2 py-2 text-right">Amount (AED)</th>
+                            <th class="border border-gray-300 px-2 py-2 text-left">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>${addonRows}</tbody>
+                </table>
+                <p class="text-sm font-bold mb-4">Total Optional Add-ons: AED ${Number(addTotal).toLocaleString()}</p>
+                ` : ''}
+
+                <hr class="my-3 border-gray-200">
+                <p class="font-bold text-base mb-1">Total Compensation Payable: AED ${Number(grandTotal).toLocaleString()}</p>
+                <p class="text-xs text-gray-500 italic mb-1">Total includes base compensation of AED ${Number(sessTotal).toLocaleString()}${l.addons.length ? ' + optional add-ons of AED ' + Number(addTotal).toLocaleString() : ''}.</p>
+                <p class="text-xs text-gray-600 mb-5">Payment will be made by bank transfer within 30 working days after submission of this signed letter, subject to verification.</p>
+
+                <hr class="my-3 border-gray-200">
+                <p class="font-bold mb-2">Facilitator Bank Details</p>
+                ${bankHtml}
+
+                <hr class="my-4 border-gray-200">
+                <p class="font-bold mb-2">Signatures</p>
+                <p class="text-xs text-gray-600 mb-3">By signing below, the Parties confirm agreement to the terms of this Payment Letter.</p>
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <p class="font-bold text-xs mb-1">For SpacePoint FZC</p>
+                        <p class="text-xs text-gray-700">Name: SpacePoint Admin</p>
+                        <div class="mt-1 h-10 flex items-center">
+                            <span class="text-xs text-gray-400 italic">(SpacePoint signature on file)</span>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="font-bold text-xs mb-1">Facilitator</p>
+                        <p class="text-xs text-gray-700">Name: ${l.instructor_name}</p>
+                        <p class="text-xs text-gray-400 mt-1 italic">${l.status === 'SIGNED' ? '✓ Signed digitally' : 'Signature required below ↓'}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Show correct bottom section
+        if (l.status === 'PUBLISHED') {
+            sigSection.classList.remove('hidden');
+            setTimeout(() => initSignaturePad(), 50);
+        } else if (l.status === 'SIGNED' || l.status === 'PAID') {
+            signedNotice.classList.remove('hidden');
+            const signedAt = l.signed_at ? new Date(l.signed_at).toLocaleDateString('en-AE', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+            document.getElementById('signed-at-text').textContent = `Signed on ${signedAt}`;
+            document.getElementById('download-signed-btn').href = `/api/instructor/payments/letters/${letterId}/download`;
+        }
+
+    } catch(e) {
+        content.innerHTML = '<p class="text-red-400 text-center py-8">Failed to load letter details.</p>';
+    }
+}
+
+function closeLetterModal() {
+    document.getElementById('letter-modal').classList.add('hidden');
+    document.body.style.overflow = '';
+    currentLetterId = null;
+    clearSignature();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Submit signature
+// ─────────────────────────────────────────────────────────────────────────────
+async function submitSignature() {
+    const errEl = document.getElementById('sign-error');
+    errEl.classList.add('hidden');
+
+    if (isSignatureEmpty()) {
+        errEl.textContent = 'Please provide your signature before submitting.';
+        errEl.classList.remove('hidden');
+        return;
+    }
+    if (!document.getElementById('confirm-check').checked) {
+        errEl.textContent = 'Please check the confirmation checkbox.';
+        errEl.classList.remove('hidden');
+        return;
+    }
+
+    const btn = document.getElementById('submit-sig-btn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
+    const signatureData = sigCanvas.toDataURL('image/png');
+
+    try {
+        const r = await fetch(`/api/instructor/payments/letters/${currentLetterId}/sign`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ signature: signatureData }),
+        });
+        const d = await r.json();
+        if (r.ok && d.ok) {
+            closeLetterModal();
+            showToast('✅ Letter signed successfully! Thank you.', 'success');
+            await loadStats();
+            await loadLetters();
+        } else {
+            errEl.textContent = d.detail || 'Failed to submit signature.';
+            errEl.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Submit My Signature';
+        }
+    } catch(e) {
+        errEl.textContent = 'Network error. Please try again.';
+        errEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Submit My Signature';
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bank details
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadBankDetails() {
+    try {
+        const r = await fetch('/api/instructor/payments/bank-details');
+        if (!r.ok) return;
+        const d = await r.json();
+        document.getElementById('bank-holder').value = d.account_holder_name || '';
+        document.getElementById('bank-name').value = d.bank_name || '';
+        document.getElementById('bank-iban').value = d.iban || '';
+        document.getElementById('bank-swift').value = d.swift_bic || '';
+    } catch(e) {}
+}
+
+document.getElementById('bank-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msgEl = document.getElementById('bank-msg');
+    const btn = document.getElementById('bank-save-btn');
+    btn.disabled = true;
+
+    const body = new FormData();
+    body.append('account_holder_name', document.getElementById('bank-holder').value);
+    body.append('bank_name', document.getElementById('bank-name').value);
+    body.append('iban', document.getElementById('bank-iban').value);
+    body.append('swift_bic', document.getElementById('bank-swift').value);
+
+    try {
+        const r = await fetch('/api/instructor/payments/bank-details', { method: 'PUT', body });
+        const d = await r.json();
+        if (r.ok && d.ok) {
+            msgEl.textContent = '✅ Bank details saved successfully.';
+            msgEl.className = 'mt-4 px-4 py-3 rounded-xl text-sm font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+        } else {
+            msgEl.textContent = '❌ Failed to save. Please try again.';
+            msgEl.className = 'mt-4 px-4 py-3 rounded-xl text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/30';
+        }
+        msgEl.classList.remove('hidden');
+        setTimeout(() => msgEl.classList.add('hidden'), 4000);
+    } catch(err) {
+        msgEl.textContent = '❌ Network error.';
+        msgEl.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Toast notification
+// ─────────────────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+    const t = document.createElement('div');
+    t.className = `fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-lg transition-all
+        ${type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────────────────────
+loadStats();
+loadLetters();
+loadBankDetails();
+</script>
+{% endblock %}

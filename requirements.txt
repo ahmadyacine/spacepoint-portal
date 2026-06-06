@@ -13,3 +13,5 @@ pypdf
 reportlab
 python-docx
 docx2pdf
+openpyxl
+pillow

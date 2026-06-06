@@ -4,6 +4,25 @@ This document tracks all version releases, feature additions, layout modificatio
 
 ---
 
+## [v1.2.0] - 2026-05-31
+### Added
+- **Instructor ID Card PDF Download**:
+  - Implemented a backend route (`/api/instructor/id-card/pdf`) utilizing `ReportLab` to compile the front and back card images into a two-page PDF.
+  - Tailored the PDF page canvas dimensions precisely to portrait CR80 format specifications (`2.125" x 3.375"` i.e., `153.0 x 243.0` points) to support direct physical printing.
+  - Added a download action button to the frontend UI that is dynamically revealed upon successful ID card generation.
+
+- **ID Card Portal Layout Enhancements**:
+  - Optimized the ID card details page by converting the two-column grid into stacked full-width rows (Row 1: Card Details Form & Actions, Row 2: Card Preview showing Front/Back side-by-side).
+  - Added a highly visible, always-accessible note banner detailing the standard landscape CR80 format dimensions (`3.375" x 2.125"` / `85.60 mm x 54.00 mm`) for workshop card holders.
+
+- **Personal Documents Uploader UI Redesign**:
+  - Redesigned the uploader layout into a 5-column split panel structure.
+  - Added a **Required Documents Checklist** detailing explicit requirements for UAE Emirates IDs, Passport copies, Personal Pictures, SpacePoint Contracts, UAE Visas, and CVs.
+  - Built a fully interactive drag-and-drop file uploader zone featuring hover transition styles, drag-over highlights, and dynamic filename/file size rendering.
+  - Added **CV** option to the document type dropdown and checklist details.
+
+---
+
 ## [v1.1.0] - 2026-05-20
 ### Fixed
 - **Invitation Code Case Insensitivity**:
@@ -104,3 +123,217 @@ This document tracks all version releases, feature additions, layout modificatio
 - **Facilitator Portal**:
   - Resource library module editor.
   - SatKit training content uploader.
+
+---
+
+## SpacePoint Portal - Database Schema Reference
+
+This section outlines all database tables, columns, constraints, relationships, and data types modeled in SQLAlchemy for the portal.
+
+### 1. Table: `users`
+Tracks core administrative and authentication credentials.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `name`: `String` | Not Null
+  * `email`: `String` | Unique, Indexed, Not Null
+  * `phone`: `String` | Nullable
+  * `password_hash`: `String` | Not Null
+  * `role`: `Enum(UserRole)` (`ADMIN`, `APPLICANT`, `INSTRUCTOR`, `FACILITATOR`) | Not Null
+  * `invitation_code_used`: `String` | Nullable
+  * `created_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+  * `last_login_at`: `DateTime(timezone=True)` | Nullable
+  * `must_change_password`: `Integer` (1/0) | Not Null, Default `0`
+  * `temp_password_last_set_at`: `DateTime(timezone=True)` | Nullable
+
+### 2. Table: `applicant_profiles`
+Holds additional application details for applicants.
+* **Columns:**
+  * `user_id`: `Integer` | Foreign Key (`users.id`), Primary Key
+  * `university`: `String` | Not Null
+  * `highest_degree`: `String` | Not Null
+  * `highest_degree_other`: `String` | Nullable
+  * `city_of_residence`: `String` | Nullable
+  * `deliver_cities_json`: `String` | Nullable (stores stringified JSON list of cities)
+  * `background_areas_json`: `String` | Not Null (stores stringified JSON list of areas)
+  * `background_other`: `String` | Nullable
+  * `has_own_transportation`: `Boolean` | Nullable, Default `False`
+  * `country`: `String` | Nullable, Default `"United Arab Emirates"`
+
+### 3. Table: `instructor_profiles`
+Tracks generated assets, contract paths, and digital ID card credentials for instructors.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `user_id`: `Integer` | Foreign Key (`users.id`), Unique, Not Null
+  * `linkedin_url`: `String` | Nullable
+  * `profile_photo_path`: `String` | Nullable
+  * `instructor_id`: `String` | Unique, Nullable (e.g. `SP-0012-UAE`)
+  * `issue_date`: `DateTime(timezone=True)` | Nullable
+  * `front_card_path`: `String` | Nullable
+  * `back_card_path`: `String` | Nullable
+  * `contract_path`: `String` | Nullable
+  * `signed_contract_path`: `String` | Nullable
+  * `created_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+  * `updated_at`: `DateTime(timezone=True)` | On Update (`func.now()`)
+
+### 4. Table: `video_submissions`
+Tracks Phase 1 applicant video summaries.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `user_id`: `Integer` | Foreign Key (`users.id`), Not Null
+  * `video_no`: `Integer` (1, 2, or 3) | Not Null
+  * `youtube_url`: `String` | Not Null
+  * `summary_text`: `String` | Nullable
+  * `word_count`: `Integer` | Default `0`
+  * `status`: `Enum(SubmissionStatus)` (`DRAFT`, `SUBMITTED`) | Not Null, Default `DRAFT`
+  * `submitted_at`: `DateTime(timezone=True)` | Nullable
+
+### 5. Table: `research_submissions`
+Tracks Phase 2 applicant research uploader submissions.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `user_id`: `Integer` | Foreign Key (`users.id`), Not Null
+  * `file_path`: `String` | Not Null
+  * `original_filename`: `String` | Not Null
+  * `content_text`: `String` | Nullable
+  * `submitted_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+
+### 6. Table: `presentation_submissions`
+Tracks final Phase 2 video link submissions.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `user_id`: `Integer` | Foreign Key (`users.id`), Unique, Not Null
+  * `video_link`: `String` | Not Null
+  * `submitted_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+
+### 7. Table: `application_reviews`
+Tracks overall admin adjudication workflow status.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `user_id`: `Integer` | Foreign Key (`users.id`), Unique, Not Null
+  * `status`: `Enum(ApplicationStatus)` (`IN_PROGRESS`, `UNDER_REVIEW`, `PHASE_1_APPROVED`, `APPROVED`, `REJECTED`) | Not Null, Default `IN_PROGRESS`
+  * `admin_id`: `Integer` | Foreign Key (`users.id`), Nullable
+  * `feedback`: `String` | Nullable
+  * `reviewed_at`: `DateTime(timezone=True)` | Nullable
+
+### 8. Table: `modules`
+Curriculum module nodes for checklist items.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `title`: `String` | Not Null
+  * `sort_order`: `Integer` | Not Null, Default `1`
+
+### 9. Table: `module_sections`
+Checklist sections grouped under modules.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `module_id`: `Integer` | Foreign Key (`modules.id` ON DELETE `CASCADE`), Not Null
+  * `title`: `String` | Not Null
+  * `sort_order`: `Integer` | Not Null, Default `1`
+
+### 10. Table: `checklist_items`
+Individual checklist items in modules/sections.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `module_id`: `Integer` | Foreign Key (`modules.id` ON DELETE `CASCADE`), Not Null
+  * `section_id`: `Integer` | Foreign Key (`module_sections.id` ON DELETE `CASCADE`), Nullable
+  * `item_code`: `String` | Not Null
+  * `title`: `String` | Not Null
+  * `description`: `Text` | Not Null
+  * `sort_order`: `Integer` | Not Null, Default `1`
+  * `is_required`: `Boolean` | Not Null, Default `True`
+
+### 11. Table: `user_checklist_progress`
+Tracks student checkmarks on checklist items.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `user_id`: `Integer` | Foreign Key (`users.id` ON DELETE `CASCADE`), Indexed, Not Null
+  * `checklist_item_id`: `Integer` | Foreign Key (`checklist_items.id` ON DELETE `CASCADE`), Not Null
+  * `is_completed`: `Boolean` | Not Null, Default `False`
+  * `updated_at`: `DateTime(timezone=True)` | Server Default / On Update (`func.now()`)
+
+### 12. Table: `module_submissions`
+Files uploaded by applicants to pass checklist modules.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `user_id`: `Integer` | Foreign Key (`users.id` ON DELETE `CASCADE`), Indexed, Not Null
+  * `module_id`: `Integer` | Foreign Key (`modules.id` ON DELETE `CASCADE`), Not Null
+  * `file_path`: `String` | Not Null
+  * `original_filename`: `String` | Not Null
+  * `notes_text`: `Text` | Nullable
+  * `status`: `String` (`SUBMITTED`, `APPROVED`, `REJECTED`) | Not Null, Default `"SUBMITTED"`
+  * `feedback`: `Text` | Nullable
+  * `submitted_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+  * `reviewed_at`: `DateTime(timezone=True)` | Nullable
+  * `reviewer_admin_id`: `Integer` | Foreign Key (`users.id` ON DELETE `SET NULL`), Nullable
+
+### 13. Table: `invitation_codes`
+Tracks unique verification codes for user registrations.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `code`: `String` | Unique, Indexed, Not Null
+  * `is_active`: `Boolean` | Not Null, Default `True`
+  * `expires_at`: `DateTime(timezone=True)` | Nullable
+  * `max_uses`: `Integer` | Not Null, Default `20`
+  * `used_count`: `Integer` | Not Null, Default `0`
+  * `source_type`: `String` | Nullable
+  * `source_id`: `String` | Nullable
+  * `created_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+
+### 14. Table: `instructor_documents`
+Personal vault uploads by instructors (Emirates ID, Passports, Visas, Contracts, CVs, etc.).
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `user_id`: `Integer` | Foreign Key (`users.id`), Indexed, Not Null
+  * `document_type`: `String` | Not Null (e.g. `"ID Card"`, `"Passport"`, `"Visa"`, `"CV"`)
+  * `file_path`: `String` | Not Null
+  * `uploaded_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+
+### 15. Table: `library_modules`
+Folder categories inside resources library vault.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `name`: `String` | Unique, Not Null
+  * `description`: `Text` | Nullable
+  * `created_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+
+### 16. Table: `library_resources`
+Actual document resources uploaded for instructors inside vault folders.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `title`: `String` | Not Null
+  * `description`: `Text` | Nullable
+  * `format`: `String` | Not Null (e.g. `"PDF"`, `"PPTX"`)
+  * `file_path`: `String` | Not Null
+  * `uploader_id`: `Integer` | Foreign Key (`users.id`)
+  * `module_id`: `Integer` | Foreign Key (`library_modules.id` ON DELETE `CASCADE`), Not Null
+  * `created_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+
+### 17. Table: `training_modules`
+Curriculum modules for instructor SatKit training.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `title`: `String` | Unique, Not Null
+  * `description`: `Text` | Nullable
+  * `sort_order`: `Integer` | Not Null, Default `1`
+  * `created_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+
+### 18. Table: `training_videos`
+MP4 video resources under SatKit modules.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `module_id`: `Integer` | Foreign Key (`training_modules.id` ON DELETE `CASCADE`), Not Null
+  * `title`: `String` | Not Null
+  * `description`: `Text` | Nullable
+  * `notes`: `Text` | Nullable
+  * `video_path`: `String` | Not Null
+  * `sort_order`: `Integer` | Not Null, Default `1`
+  * `created_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+
+### 19. Table: `user_training_progress`
+Tracks instructor video completion progress.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `user_id`: `Integer` | Foreign Key (`users.id` ON DELETE `CASCADE`), Indexed, Not Null
+  * `video_id`: `Integer` | Foreign Key (`training_videos.id` ON DELETE `CASCADE`), Indexed, Not Null
+  * `is_completed`: `Boolean` | Not Null, Default `False`
+  * `completed_at`: `DateTime(timezone=True)` | Nullable
