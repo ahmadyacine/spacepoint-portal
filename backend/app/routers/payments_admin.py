@@ -168,7 +168,7 @@ def _letter_to_dict(letter: PaymentLetter, db: Session) -> dict:
         "instructor_email": instructor.email if instructor else "",
         "letter_date": letter.letter_date,
         "reference": letter.reference,
-        "status": letter.status.value if letter.status else "DRAFT",
+        "status": letter.status.value if hasattr(letter.status, "value") else (letter.status or "DRAFT"),
         "is_published": letter.is_published,
         "signed_at": letter.signed_at.isoformat() if letter.signed_at else None,
         "admin_notes": letter.admin_notes,

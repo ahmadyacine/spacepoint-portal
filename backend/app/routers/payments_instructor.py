@@ -100,7 +100,7 @@ def _letter_to_instructor_dict(letter: PaymentLetter) -> dict:
         "id": letter.id,
         "letter_date": letter.letter_date,
         "reference": letter.reference,
-        "status": letter.status.value if letter.status else "PUBLISHED",
+        "status": letter.status.value if hasattr(letter.status, "value") else (letter.status or "PUBLISHED"),
         "signed_at": letter.signed_at.isoformat() if letter.signed_at else None,
         "has_signed_pdf": bool(letter.signed_pdf_path and os.path.exists(letter.signed_pdf_path)),
         "sessions_total": sessions_total,
@@ -201,7 +201,8 @@ async def sign_letter(
     ).first()
     if not letter:
         raise HTTPException(404, "Letter not found")
-    if letter.status == PaymentLetterStatus.SIGNED:
+    status_str = letter.status.value if hasattr(letter.status, "value") else letter.status
+    if status_str == "SIGNED" or status_str == PaymentLetterStatus.SIGNED:
         raise HTTPException(400, "Letter already signed")
 
     signed_pdf = embed_instructor_signature(letter_id, signature_b64, db)
@@ -277,7 +278,8 @@ def get_payments_summary(
         total_earned += sess_total + addon_total
         total_hours += sum(s.duration_hours for s in letter.sessions)
         total_sessions += len(letter.sessions)
-        if letter.status == PaymentLetterStatus.PUBLISHED:
+        status_str = letter.status.value if hasattr(letter.status, "value") else letter.status
+        if status_str == "PUBLISHED" or status_str == PaymentLetterStatus.PUBLISHED:
             pending_signature += 1
 
     return {

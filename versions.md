@@ -4,6 +4,34 @@ This document tracks all version releases, feature additions, layout modificatio
 
 ---
 
+## [v1.3.0] - 2026-06-06
+### Added
+- **Instructor Payment System Backend**:
+  - Designed SQLAlchemy models for automated payments workflow: `PaymentBatch`, `PaymentLetter`, `PaymentSession`, `PaymentAddon`, `InstructorBankDetails`, and `PortalSetting`.
+  - Added automated ReportLab PDF generator with personalized signatory settings and digital signature embedding.
+  - Developed transactional notification emails to alert instructors of ready contracts and notify administrators of signed agreements.
+
+- **Admin Payments Dashboard & Batch Filtering**:
+  - Replaced native browser `alert`, `confirm`, and `prompt` dialogs with theme-matched custom glassmorphic modals.
+  - Developed a full-bleed inline editor modal to manually edit, add, or delete sessions and optional add-ons, recalculating totals instantly.
+  - Replaced applicant metrics with **Payment Overview Stats** tracking total spent, pending payment, awaiting signatures, total sessions, and total duration.
+  - Integrated **Batch Filtering** dropdown select element to group and analyze letters by batch, computing statistics client-side to ensure accuracy.
+
+- **Instructor Payments Tab & Vault**:
+  - Added IBAN, swift, bank name, and account holder fields under payments settings.
+  - Created a signature confirmation modal with base64 digital signature canvas drawing and verified PDF generation.
+  - Enhanced layout to support scrollable overlays and edge-to-edge full bleed ReportLab contract headers in brand violet color (`#231134`).
+
+### Files Impacted
+- `backend/app/models/payment.py`
+- `backend/app/routers/payments_admin.py`
+- `backend/app/routers/payments_instructor.py`
+- `backend/app/services/payment_service.py`
+- `backend/app/templates/admin_dashboard.html`
+- `backend/app/templates/instructor/payments.html`
+
+---
+
 ## [v1.2.0] - 2026-05-31
 ### Added
 - **Instructor ID Card PDF Download**:
@@ -337,3 +365,71 @@ Tracks instructor video completion progress.
   * `video_id`: `Integer` | Foreign Key (`training_videos.id` ON DELETE `CASCADE`), Indexed, Not Null
   * `is_completed`: `Boolean` | Not Null, Default `False`
   * `completed_at`: `DateTime(timezone=True)` | Nullable
+
+### 20. Table: `payment_batches`
+Admin groupings to categorize instructor payment cohorts.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `name`: `String` | Not Null
+  * `description`: `Text` | Nullable
+  * `created_by_admin_id`: `Integer` | Foreign Key (`users.id`), Nullable
+  * `created_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+
+### 21. Table: `payment_letters`
+Generates one contract sheet/record per instructor under a batch.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `batch_id`: `Integer` | Foreign Key (`payment_batches.id`), Nullable
+  * `instructor_user_id`: `Integer` | Foreign Key (`users.id`), Not Null
+  * `letter_date`: `String` | Nullable
+  * `reference`: `String` | Default `"Facilitator Agreement"`
+  * `status`: `Enum(PaymentLetterStatus)` (`DRAFT`, `PUBLISHED`, `SIGNED`, `PAID`) | Not Null, Default `DRAFT`
+  * `is_published`: `Boolean` | Not Null, Default `False`
+  * `pdf_path`: `String` | Nullable
+  * `signed_pdf_path`: `String` | Nullable
+  * `instructor_signature_data`: `Text` | Nullable
+  * `signed_at`: `DateTime(timezone=True)` | Nullable
+  * `admin_notes`: `Text` | Nullable
+  * `created_at`: `DateTime(timezone=True)` | Server Default (`func.now()`)
+
+### 22. Table: `payment_sessions`
+Workshop items scheduled inside a payment letter.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `payment_letter_id`: `Integer` | Foreign Key (`payment_letters.id`), Not Null
+  * `session_date`: `String` | Not Null
+  * `workshop_description`: `String` | Not Null
+  * `role`: `Enum(SessionRole)` (`Lead Facilitator`, `Facilitator`, `Assistant Facilitator`) | Not Null
+  * `location`: `String` | Not Null
+  * `duration_hours`: `Float` | Not Null, Default `0`
+  * `compensation_aed`: `Float` | Not Null, Default `0`
+  * `sort_order`: `Integer` | Not Null, Default `1`
+
+### 23. Table: `payment_addons`
+Optional compensation allowances linked to a payment letter.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `payment_letter_id`: `Integer` | Foreign Key (`payment_letters.id`), Not Null
+  * `description`: `String` | Not Null
+  * `amount_aed`: `Float` | Not Null, Default `0`
+  * `notes`: `String` | Nullable
+  * `sort_order`: `Integer` | Not Null, Default `1`
+
+### 24. Table: `instructor_bank_details`
+Secure account credentials filled by instructors for payouts.
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `user_id`: `Integer` | Foreign Key (`users.id`), Unique, Not Null
+  * `account_holder_name`: `String` | Nullable
+  * `bank_name`: `String` | Nullable
+  * `iban`: `String` | Nullable
+  * `swift_bic`: `String` | Nullable
+  * `updated_at`: `DateTime(timezone=True)` | Server Default / On Update (`func.now()`)
+
+### 25. Table: `portal_settings`
+Global system settings key/value registry (e.g., admin signature paths).
+* **Columns:**
+  * `id`: `Integer` | Primary Key, Indexed
+  * `key`: `String` | Unique, Indexed, Not Null
+  * `value`: `Text` | Nullable
+  * `updated_at`: `DateTime(timezone=True)` | Server Default / On Update (`func.now()`)
