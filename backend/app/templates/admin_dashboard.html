@@ -2333,6 +2333,13 @@ function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
                         </select>
                     </div>
                     <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Batch (optional)</label>
+                        <select id="cl-batch"
+                            class="w-full rounded-xl border-white/20 bg-space-800 px-3 py-2.5 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm">
+                            <option value="">No batch</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Letter Date</label>
                         <input type="text" id="cl-date" placeholder="DD/MM/YYYY" required
                             class="w-full rounded-xl border-white/20 bg-space-800 px-3 py-2.5 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm">
@@ -2361,6 +2368,13 @@ function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
                 list.map(i => `<option value="${i.id}">${i.name} (${i.email})</option>`).join('');
         });
 
+        // Populate batch select
+        fetch('/api/admin/payments/batches').then(r => r.json()).then(batches => {
+            const sel = document.getElementById('cl-batch');
+            sel.innerHTML = '<option value="">No batch</option>' +
+                batches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+        });
+
         // Set today's date
         const today = new Date();
         const dd = String(today.getDate()).padStart(2,'0');
@@ -2376,6 +2390,8 @@ function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
         body.append('instructor_user_id', document.getElementById('cl-instructor').value);
         body.append('letter_date', document.getElementById('cl-date').value);
         body.append('reference', document.getElementById('cl-reference').value);
+        const batchVal = document.getElementById('cl-batch').value;
+        if (batchVal) body.append('batch_id', batchVal);
 
         const r = await fetch('/api/admin/payments/letters', { method: 'POST', body });
         const d = await r.json();
@@ -2700,11 +2716,18 @@ function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
                     <!-- Section 1: General Info -->
                     <div class="glass-panel border border-white/5 rounded-xl p-4 space-y-4">
                         <h4 class="text-sm font-semibold text-white uppercase tracking-wider text-space-accent">General Information</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div>
                                 <label class="block text-xs text-gray-400 mb-1">Letter Date</label>
                                 <input type="text" id="el-date" placeholder="DD/MM/YYYY" 
                                     class="w-full rounded-xl border-white/10 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Batch (optional)</label>
+                                <select id="el-batch"
+                                    class="w-full rounded-xl border-white/10 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm">
+                                    <option value="">No batch</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-400 mb-1">Reference Agreement</label>
@@ -2817,6 +2840,18 @@ function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
             document.getElementById('el-date').value = l.letter_date || '';
             document.getElementById('el-reference').value = l.reference || '';
             document.getElementById('el-notes').value = l.admin_notes || '';
+
+            // Populate batch select
+            const batchSel = document.getElementById('el-batch');
+            if (batchSel) {
+                const batchesResp = await fetch('/api/admin/payments/batches');
+                if (batchesResp.ok) {
+                    const batches = await batchesResp.json();
+                    batchSel.innerHTML = '<option value="">No batch</option>' +
+                        batches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+                    batchSel.value = l.batch_id || '';
+                }
+            }
 
             // Populate sessions
             const sessTbody = document.getElementById('el-sessions-tbody');
@@ -2956,11 +2991,17 @@ function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
         const date = document.getElementById('el-date').value.trim();
         const ref = document.getElementById('el-reference').value.trim();
         const notes = document.getElementById('el-notes').value.trim();
+        const batchId = document.getElementById('el-batch').value;
 
         const body = new FormData();
         body.append('letter_date', date);
         body.append('reference', ref);
         body.append('admin_notes', notes);
+        if (batchId) {
+            body.append('batch_id', batchId);
+        } else {
+            body.append('batch_id', '');
+        }
 
         try {
             const r = await fetch(`/api/admin/payments/letters/${currentEditLetterId}`, { method: 'PUT', body });

@@ -14,6 +14,11 @@ This document tracks all version releases, feature additions, layout modificatio
   - Replaced usage of the non-standard `cell.column_letter` property in `openpyxl` with the official `get_column_letter` utility function from `openpyxl.utils` to prevent version mismatch crashes on deployment.
   - Corrected the `requirements.txt` installation file path in the VPS update guide from `backend/requirements.txt` to `requirements.txt`.
 
+### Added
+- **Admin Single-Letter Batch Assignment UI**:
+  - Exposed a **Batch (optional)** dropdown selector inside the single letter creation modal (`openCreateLetterModal`).
+  - Added a **Batch (optional)** dropdown selector in the General Information section of the inline editor modal (`openEditLetterModal`), allowing admins to dynamically move or assign individual letters to any created batch.
+
 ## [v1.3.0] - 2026-06-06
 ### Added
 - **Instructor Payment System Backend**:
