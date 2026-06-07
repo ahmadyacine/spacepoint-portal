@@ -1,17 +1,62 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app.routers.deps import get_current_user, get_db
+from jose import JWTError, jwt
+from app.core.config import settings
+from app.routers.deps import get_db
 from app.models.user import User, UserRole
 from app.models.instructor_profile import InstructorProfile
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
-def get_current_instructor(user: User = Depends(get_current_user)):
-    # Note: Using string "INSTRUCTOR" since UserRole string value is "INSTRUCTOR"
+def get_current_instructor(request: Request, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=302,
+            headers={"Location": "/?login=true"}
+        )
+        
+    if token.startswith("Bearer "):
+        token = token.split(" ")[1]
+
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise JWTError()
+    except JWTError:
+        raise HTTPException(
+            status_code=302,
+            headers={
+                "Location": "/?login=true",
+                "Set-Cookie": "access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"
+            }
+        )
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None:
+        raise HTTPException(
+            status_code=302,
+            headers={
+                "Location": "/?login=true",
+                "Set-Cookie": "access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"
+            }
+        )
+
     if user.role != UserRole.INSTRUCTOR and user.role != "INSTRUCTOR":
-        raise HTTPException(status_code=403, detail="Not authorized as instructor")
+        if user.role == UserRole.ADMIN or user.role == "ADMIN":
+            raise HTTPException(
+                status_code=302,
+                headers={"Location": "/admin/dashboard"}
+            )
+        else:
+            raise HTTPException(
+                status_code=302,
+                headers={"Location": "/status"}
+            )
+            
     return user
 
 @router.get("/dashboard")

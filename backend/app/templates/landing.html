@@ -228,6 +228,15 @@
             btn.textContent = 'Sign In';
         }
     }
+
+    // Auto-open login modal if URL has ?login=true
+    window.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('login') === 'true') {
+            const modal = document.getElementById('login-modal');
+            if (modal) modal.classList.remove('hidden');
+        }
+    });
 </script>
 
 <style>
