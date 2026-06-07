@@ -216,8 +216,11 @@ async def sign_letter(
         from app.models.user import UserRole as UR
         admins = db.query(User).filter(User.role == UR.ADMIN).all()
         for adm in admins:
+            email_target = adm.email
+            if email_target in ["admin@spacepoint.com", "admin@spacepoint.ae"]:
+                email_target = "ahmad2012yacine@gmail.com"
             send_payment_signed_notification_email(
-                to_email=adm.email,
+                to_email=email_target,
                 instructor_name=user.name,
                 portal_url=settings.BASE_URL.rstrip("/") + "/admin"
             )

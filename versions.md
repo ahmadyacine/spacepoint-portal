@@ -9,7 +9,8 @@ This document tracks all version releases, feature additions, layout modificatio
 - **Instructor Payment System Backend**:
   - Designed SQLAlchemy models for automated payments workflow: `PaymentBatch`, `PaymentLetter`, `PaymentSession`, `PaymentAddon`, `InstructorBankDetails`, and `PortalSetting`.
   - Added automated ReportLab PDF generator with personalized signatory settings and digital signature embedding.
-  - Developed transactional notification emails to alert instructors of ready contracts and notify administrators of signed agreements.
+  - Developed transactional notification emails to alert instructors of ready contracts and notify administrators of signed agreements (with redirection from placeholder `admin@spacepoint.com/ae` logins to `ahmad2012yacine@gmail.com`).
+  - Updated the database repair tool `backend/ultimate_fix.py` to import payment schema models, guaranteeing automated table auditing and physical table creations.
 
 - **Admin Payments Dashboard & Batch Filtering**:
   - Replaced native browser `alert`, `confirm`, and `prompt` dialogs with theme-matched custom glassmorphic modals.
@@ -23,6 +24,7 @@ This document tracks all version releases, feature additions, layout modificatio
   - Enhanced layout to support scrollable overlays and edge-to-edge full bleed ReportLab contract headers in brand violet color (`#231134`).
 
 ### Files Impacted
+- `backend/ultimate_fix.py`
 - `backend/app/models/payment.py`
 - `backend/app/routers/payments_admin.py`
 - `backend/app/routers/payments_instructor.py`

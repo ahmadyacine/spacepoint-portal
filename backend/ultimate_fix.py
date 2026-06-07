@@ -20,6 +20,8 @@ if not db_url:
 print(f"Connecting to database...")
 
 # Import Base and ALL models to ensure they are registered with metadata
+# NOTE: Whenever you add new database models/tables in the future, you MUST import them here 
+# so that Base.metadata.create_all() can auto-create the missing tables in the database.
 from app.core.database import Base, engine
 from app.models.user import User, UserRole
 from app.models.instructor_profile import InstructorProfile

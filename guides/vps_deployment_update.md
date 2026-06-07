@@ -23,7 +23,7 @@ apt install -y libreoffice-writer libreoffice-java-common
 Navigate to your project folder and pull the updates.
 
 ```bash
-cd /var/www/spacepoint
+cd /var/www/spacepoint_portal
 
 # Pull the latest changes from Git
 git pull
@@ -38,17 +38,21 @@ pip install -r backend/requirements.txt
 ---
 
 ## 3. Run Database Migrations & Structure Repair
-We added new columns (contract paths, transportation options, etc.) to the database. You must update your database schema and structure:
+We added new columns (contract paths, transportation options, etc.) and new tables (payments, batches, settings, bank details) to the database. You must update your database schema and structure:
 
 ```bash
-cd /var/www/spacepoint/backend
+cd /var/www/spacepoint_portal/backend
 
 # 1. Run migrations via Alembic
 alembic upgrade head
 
-# 2. Run the ultimate repair script to sync missing columns & custom types
+# 2. Run the ultimate repair script to sync missing columns, custom types, and new tables
 python ultimate_fix.py
 ```
+
+> [!NOTE]
+> `ultimate_fix.py` uses SQLAlchemy to audit your database and create tables that do not exist yet. 
+> Whenever you add new database models/tables in the future, you must import them in `backend/ultimate_fix.py` so the repair tool is aware of them and can auto-create them on the VPS.
 
 ---
 
@@ -56,12 +60,13 @@ python ultimate_fix.py
 Ensure the web server (`www-data`) has permission to create the new contract folders:
 
 ```bash
-# Create the contracts folder if it doesn't exist
-mkdir -p /var/www/spacepoint/backend/app/uploads/contracts
+# Create the new uploads subfolders if they don't exist
+mkdir -p /var/www/spacepoint_portal/backend/app/uploads/contracts
+mkdir -p /var/www/spacepoint_portal/backend/app/uploads/settings
 
 # Set ownership to the web user
-chown -R www-data:www-data /var/www/spacepoint
-chmod -R 775 /var/www/spacepoint/backend/app/uploads
+chown -R www-data:www-data /var/www/spacepoint_portal
+chmod -R 775 /var/www/spacepoint_portal/backend/app/uploads
 ```
 
 ---
