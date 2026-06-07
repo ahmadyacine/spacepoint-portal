@@ -59,10 +59,10 @@
             <p class="text-gray-600 text-sm mt-1">Your payment letters will appear here once published by the admin.</p>
         </div>
 
-        <div id="letters-table-wrap" class="hidden overflow-x-auto">
-            <table class="w-full text-sm">
+        <div id="letters-table-wrap" class="hidden overflow-x-auto w-full">
+            <table class="w-full text-sm min-w-[700px]">
                 <thead>
-                    <tr class="border-b border-white/5 text-gray-500 uppercase text-xs tracking-wider">
+                    <tr class="border-b border-white/5 text-gray-500 uppercase text-xs tracking-wider whitespace-nowrap">
                         <th class="px-6 py-3 text-left font-medium">Letter Date</th>
                         <th class="px-6 py-3 text-left font-medium">Sessions</th>
                         <th class="px-6 py-3 text-right font-medium">Total (AED)</th>
@@ -89,7 +89,7 @@
             <form id="bank-form" class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Account Holder Name</label>
-                    <input id="bank-holder" type="text" placeholder="e.g. Ahmad Yacine"
+                    <input id="bank-holder" type="text" placeholder="e.g. Osama Ahmad"
                         class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-space-accent/60 focus:ring-1 focus:ring-space-accent/20 transition-all">
                 </div>
                 <div>
@@ -99,7 +99,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">IBAN</label>
-                    <input id="bank-iban" type="text" placeholder="AE070331234567890123456"
+                    <input id="bank-iban" type="text" placeholder="AE123456789012345678"
                         class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-space-accent/60 focus:ring-1 focus:ring-space-accent/20 transition-all font-mono">
                 </div>
                 <div>
@@ -107,10 +107,10 @@
                     <input id="bank-swift" type="text" placeholder="e.g. EBILAEAD"
                         class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-space-accent/60 focus:ring-1 focus:ring-space-accent/20 transition-all font-mono">
                 </div>
-                <div class="md:col-span-2 flex items-center justify-between pt-1">
+                <div class="md:col-span-2 flex flex-col-reverse lg:flex-row gap-4 items-center justify-between pt-2 text-center lg:text-left">
                     <p class="text-xs text-gray-500 italic">Any changes must be communicated to SpacePoint in writing.</p>
                     <button type="submit" id="bank-save-btn"
-                        class="px-6 py-2.5 rounded-xl bg-space-accent text-white text-sm font-semibold hover:bg-space-hover transition-all flex items-center gap-2">
+                        class="w-full lg:w-auto px-6 py-2.5 rounded-xl bg-space-accent text-white text-sm font-semibold hover:bg-space-hover transition-all flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
@@ -294,12 +294,12 @@ async function loadStats() {
 // ─────────────────────────────────────────────────────────────────────────────
 function statusBadge(status) {
     const map = {
-        'PUBLISHED': '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">Awaiting Signature</span>',
-        'SIGNED':    '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Signed</span>',
-        'PAID':      '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30">Paid</span>',
-        'DRAFT':     '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-gray-500/15 text-gray-400 border border-gray-500/30">Draft</span>',
+        'PUBLISHED': '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30 whitespace-nowrap">Awaiting Signature</span>',
+        'SIGNED':    '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">Signed</span>',
+        'PAID':      '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30 whitespace-nowrap">Paid</span>',
+        'DRAFT':     '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-gray-500/15 text-gray-400 border border-gray-500/30 whitespace-nowrap">Draft</span>',
     };
-    return map[status] || `<span class="text-xs text-gray-500">${status}</span>`;
+    return map[status] || `<span class="text-xs text-gray-500 whitespace-nowrap">${status}</span>`;
 }
 
 async function loadLetters() {
@@ -326,20 +326,20 @@ async function loadLetters() {
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-white/2 transition-colors';
             tr.innerHTML = `
-                <td class="px-6 py-4 text-gray-300 font-medium">${l.letter_date || '—'}</td>
-                <td class="px-6 py-4 text-gray-400">${l.session_count} session${l.session_count !== 1 ? 's' : ''}</td>
-                <td class="px-6 py-4 text-right font-mono text-space-accent font-semibold">${Number(l.grand_total).toLocaleString('en-AE')}</td>
-                <td class="px-6 py-4 text-right text-gray-400">${l.total_hours}h</td>
-                <td class="px-6 py-4 text-center">${statusBadge(l.status)}</td>
-                <td class="px-6 py-4 text-right">
+                <td class="px-6 py-4 text-gray-300 font-medium whitespace-nowrap">${l.letter_date || '—'}</td>
+                <td class="px-6 py-4 text-gray-400 whitespace-nowrap">${l.session_count} session${l.session_count !== 1 ? 's' : ''}</td>
+                <td class="px-6 py-4 text-right font-mono text-space-accent font-semibold whitespace-nowrap">${Number(l.grand_total).toLocaleString('en-AE')}</td>
+                <td class="px-6 py-4 text-right text-gray-400 whitespace-nowrap">${l.total_hours}h</td>
+                <td class="px-6 py-4 text-center whitespace-nowrap">${statusBadge(l.status)}</td>
+                <td class="px-6 py-4 text-right whitespace-nowrap">
                     <div class="flex items-center justify-end gap-2">
                         <button onclick="openLetterModal(${l.id})"
-                            class="px-3 py-1.5 text-xs rounded-lg border border-space-accent/30 text-space-accent hover:bg-space-accent/10 transition-all font-medium">
+                            class="px-3 py-1.5 text-xs rounded-lg border border-space-accent/30 text-space-accent hover:bg-space-accent/10 transition-all font-medium whitespace-nowrap">
                             ${l.status === 'PUBLISHED' ? 'Review & Sign' : 'View'}
                         </button>
                         ${l.has_signed_pdf ? `
                         <a href="/api/instructor/payments/letters/${l.id}/download"
-                            class="px-3 py-1.5 text-xs rounded-lg border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-all font-medium">
+                            class="px-3 py-1.5 text-xs rounded-lg border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-all font-medium whitespace-nowrap">
                             Download
                         </a>` : ''}
                     </div>
@@ -414,7 +414,7 @@ async function openLetterModal(letterId) {
         }
 
         content.innerHTML = `
-            <div class="bg-white text-gray-900 rounded-xl p-6 shadow-sm font-sans text-sm">
+            <div class="bg-white text-gray-900 rounded-xl p-6 shadow-sm font-sans text-sm w-full max-w-full overflow-hidden">
                 <!-- Header -->
                 <div class="rounded-t-lg -mx-6 -mt-6 px-6 py-4 mb-5 flex items-center" style="background-color: #231134;">
                     <img src="/static/SpacePoint%20logo.png" alt="SpacePoint Logo" class="h-8">
@@ -434,33 +434,37 @@ async function openLetterModal(letterId) {
 
                 <!-- Sessions table -->
                 <p class="font-bold mb-2">Schedule of Workshops</p>
-                <table class="w-full border-collapse text-xs mb-4">
-                    <thead>
-                        <tr class="bg-gray-200">
-                            <th class="border border-gray-300 px-2 py-2 text-left">Session/Course Date</th>
-                            <th class="border border-gray-300 px-2 py-2 text-left">Workshop Description</th>
-                            <th class="border border-gray-300 px-2 py-2 text-left">Role</th>
-                            <th class="border border-gray-300 px-2 py-2 text-left">Location</th>
-                            <th class="border border-gray-300 px-2 py-2 text-center">Duration</th>
-                            <th class="border border-gray-300 px-2 py-2 text-right">Compensation (AED)</th>
-                        </tr>
-                    </thead>
-                    <tbody>${sessRows}</tbody>
-                </table>
+                <div class="overflow-x-auto w-full border border-gray-200 rounded-lg mb-4">
+                    <table class="w-full border-collapse text-xs min-w-[600px]">
+                        <thead>
+                            <tr class="bg-gray-200">
+                                <th class="border border-gray-300 px-3 py-2 text-left">Session/Course Date</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">Workshop Description</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">Role</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">Location</th>
+                                <th class="border border-gray-300 px-3 py-2 text-center">Duration</th>
+                                <th class="border border-gray-300 px-3 py-2 text-right">Compensation (AED)</th>
+                            </tr>
+                        </thead>
+                        <tbody>${sessRows}</tbody>
+                    </table>
+                </div>
 
                 ${l.addons.length ? `
                 <!-- Add-ons table -->
                 <p class="font-bold mb-2">Optional Add-ons</p>
-                <table class="w-full border-collapse text-xs mb-2">
-                    <thead>
-                        <tr class="bg-gray-200">
-                            <th class="border border-gray-300 px-2 py-2 text-left">Description</th>
-                            <th class="border border-gray-300 px-2 py-2 text-right">Amount (AED)</th>
-                            <th class="border border-gray-300 px-2 py-2 text-left">Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody>${addonRows}</tbody>
-                </table>
+                <div class="overflow-x-auto w-full border border-gray-200 rounded-lg mb-2">
+                    <table class="w-full border-collapse text-xs min-w-[500px]">
+                        <thead>
+                            <tr class="bg-gray-200">
+                                <th class="border border-gray-300 px-3 py-2 text-left">Description</th>
+                                <th class="border border-gray-300 px-3 py-2 text-right">Amount (AED)</th>
+                                <th class="border border-gray-300 px-3 py-2 text-left">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>${addonRows}</tbody>
+                    </table>
+                </div>
                 <p class="text-sm font-bold mb-4">Total Optional Add-ons: AED ${Number(addTotal).toLocaleString()}</p>
                 ` : ''}
 

@@ -4,6 +4,13 @@ This document tracks all version releases, feature additions, layout modificatio
 
 ---
 
+## [v1.3.1] - 2026-06-07
+### Fixed
+- **Instructor Payments Dashboard UI Bug Fixes**:
+  - Fixed "Schedule of Workshops" and "Optional Add-ons" tables overflowing the white letter container in the Facilitator Payment Letter modal by adding width constraints and proper scroll container overflow properties.
+  - Resolved status badge wrapping issue in the main Payment Letters table by setting a table minimum width and adding whitespace nowrap styling on table cells.
+  - Fixed overlap between the "Save Bank Details" button and its adjacent disclaimer helper text on intermediate tablet/desktop screen widths by adjusting the responsive flex row layout breakpoint to accommodate the sidebar footprint.
+
 ## [v1.3.0] - 2026-06-06
 ### Added
 - **Instructor Payment System Backend**:
