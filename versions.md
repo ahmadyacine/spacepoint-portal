@@ -10,6 +10,9 @@ This document tracks all version releases, feature additions, layout modificatio
   - Fixed "Schedule of Workshops" and "Optional Add-ons" tables overflowing the white letter container in the Facilitator Payment Letter modal by adding width constraints and proper scroll container overflow properties.
   - Resolved status badge wrapping issue in the main Payment Letters table by setting a table minimum width and adding whitespace nowrap styling on table cells.
   - Fixed overlap between the "Save Bank Details" button and its adjacent disclaimer helper text on intermediate tablet/desktop screen widths by adjusting the responsive flex row layout breakpoint to accommodate the sidebar footprint.
+- **Excel Bulk Import Template Bug Fix**:
+  - Replaced usage of the non-standard `cell.column_letter` property in `openpyxl` with the official `get_column_letter` utility function from `openpyxl.utils` to prevent version mismatch crashes on deployment.
+  - Corrected the `requirements.txt` installation file path in the VPS update guide from `backend/requirements.txt` to `requirements.txt`.
 
 ## [v1.3.0] - 2026-06-06
 ### Added

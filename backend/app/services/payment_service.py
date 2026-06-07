@@ -566,6 +566,7 @@ def generate_excel_template() -> bytes:
     try:
         import openpyxl
         from openpyxl.styles import Font, PatternFill, Alignment
+        from openpyxl.utils import get_column_letter
 
         wb = openpyxl.Workbook()
 
@@ -581,7 +582,7 @@ def generate_excel_template() -> bytes:
             cell.font = Font(bold=True, color="FFFFFF")
             cell.fill = PatternFill("solid", fgColor="653f84")
             cell.alignment = Alignment(horizontal="center", wrap_text=True)
-            ws1.column_dimensions[ws1.cell(row=1, column=col).column_letter].width = 22
+            ws1.column_dimensions[get_column_letter(col)].width = 22
 
         # Example row
         example = [
@@ -599,7 +600,7 @@ def generate_excel_template() -> bytes:
             cell.font = Font(bold=True, color="FFFFFF")
             cell.fill = PatternFill("solid", fgColor="653f84")
             cell.alignment = Alignment(horizontal="center", wrap_text=True)
-            ws2.column_dimensions[ws2.cell(row=1, column=col).column_letter].width = 28
+            ws2.column_dimensions[get_column_letter(col)].width = 28
 
         # Example add-on row
         addon_example = ["instructor@example.com", "Travel allowance", 150, "For session on 30/10"]

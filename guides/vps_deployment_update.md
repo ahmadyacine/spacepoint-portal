@@ -31,8 +31,8 @@ git pull
 # Activate virtual environment
 source backend/venv/bin/activate
 
-# Install new Python packages (python-docx, docx2pdf)
-pip install -r backend/requirements.txt
+# Install new Python packages (python-docx, docx2pdf, openpyxl, etc.)
+pip install -r requirements.txt
 ```
 
 ---
