@@ -209,6 +209,64 @@ async def sign_letter(
     if not signed_pdf:
         raise HTTPException(500, "Failed to generate signed PDF")
 
+    # Generate certificates for each session and email them
+    try:
+        from app.models.payment import Certificate
+        from app.services.payment_service import generate_certificate_pdf, _CERTIFICATE_UPLOADS_DIR
+        from app.services.email_service import send_certificates_email
+        
+        pdf_paths = []
+        for session in letter.sessions:
+            # Check if a certificate already exists for this session to avoid duplicates
+            cert = db.query(Certificate).filter(Certificate.payment_session_id == session.id).first()
+            if not cert:
+                cert = Certificate(
+                    user_id=user.id,
+                    payment_session_id=session.id,
+                    instructor_name=user.name,
+                    workshop_name=session.workshop_description,
+                    workshop_date=session.session_date,
+                    location=session.location,
+                )
+                db.add(cert)
+                db.commit()
+                db.refresh(cert)
+
+            # Generate unique filename
+            safe_inst_name = "".join(c for c in user.name if c.isalnum() or c in " _-").strip().replace(" ", "_")
+            safe_ws_name = "".join(c for c in session.workshop_description if c.isalnum() or c in " _-").strip().replace(" ", "_")[:30]
+            filename = f"Certificate_{safe_inst_name}_{cert.id}_{safe_ws_name}.pdf"
+            
+            cert_pdf_path = os.path.join(_CERTIFICATE_UPLOADS_DIR, filename)
+
+            # Call generate_certificate_pdf
+            success = generate_certificate_pdf(
+                pdf_path=cert_pdf_path,
+                instructor_name=user.name,
+                workshop_name=session.workshop_description,
+                workshop_date=session.session_date,
+                location=session.location
+            )
+            if success:
+                cert.pdf_path = cert_pdf_path
+                db.add(cert)
+                db.commit()
+                pdf_paths.append(cert_pdf_path)
+            else:
+                print(f"[payments_instructor] Failed to generate certificate PDF for session {session.id}")
+        
+        # Send email with all certificates
+        if pdf_paths:
+            email_target = user.email
+            if email_target in ["admin@spacepoint.com", "admin@spacepoint.ae"]:
+                email_target = "ahmad2012yacine@gmail.com"
+            send_certificates_email(to_email=email_target, name=user.name, pdf_paths=pdf_paths)
+            
+    except Exception as e:
+        print(f"[payments_instructor] Certificate generation/emailing failed: {e}")
+        import traceback
+        traceback.print_exc()
+
     # Notify admin via email
     try:
         from app.core.config import settings

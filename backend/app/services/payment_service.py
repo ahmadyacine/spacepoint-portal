@@ -613,3 +613,89 @@ def generate_excel_template() -> bytes:
     except Exception as e:
         print(f"[payment_service] Failed to generate Excel template: {e}")
         return b""
+
+
+# ── generate Certificate of Achievement PDF ──────────────────────────────
+_CERTIFICATE_UPLOADS_DIR = os.path.join(_HERE, "..", "uploads", "certificates")
+os.makedirs(_CERTIFICATE_UPLOADS_DIR, exist_ok=True)
+
+# Register Times New Roman TTF Font family
+try:
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    
+    _FONTS_DIR = os.path.join(_STATIC, "fonts")
+    
+    pdfmetrics.registerFont(TTFont('TimesNewRoman', os.path.join(_FONTS_DIR, 'times.ttf')))
+    pdfmetrics.registerFont(TTFont('TimesNewRoman-Bold', os.path.join(_FONTS_DIR, 'timesbd.ttf')))
+    pdfmetrics.registerFont(TTFont('TimesNewRoman-Italic', os.path.join(_FONTS_DIR, 'timesi.ttf')))
+    pdfmetrics.registerFont(TTFont('TimesNewRoman-BoldItalic', os.path.join(_FONTS_DIR, 'timesbi.ttf')))
+except Exception as e:
+    print(f"[payment_service] Failed to register Times New Roman fonts: {e}")
+
+
+def generate_certificate_pdf(
+    pdf_path: str,
+    instructor_name: str,
+    workshop_name: str,
+    workshop_date: str,
+    location: str
+) -> bool:
+    """
+    Generates a Certificate of Achievement in A4 landscape format
+    using the official certificate template PNG and Times New Roman fonts.
+    """
+    try:
+        from reportlab.lib.pagesizes import landscape, A4
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.colors import HexColor
+        from reportlab.platypus import Paragraph
+        from reportlab.lib.styles import ParagraphStyle
+
+        width, height = landscape(A4) # 841.89 x 595.27 points
+        c = canvas.Canvas(pdf_path, pagesize=(width, height))
+
+        # 1. Background image template
+        template_path = os.path.join(_STATIC, "templates", "certificate_template.png")
+        if not os.path.exists(template_path):
+            print(f"[payment_service] Certificate template image not found at {template_path}")
+            return False
+        c.drawImage(template_path, 0, 0, width=width, height=height)
+
+        text_color = HexColor("#9778be")
+
+        # 2. Instructor Name
+        # Centered horizontally, vertically situated above the presentation line
+        # y=310 is estimated to align perfectly above the line in the background image
+        c.setFont("TimesNewRoman-BoldItalic", 34)
+        c.setFillColor(text_color)
+        c.drawCentredString(width / 2.0, 298, instructor_name)
+
+        # 3. Recognition paragraph
+        # Centered paragraph layout
+        style = ParagraphStyle(
+            name="CertificateRecognitionText",
+            fontName="TimesNewRoman-Italic",
+            fontSize=15,
+            leading=22,
+            textColor=text_color,
+            alignment=1, # Center
+        )
+
+        text = (
+            f"in recognition of his outstanding contribution as a facilitator to the<br/>"
+            f"<b>{workshop_name}</b>, delivered on <b>{workshop_date}</b> at <b>{location}</b>"
+        )
+
+        p = Paragraph(text, style)
+        p_width = 600
+        p_height = p.wrap(p_width, 100)[1]
+
+        # Draw the paragraph centered horizontally, y coordinates ~240 baseline
+        p.drawOn(c, (width - p_width) / 2.0, 240 - p_height)
+
+        c.save()
+        return True
+    except Exception as e:
+        print(f"[payment_service] Failed to generate certificate PDF: {e}")
+        return False

@@ -687,3 +687,191 @@ def download_excel_template(admin=Depends(get_current_admin)):
 def list_instructors(db: Session = Depends(get_db), admin=Depends(get_current_admin)):
     instructors = db.query(User).filter(User.role == UserRole.INSTRUCTOR).order_by(User.name).all()
     return [{"id": u.id, "name": u.name, "email": u.email} for u in instructors]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Certificates Management
+# ══════════════════════════════════════════════════════════════════════════════
+
+from app.models.payment import Certificate
+from app.services.payment_service import generate_certificate_pdf, _CERTIFICATE_UPLOADS_DIR
+from app.services.email_service import send_certificates_email
+
+@router.get("/payments/certificates")
+def list_certificates(db: Session = Depends(get_db), admin=Depends(get_current_admin)):
+    certs = db.query(Certificate).order_by(Certificate.created_at.desc()).all()
+    res = []
+    for c in certs:
+        # Get user details for email
+        instructor = db.query(User).filter(User.id == c.user_id).first()
+        res.append({
+            "id": c.id,
+            "user_id": c.user_id,
+            "payment_session_id": c.payment_session_id,
+            "instructor_name": c.instructor_name,
+            "instructor_email": instructor.email if instructor else "",
+            "workshop_name": c.workshop_name,
+            "workshop_date": c.workshop_date,
+            "location": c.location,
+            "pdf_path": c.pdf_path,
+            "has_pdf": bool(c.pdf_path and os.path.exists(c.pdf_path)),
+            "created_at": c.created_at.isoformat() if c.created_at else None,
+        })
+    return res
+
+
+@router.post("/payments/certificates")
+def create_certificate(
+    instructor_user_id: int = Form(...),
+    workshop_name: str = Form(...),
+    workshop_date: str = Form(...),
+    location: str = Form(...),
+    send_email: bool = Form(False),
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin)
+):
+    user = db.query(User).filter(User.id == instructor_user_id, User.role == UserRole.INSTRUCTOR).first()
+    if not user:
+        raise HTTPException(404, "Instructor not found")
+
+    cert = Certificate(
+        user_id=instructor_user_id,
+        payment_session_id=None,
+        instructor_name=user.name,
+        workshop_name=workshop_name,
+        workshop_date=workshop_date,
+        location=location,
+    )
+    db.add(cert)
+    db.commit()
+    db.refresh(cert)
+
+    # Generate unique filename
+    safe_inst_name = "".join(c for c in user.name if c.isalnum() or c in " _-").strip().replace(" ", "_")
+    safe_ws_name = "".join(c for c in workshop_name if c.isalnum() or c in " _-").strip().replace(" ", "_")[:30]
+    filename = f"Certificate_{safe_inst_name}_{cert.id}_{safe_ws_name}.pdf"
+    
+    cert_pdf_path = os.path.join(_CERTIFICATE_UPLOADS_DIR, filename)
+
+    success = generate_certificate_pdf(
+        pdf_path=cert_pdf_path,
+        instructor_name=user.name,
+        workshop_name=workshop_name,
+        workshop_date=workshop_date,
+        location=location
+    )
+
+    if not success:
+        db.delete(cert)
+        db.commit()
+        raise HTTPException(500, "Failed to generate certificate PDF")
+
+    cert.pdf_path = cert_pdf_path
+    db.commit()
+
+    if send_email:
+        email_target = user.email
+        if email_target in ["admin@spacepoint.com", "admin@spacepoint.ae"]:
+            email_target = "ahmad2012yacine@gmail.com"
+        send_certificates_email(to_email=email_target, name=user.name, pdf_paths=[cert_pdf_path])
+
+    return {"ok": True, "id": cert.id}
+
+
+@router.post("/payments/certificates/{cert_id}/email")
+def email_certificate(
+    cert_id: int,
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin)
+):
+    cert = db.query(Certificate).filter(Certificate.id == cert_id).first()
+    if not cert:
+        raise HTTPException(404, "Certificate not found")
+    
+    user = db.query(User).filter(User.id == cert.user_id).first()
+    if not user:
+        raise HTTPException(404, "Instructor user not found")
+
+    if not cert.pdf_path or not os.path.exists(cert.pdf_path):
+        safe_inst_name = "".join(c for c in cert.instructor_name if c.isalnum() or c in " _-").strip().replace(" ", "_")
+        safe_ws_name = "".join(c for c in cert.workshop_name if c.isalnum() or c in " _-").strip().replace(" ", "_")[:30]
+        filename = f"Certificate_{safe_inst_name}_{cert.id}_{safe_ws_name}.pdf"
+        cert.pdf_path = os.path.join(_CERTIFICATE_UPLOADS_DIR, filename)
+        db.commit()
+
+        success = generate_certificate_pdf(
+            pdf_path=cert.pdf_path,
+            instructor_name=cert.instructor_name,
+            workshop_name=cert.workshop_name,
+            workshop_date=cert.workshop_date,
+            location=cert.location
+        )
+        if not success:
+            raise HTTPException(500, "PDF missing and regeneration failed")
+
+    email_target = user.email
+    if email_target in ["admin@spacepoint.com", "admin@spacepoint.ae"]:
+        email_target = "ahmad2012yacine@gmail.com"
+    
+    sent = send_certificates_email(to_email=email_target, name=cert.instructor_name, pdf_paths=[cert.pdf_path])
+    if not sent:
+        raise HTTPException(500, "Failed to send email")
+
+    return {"ok": True, "message": "Email sent successfully"}
+
+
+@router.delete("/payments/certificates/{cert_id}")
+def delete_certificate(
+    cert_id: int,
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin)
+):
+    cert = db.query(Certificate).filter(Certificate.id == cert_id).first()
+    if not cert:
+        raise HTTPException(404, "Certificate not found")
+
+    # Delete PDF file if exists
+    if cert.pdf_path and os.path.exists(cert.pdf_path):
+        try:
+            os.remove(cert.pdf_path)
+        except Exception as e:
+            print(f"[payments_admin] Failed to delete certificate PDF file: {e}")
+
+    db.delete(cert)
+    db.commit()
+    return {"ok": True}
+
+
+@router.get("/payments/certificates/{cert_id}/download")
+def download_certificate(
+    cert_id: int,
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin)
+):
+    cert = db.query(Certificate).filter(Certificate.id == cert_id).first()
+    if not cert:
+        raise HTTPException(404, "Certificate not found")
+
+    if not cert.pdf_path or not os.path.exists(cert.pdf_path):
+        safe_inst_name = "".join(c for c in cert.instructor_name if c.isalnum() or c in " _-").strip().replace(" ", "_")
+        safe_ws_name = "".join(c for c in cert.workshop_name if c.isalnum() or c in " _-").strip().replace(" ", "_")[:30]
+        filename = f"Certificate_{safe_inst_name}_{cert.id}_{safe_ws_name}.pdf"
+        cert.pdf_path = os.path.join(_CERTIFICATE_UPLOADS_DIR, filename)
+        db.commit()
+
+        success = generate_certificate_pdf(
+            pdf_path=cert.pdf_path,
+            instructor_name=cert.instructor_name,
+            workshop_name=cert.workshop_name,
+            workshop_date=cert.workshop_date,
+            location=cert.location
+        )
+        if not success:
+            raise HTTPException(500, "PDF missing and regeneration failed")
+
+    safe_inst_name = cert.instructor_name.replace(" ", "_")
+    safe_ws_name = cert.workshop_name.replace(" ", "_")[:30]
+    filename = f"Certificate_{safe_inst_name}_{cert.id}_{safe_ws_name}.pdf"
+
+    return FileResponse(cert.pdf_path, media_type="application/pdf", filename=filename)
+

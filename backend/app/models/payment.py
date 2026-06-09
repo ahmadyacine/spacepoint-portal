@@ -131,3 +131,26 @@ class PortalSetting(Base):
     key = Column(String, unique=True, nullable=False, index=True)
     value = Column(Text, nullable=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+# ---------------------------------------------------------------------------
+# Certificate — certificate of achievement records for facilitators
+# ---------------------------------------------------------------------------
+class Certificate(Base):
+    __tablename__ = "certificates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    payment_session_id = Column(Integer, ForeignKey("payment_sessions.id", ondelete="SET NULL"), nullable=True)
+
+    instructor_name = Column(String, nullable=False)
+    workshop_name = Column(String, nullable=False)
+    workshop_date = Column(String, nullable=False)
+    location = Column(String, nullable=False)
+
+    pdf_path = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    user = relationship("User")
+    session = relationship("PaymentSession")

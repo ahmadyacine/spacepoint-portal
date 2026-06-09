@@ -669,6 +669,91 @@
         </div>
     </div> <!-- END TAB PAYMENTS -->
 
+    <!-- TAB: Certificates -->
+    <div id="tab-certificates" class="w-full flex-col gap-6 hidden animate-fade-in">
+        <div class="flex justify-between items-center flex-wrap gap-4">
+            <div>
+                <h2 class="text-2xl font-display font-bold text-white tracking-tight">Certificates of Achievement</h2>
+                <p class="text-sm text-gray-400">View, download, manually issue, and email achievement certificates for instructors.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="openCreateCertificateModal()"
+                    class="px-4 py-2 bg-space-accent text-space-900 rounded-xl font-bold transition-colors shadow-[0_0_10px_rgba(167,125,255,0.3)] flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Issue Certificate
+                </button>
+            </div>
+        </div>
+
+        <div class="glass-panel rounded-2xl border border-white/5 overflow-hidden">
+            <div class="flex items-center gap-3 px-5 py-3 border-b border-white/5 justify-between flex-wrap">
+                <span class="text-sm text-gray-400 font-semibold" id="certs-count-label">0 Certificates Issued</span>
+                <button onclick="loadCertificates()" class="text-space-accent text-sm hover:text-white transition-colors">↻ Refresh</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-white/5 text-gray-500 uppercase text-xs tracking-wider">
+                            <th class="px-5 py-3 text-left">Instructor</th>
+                            <th class="px-5 py-3 text-left">Workshop/Course</th>
+                            <th class="px-5 py-3 text-left">Date</th>
+                            <th class="px-5 py-3 text-left">Location</th>
+                            <th class="px-5 py-3 text-center">PDF</th>
+                            <th class="px-5 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="certs-tbody" class="divide-y divide-white/5 text-gray-300">
+                        <tr><td colspan="6" class="px-5 py-8 text-center text-gray-500">Loading certificates...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div> <!-- END TAB CERTIFICATES -->
+
+</div>
+<!-- MODAL: Issue Certificate -->
+<div id="modal-create-certificate"
+    class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-[#0e0820] border border-white/10 rounded-2xl p-6 shadow-2xl animate-modal pointer-events-auto">
+        <h3 class="text-xl font-bold text-white mb-4">Issue Certificate of Achievement</h3>
+        <form onsubmit="submitCreateCertificate(event)" class="space-y-4">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Instructor</label>
+                <select id="cert-instructor-select" required
+                    class="w-full rounded-xl border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm">
+                    <option value="">Select Instructor...</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Workshop Description</label>
+                <input type="text" id="cert-workshop-name" required placeholder="e.g. Advanced Cubesat Systems Workshop"
+                    class="w-full rounded-xl border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm placeholder-gray-600">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Workshop Date(s)</label>
+                <input type="text" id="cert-workshop-date" required placeholder="e.g. 30 October 2025"
+                    class="w-full rounded-xl border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm placeholder-gray-600">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Location</label>
+                <input type="text" id="cert-location" required placeholder="e.g. GEMS Metropole School, Dubai"
+                    class="w-full rounded-xl border-white/20 bg-space-800 px-3 py-2 text-white outline-none focus:ring-1 focus:ring-space-accent border text-sm placeholder-gray-600">
+            </div>
+            <div class="flex items-center gap-2 pt-2">
+                <input type="checkbox" id="cert-send-email" class="rounded border-white/20 bg-space-800 text-space-accent focus:ring-space-accent">
+                <label for="cert-send-email" class="text-sm text-gray-300">Deliver via email immediately</label>
+            </div>
+            <div id="cert-create-err" class="text-red-400 text-sm hidden"></div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="closeCreateCertificateModal()"
+                    class="flex-1 py-2 bg-space-800 text-white border border-white/20 rounded-xl hover:bg-white/10 transition-colors text-sm font-semibold">Cancel</button>
+                <button type="submit" id="cert-submit-btn"
+                    class="flex-1 py-2 bg-space-accent text-space-900 font-bold rounded-xl hover:bg-space-hover transition-colors text-sm">Issue</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- MODAL: Add Invitation Code -->
@@ -1189,7 +1274,7 @@ function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
         });
 
         // Reset panels
-        ['tab-overview', 'tab-apps', 'tab-instructors', 'tab-invites', 'tab-facs', 'tab-users', 'tab-payments'].forEach(id => {
+        ['tab-overview', 'tab-apps', 'tab-instructors', 'tab-invites', 'tab-facs', 'tab-users', 'tab-payments', 'tab-certificates'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.classList.add('hidden');
@@ -1203,6 +1288,9 @@ function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
         if (tab === 'payments') {
             if (statsContainer) statsContainer.classList.add('hidden');
             if (paymentStatsContainer) paymentStatsContainer.classList.remove('hidden');
+        } else if (tab === 'certificates') {
+            if (statsContainer) statsContainer.classList.add('hidden');
+            if (paymentStatsContainer) paymentStatsContainer.classList.add('hidden');
         } else {
             if (statsContainer) statsContainer.classList.remove('hidden');
             if (paymentStatsContainer) paymentStatsContainer.classList.add('hidden');
@@ -1255,6 +1343,12 @@ function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
             document.getElementById('tab-payments').classList.remove('hidden');
             document.getElementById('tab-payments').classList.add('flex');
             loadPaymentsTab();
+        } else if (tab === 'certificates') {
+            document.getElementById('nav-desk-certificates').className = "nav-link-desk " + activeClassBtn;
+            document.getElementById('nav-mob-certificates').className = "nav-link-mob " + activeClassBtn;
+            document.getElementById('tab-certificates').classList.remove('hidden');
+            document.getElementById('tab-certificates').classList.add('flex');
+            loadCertificatesTab();
         }
     }
 
@@ -3191,6 +3285,226 @@ function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
             btn.disabled = false;
             btn.textContent = 'Generate PDF';
         }
+    }
+    // ═══════════════════════════════════════════════════════════════════
+    // CERTIFICATES JAVASCRIPT
+    // ═══════════════════════════════════════════════════════════════════
+
+    async function loadCertificatesTab() {
+        await loadCertificates();
+    }
+
+    async function loadCertificates() {
+        const tbody = document.getElementById('certs-tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-500">Loading certificates...</td></tr>';
+        
+        try {
+            const res = await fetch('/api/admin/payments/certificates');
+            if (!res.ok) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-red-400">Failed to load certificates.</td></tr>';
+                return;
+            }
+            const data = await res.json();
+            
+            // Update stats label
+            const labelEl = document.getElementById('certs-count-label');
+            if (labelEl) {
+                labelEl.innerText = `${data.length} Certificate${data.length === 1 ? '' : 's'} Issued`;
+            }
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-gray-500">No certificates found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            data.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-white/5 hover:bg-white/[0.02] transition-colors';
+                
+                // PDF link
+                let pdfButton = '';
+                if (c.has_pdf) {
+                    pdfButton = `
+                        <a href="/api/admin/payments/certificates/${c.id}/download" target="_blank"
+                           class="inline-flex items-center gap-1 text-space-accent hover:text-white transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Download
+                        </a>
+                    `;
+                } else {
+                    pdfButton = '<span class="text-gray-500 italic">No PDF</span>';
+                }
+
+                tr.innerHTML = `
+                    <td class="px-5 py-4">
+                        <div class="font-semibold text-white">${c.instructor_name}</div>
+                        <div class="text-xs text-gray-400">${c.instructor_email || ''}</div>
+                    </td>
+                    <td class="px-5 py-4 font-medium text-gray-200">${c.workshop_name}</td>
+                    <td class="px-5 py-4 text-gray-400">${c.workshop_date}</td>
+                    <td class="px-5 py-4 text-gray-400">${c.location}</td>
+                    <td class="px-5 py-4 text-center">${pdfButton}</td>
+                    <td class="px-5 py-4 text-right">
+                        <div class="flex justify-end gap-3">
+                            <button onclick="resendCertificateEmail(${c.id})"
+                                    class="text-xs px-2.5 py-1 rounded-lg border border-space-accent/30 text-space-accent hover:bg-space-accent/15 transition-all flex items-center gap-1 font-semibold">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                Email
+                            </button>
+                            <button onclick="deleteCertificate(${c.id})"
+                                    class="text-xs px-2.5 py-1 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/15 transition-all flex items-center gap-1 font-semibold">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (e) {
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="6" class="px-5 py-8 text-center text-red-400">Failed to fetch certificates.</td></tr>';
+        }
+    }
+
+    async function openCreateCertificateModal() {
+        const modal = document.getElementById('modal-create-certificate');
+        const select = document.getElementById('cert-instructor-select');
+        select.innerHTML = '<option value="">Loading instructors...</option>';
+        document.getElementById('cert-create-err').classList.add('hidden');
+        modal.classList.remove('hidden');
+
+        try {
+            const res = await fetch('/api/admin/payments/instructors');
+            if (res.ok) {
+                const data = await res.json();
+                select.innerHTML = '<option value="">Select Instructor...</option>';
+                data.forEach(inst => {
+                    const opt = document.createElement('option');
+                    opt.value = inst.id;
+                    opt.textContent = `${inst.name} (${inst.email})`;
+                    select.appendChild(opt);
+                });
+            } else {
+                select.innerHTML = '<option value="">Failed to load instructors.</option>';
+            }
+        } catch (e) {
+            console.error(e);
+            select.innerHTML = '<option value="">Failed to load instructors.</option>';
+        }
+    }
+
+    function closeCreateCertificateModal() {
+        document.getElementById('modal-create-certificate').classList.add('hidden');
+        document.getElementById('cert-instructor-select').value = '';
+        document.getElementById('cert-workshop-name').value = '';
+        document.getElementById('cert-workshop-date').value = '';
+        document.getElementById('cert-location').value = '';
+        document.getElementById('cert-send-email').checked = false;
+        document.getElementById('cert-create-err').classList.add('hidden');
+    }
+
+    async function submitCreateCertificate(event) {
+        event.preventDefault();
+        const errEl = document.getElementById('cert-create-err');
+        errEl.classList.add('hidden');
+
+        const instructorId = document.getElementById('cert-instructor-select').value;
+        const workshopName = document.getElementById('cert-workshop-name').value;
+        const workshopDate = document.getElementById('cert-workshop-date').value;
+        const location = document.getElementById('cert-location').value;
+        const sendEmail = document.getElementById('cert-send-email').checked;
+
+        if (!instructorId) {
+            errEl.textContent = 'Please select an instructor.';
+            errEl.classList.remove('hidden');
+            return;
+        }
+
+        const btn = document.getElementById('cert-submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+
+        const formData = new FormData();
+        formData.append('instructor_user_id', instructorId);
+        formData.append('workshop_name', workshopName);
+        formData.append('workshop_date', workshopDate);
+        formData.append('location', location);
+        formData.append('send_email', sendEmail);
+
+        try {
+            const res = await fetch('/api/admin/payments/certificates', {
+                method: 'POST',
+                body: formData
+            });
+            if (res.ok) {
+                showAdminToast('✅ Certificate issued successfully');
+                closeCreateCertificateModal();
+                await loadCertificates();
+            } else {
+                const errData = await res.json();
+                errEl.textContent = errData.detail || 'Failed to issue certificate.';
+                errEl.classList.remove('hidden');
+            }
+        } catch (e) {
+            console.error(e);
+            errEl.textContent = 'Network error occurred.';
+            errEl.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Issue';
+        }
+    }
+
+    function resendCertificateEmail(id) {
+        showConfirmModal({
+            title: 'Send Certificate Email',
+            message: 'Are you sure you want to email this certificate of achievement to the instructor?',
+            confirmText: 'Send',
+            onConfirm: async () => {
+                try {
+                    const res = await fetch(`/api/admin/payments/certificates/${id}/email`, { method: 'POST' });
+                    if (res.ok) {
+                        showAdminToast('📧 Certificate emailed successfully');
+                    } else {
+                        const err = await res.json();
+                        showAdminToast('❌ ' + (err.detail || 'Failed to send email'), 'error');
+                    }
+                } catch (e) {
+                    showAdminToast('❌ Network error', 'error');
+                }
+            }
+        });
+    }
+
+    function deleteCertificate(id) {
+        showConfirmModal({
+            title: 'Delete Certificate',
+            message: 'Are you sure you want to delete this certificate? This will also remove the PDF file and cannot be undone.',
+            type: 'danger',
+            confirmText: 'Delete',
+            onConfirm: async () => {
+                try {
+                    const res = await fetch(`/api/admin/payments/certificates/${id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        showAdminToast('✅ Certificate deleted');
+                        await loadCertificates();
+                    } else {
+                        showAdminToast('❌ Failed to delete certificate', 'error');
+                    }
+                } catch (e) {
+                    showAdminToast('❌ Network error', 'error');
+                }
+            }
+        });
     }
 
 // ── Toast ─────────────────────────────────────────────────────────────

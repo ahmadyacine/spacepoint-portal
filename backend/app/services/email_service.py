@@ -641,3 +641,108 @@ def send_payment_signed_notification_email(to_email: str, instructor_name: str, 
         traceback.print_exc()
         return False
 
+
+def send_certificates_email(to_email: str, name: str, pdf_paths: list[str]) -> bool:
+    """
+    Sends an email to the instructor with their Certificates of Achievement attached.
+    """
+    smtp_host = settings.SMTP_HOST
+    smtp_port = settings.SMTP_PORT
+    smtp_user = settings.SMTP_USER
+    smtp_password = settings.SMTP_PASSWORD
+
+    msg = MIMEMultipart("mixed")
+    msg["Subject"] = "Your SpacePoint Certificates of Achievement"
+    msg["From"] = f"SpacePoint <{smtp_user}>"
+    msg["To"] = to_email
+
+    msg_alternative = MIMEMultipart("alternative")
+    msg.attach(msg_alternative)
+
+    LOGO_URL = "https://spacepoint.ae/assets/img/SpacePoint%20logo.png"
+
+    html_body = f"""
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:system-ui,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0;background:#f3f4f6;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border-radius:16px;overflow:hidden;
+                    box-shadow:0 4px 24px rgba(36,17,52,0.12);">
+        <tr>
+          <td style="background:linear-gradient(135deg,#241134,#653f84);padding:28px 32px;">
+            <img src="{LOGO_URL}" height="44" alt="SpacePoint" style="display:block;">
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 32px;">
+            <h2 style="margin:0 0 6px 0;font-size:20px;font-weight:700;color:#1a1135;">
+              Congratulations on Your Certificate! &#127891;
+            </h2>
+            <p style="margin:0 0 24px 0;font-size:12px;font-weight:700;color:#653f84;
+                       text-transform:uppercase;letter-spacing:0.1em;">
+              Certificate of Achievement
+            </p>
+            <p style="margin:0 0 12px 0;font-size:15px;color:#374151;line-height:1.7;">
+              Hello <strong>{name}</strong>,
+            </p>
+            <p style="margin:0 0 24px 0;font-size:15px;color:#374151;line-height:1.7;">
+              Thank you for your outstanding contribution as a facilitator for SpacePoint.
+              We are pleased to present your <strong>Certificate of Achievement</strong>.
+            </p>
+            <p style="margin:0 0 24px 0;font-size:15px;color:#374151;line-height:1.7;">
+              Your signed certificate has been generated and is attached to this email as a PDF.
+            </p>
+            <p style="margin:28px 0 0 0;font-size:14px;color:#6b7280;line-height:1.7;">
+              Best regards,<br>
+              <strong style="color:#241134;">The SpacePoint Team</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9fafb;padding:18px 32px;border-top:1px solid #ede9f7;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.7;">
+              &copy; 2026 SpacePoint &nbsp;&middot;&nbsp; www.spacepoint.ae
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+"""
+    msg_alternative.attach(MIMEText(html_body, "html"))
+
+    for pdf_path in pdf_paths:
+        if pdf_path and os.path.exists(pdf_path):
+            try:
+                with open(pdf_path, "rb") as attachment:
+                    part = MIMEBase("application", "octet-stream")
+                    part.set_payload(attachment.read())
+                    encoders.encode_base64(part)
+                    filename = os.path.basename(pdf_path)
+                    part.add_header(
+                        "Content-Disposition",
+                        f"attachment; filename={filename}",
+                    )
+                    msg.attach(part)
+            except Exception as e:
+                print(f"[email_service] Failed to attach {pdf_path}: {e}")
+
+    try:
+        server = smtplib.SMTP(smtp_host, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_user, to_email, msg.as_string())
+        server.quit()
+        print(f"[email_service] Certificates email sent successfully to {to_email}")
+        return True
+    except Exception as e:
+        import traceback
+        print(f"[email_service] Failed to send certificates email: {e}")
+        traceback.print_exc()
+        return False
+
+

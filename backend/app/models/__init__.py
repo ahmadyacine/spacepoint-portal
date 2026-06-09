@@ -11,5 +11,5 @@ from .instructor_document import InstructorDocument
 from .payment import (
     PaymentBatch, PaymentLetter, PaymentSession,
     PaymentAddon, InstructorBankDetails, PortalSetting,
-    PaymentLetterStatus, SessionRole
+    PaymentLetterStatus, SessionRole, Certificate
 )
