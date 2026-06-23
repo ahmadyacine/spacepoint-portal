@@ -25,6 +25,7 @@ print(f"Connecting to database...")
 from app.core.database import Base, engine
 from app.models.user import User, UserRole
 from app.models.instructor_profile import InstructorProfile
+from app.models.submission import VideoSubmission, ResearchSubmission, PresentationSubmission, AssessmentSubmission
 from app.models.training import TrainingModule, TrainingVideo, UserTrainingProgress
 from app.models.library import LibraryModule, LibraryResource
 # Use the correct class names from checklist.py
@@ -94,6 +95,24 @@ def fix():
             else:
                 print("Role already synchronized.")
                 
+    except Exception as e:
+        print(f"Note: {e}")
+
+    # 4. ENUM ApplicationStatus Synchronization
+    print("\nPhase 4: Synchronizing ApplicationStatus ENUM...")
+    try:
+        with enum_engine.connect() as conn:
+            # Check existing enum values in PostgreSQL
+            result = conn.execute(text("SELECT enumlabel FROM pg_enum JOIN pg_type ON pg_enum.enumtypid = pg_type.oid WHERE pg_type.typname = 'applicationstatus'"))
+            existing_values = [row[0] for row in result]
+            print(f"Current application statuses in DB: {existing_values}")
+            
+            if "RESEARCH_APPROVED" not in existing_values:
+                print("Patching DB: Adding 'RESEARCH_APPROVED' to applicationstatus ENUM...")
+                conn.execute(text("ALTER TYPE applicationstatus ADD VALUE 'RESEARCH_APPROVED'"))
+                print("Status 'RESEARCH_APPROVED' added successfully.")
+            else:
+                print("Status 'RESEARCH_APPROVED' already synchronized.")
     except Exception as e:
         print(f"Note: {e}")
 

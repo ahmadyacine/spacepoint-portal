@@ -8,7 +8,7 @@ import io
 from app.routers.deps import get_db, get_current_admin
 from app.models.user import User, UserRole
 from app.models.profile import ApplicantProfile
-from app.models.submission import VideoSubmission
+from app.models.submission import VideoSubmission, PresentationSubmission, AssessmentSubmission
 from app.models.review import ApplicationReview
 from app.models.checklist import Module, ModuleSection, ChecklistItem, ModuleSubmission, UserChecklistProgress
 from app.models.invitation import InvitationCode
@@ -147,7 +147,6 @@ def list_applicants(
 
 @router.get("/applicants/{user_id}")
 def get_applicant_detail(user_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
-    from app.models.submission import PresentationSubmission
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -156,14 +155,35 @@ def get_applicant_detail(user_id: int, admin: User = Depends(get_current_admin),
     videos = db.query(VideoSubmission).filter(VideoSubmission.user_id == user.id).all()
     review = db.query(ApplicationReview).filter(ApplicationReview.user_id == user.id).first()
     presentation = db.query(PresentationSubmission).filter(PresentationSubmission.user_id == user.id).first()
+    assessment = db.query(AssessmentSubmission).filter(AssessmentSubmission.user_id == user.id).first()
     
     return {
         "user": user,
         "profile": profile,
         "videos": videos,
         "review": review,
-        "presentation_link": presentation.video_link if presentation else None
+        "presentation_link": presentation.video_link if presentation else None,
+        "assessment": {
+            "id": assessment.id,
+            "file_path": assessment.file_path,
+            "original_filename": assessment.original_filename,
+            "google_drive_link": assessment.google_drive_link,
+            "comments": assessment.comments,
+            "submitted_at": assessment.submitted_at
+        } if assessment else None
     }
+
+@router.get("/assessment/submissions/{submission_id}/download")
+def download_assessment_submission(submission_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    sub = db.query(AssessmentSubmission).filter(AssessmentSubmission.id == submission_id).first()
+    if not sub or not sub.file_path or not os.path.exists(sub.file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+        
+    return FileResponse(
+        path=sub.file_path,
+        filename=sub.original_filename,
+        media_type='application/pdf'
+    )
 
 @router.delete("/applicants/{user_id}")
 def delete_applicant(user_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
@@ -177,6 +197,7 @@ def delete_applicant(user_id: int, admin: User = Depends(get_current_admin), db:
     db.query(VideoSubmission).filter(VideoSubmission.user_id == user_id).delete()
     db.query(ApplicationReview).filter(ApplicationReview.user_id == user_id).delete()
     db.query(PresentationSubmission).filter(PresentationSubmission.user_id == user_id).delete()
+    db.query(AssessmentSubmission).filter(AssessmentSubmission.user_id == user_id).delete()
     db.query(ModuleSubmission).filter(ModuleSubmission.user_id == user_id).delete()
     db.query(UserChecklistProgress).filter(UserChecklistProgress.user_id == user_id).delete()
     
@@ -278,13 +299,21 @@ def review_applicant(user_id: int, data: AdminReviewUpdate, admin: User = Depend
     
     msg = "Review updated successfully"
 
-    if data.status == "PHASE_1_APPROVED" and user:
+    if data.status == "RESEARCH_APPROVED" and user:
+        from app.services.email_service import send_research_approval_email
+        email_sent = send_research_approval_email(to_email=user.email, name=user.name)
+        if email_sent:
+            msg = f"Research Approved. Assessment email sent to {user.email}"
+        else:
+            msg = f"Research Approved, but assessment email failed to send to {user.email}."
+
+    elif data.status == "PHASE_1_APPROVED" and user:
         from app.services.email_service import send_phase1_approval_email
         email_sent = send_phase1_approval_email(to_email=user.email, name=user.name)
         if email_sent:
-            msg = f"Phase 1 Approved. Email sent to {user.email}"
+            msg = f"Phase 1 Approved. Presentation email sent to {user.email}"
         else:
-            msg = f"Phase 1 Approved, but email failed to send to {user.email}."
+            msg = f"Phase 1 Approved, but presentation email failed to send to {user.email}."
 
     elif data.status == "APPROVED" and user:
         from app.models.user import UserRole
@@ -407,6 +436,42 @@ def export_applicant_pdf(user_id: int, admin: User = Depends(get_current_admin),
                 err_packet.seek(0)
                 merger.append(fileobj=err_packet)
                 
+    # Append Assessment Page
+    assessment = db.query(AssessmentSubmission).filter(AssessmentSubmission.user_id == user_id).first()
+    if assessment:
+        sep_packet = io.BytesIO()
+        can = canvas.Canvas(sep_packet, pagesize=letter)
+        can.setFont("Helvetica-Bold", 18)
+        can.drawString(100, 700, "Phase 2: 10 Questions Assessment")
+        
+        can.setFont("Helvetica", 14)
+        y = 660
+        if assessment.original_filename:
+            can.drawString(100, y, f"Original File: {assessment.original_filename}")
+            y -= 20
+        if assessment.google_drive_link:
+            can.drawString(100, y, f"Google Drive Link: {assessment.google_drive_link}")
+            y -= 20
+        if assessment.comments:
+            can.drawString(100, y, f"Applicant Comments: {assessment.comments}")
+            
+        can.save()
+        sep_packet.seek(0)
+        merger.append(fileobj=sep_packet)
+        
+        # Append applicant PDF if exists
+        if assessment.file_path and os.path.exists(assessment.file_path):
+            try:
+                file_pdf = open(assessment.file_path, "rb")
+                merger.append(fileobj=file_pdf)
+            except Exception as e:
+                err_packet = io.BytesIO()
+                can = canvas.Canvas(err_packet, pagesize=letter)
+                can.drawString(100, 700, f"Error rendering Assessment PDF: {str(e)}")
+                can.save()
+                err_packet.seek(0)
+                merger.append(fileobj=err_packet)
+
     output_pdf = io.BytesIO()
     merger.write(output_pdf)
     output_pdf.seek(0)
@@ -649,6 +714,7 @@ def delete_user(user_id: int, admin: User = Depends(get_current_admin), db: Sess
     db.query(VideoSubmission).filter(VideoSubmission.user_id == user_id).delete()
     db.query(ApplicationReview).filter(ApplicationReview.user_id == user_id).delete()
     db.query(PresentationSubmission).filter(PresentationSubmission.user_id == user_id).delete()
+    db.query(AssessmentSubmission).filter(AssessmentSubmission.user_id == user_id).delete()
     db.query(ModuleSubmission).filter(ModuleSubmission.user_id == user_id).delete()
     db.query(UserChecklistProgress).filter(UserChecklistProgress.user_id == user_id).delete()
     db.query(InstructorProfile).filter(InstructorProfile.user_id == user_id).delete()

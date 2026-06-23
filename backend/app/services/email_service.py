@@ -135,6 +135,110 @@ def generate_contract(instructor_name: str, living_area: str) -> tuple[str, str]
         
     return docx_output, pdf_output
 
+def send_research_approval_email(to_email: str, name: str) -> bool:
+    """
+    Sends an email to the applicant notifying them that they passed the Research phase
+    and instructing them to complete the 10 Questions Assessment.
+    """
+    smtp_host = settings.SMTP_HOST
+    smtp_port = settings.SMTP_PORT
+    smtp_user = settings.SMTP_USER
+    smtp_password = settings.SMTP_PASSWORD
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "SpacePoint Instructor Application - Research Approved"
+    msg["From"] = f"SpacePoint <{smtp_user}>"
+    msg["To"] = to_email
+
+    LOGO_URL = "https://spacepoint.ae/assets/img/SpacePoint%20logo.png"
+
+    html_body = f"""
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:system-ui,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0;background:#f3f4f6;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border-radius:16px;overflow:hidden;
+                    box-shadow:0 4px 24px rgba(36,17,52,0.12);">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#241134,#653f84);padding:28px 32px;">
+            <img src="{LOGO_URL}" height="44" alt="SpacePoint" style="display:block;">
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 32px;">
+            <h2 style="margin:0 0 6px 0;font-size:20px;font-weight:700;color:#1a1135;">
+              Research Phase Passed &#10003;
+            </h2>
+            <p style="margin:0 0 24px 0;font-size:12px;font-weight:700;color:#653f84;
+                       text-transform:uppercase;letter-spacing:0.1em;">
+              Instructor Scholarship Programme
+            </p>
+
+            <p style="margin:0 0 12px 0;font-size:15px;color:#374151;line-height:1.7;">
+              Hello <strong>{name}</strong>,
+            </p>
+            <p style="margin:0 0 24px 0;font-size:15px;color:#374151;line-height:1.7;">
+              Congratulations! You have successfully passed the Research modules phase of the SpacePoint Instructor Scholarship Application.
+            </p>
+            <p style="margin:0 0 24px 0;font-size:15px;color:#374151;line-height:1.7;">
+              The next step is to complete the <strong>10 Questions Assessment</strong>. Please log in to your portal to review the questions, compile your answers as a single PDF (or submit a Google Drive link), and submit your response.
+            </p>
+
+            <!-- CTA button -->
+            <table cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="background:linear-gradient(135deg,#241134,#653f84);border-radius:10px;">
+                  <a href="{settings.BASE_URL.rstrip('/')}/status"
+                     style="display:inline-block;padding:13px 32px;font-size:14px;
+                            font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.04em;">
+                    Complete 10 Questions Assessment &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:28px 0 0 0;font-size:14px;color:#6b7280;line-height:1.7;">
+              Best regards,<br>
+              <strong style="color:#241134;">The SpacePoint Team</strong>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;padding:18px 32px;border-top:1px solid #ede9f7;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.7;">
+              &copy; 2026 SpacePoint &nbsp;&middot;&nbsp; www.spacepoint.ae<br>
+              <em>Do not reply to this email. This mailbox is not monitored.</em>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+"""
+    msg.attach(MIMEText(html_body, "html"))
+
+    try:
+        server = smtplib.SMTP(smtp_host, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_user, to_email, msg.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"[email_service] Error sending research approval email: {str(e)}")
+        return False
+
 def send_phase1_approval_email(to_email: str, name: str) -> bool:
     """
     Sends an email to the applicant notifying them that they passed Phase 1

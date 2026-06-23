@@ -36,3 +36,16 @@ class PresentationSubmission(Base):
     video_link = Column(String, nullable=False)
     submitted_at = Column(DateTime(timezone=True), server_default=func.now())
 
+
+class AssessmentSubmission(Base):
+    __tablename__ = "assessment_submissions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
+    file_path = Column(String, nullable=True)
+    original_filename = Column(String, nullable=True)
+    google_drive_link = Column(String, nullable=True)
+    comments = Column(String, nullable=True)
+    submitted_at = Column(DateTime(timezone=True), server_default=func.now())
+
+

@@ -2,6 +2,35 @@
 
 This document tracks all version releases, feature additions, layout modifications, and system updates for the **SpacePoint Instructor & Facilitator Portal**.
 
+## [v1.5.0] - 2026-06-20
+### Added
+- **10 Questions Assessment Onboarding Step**:
+  - Inserted a new assessment step in the onboarding flow right after the Research Modules stage and before the Video Presentation.
+  - Added a dedicated database table `AssessmentSubmission` to securely store applicants' PDF answer paths, original filenames, Google Drive links, and notes/comments.
+  - Automatically synchronizes the new `RESEARCH_APPROVED` state value into the PostgreSQL `applicationstatus` enum via the `ultimate_fix.py` database script.
+  - Implemented `GET /api/applicant/assessment/questions` to return 10 selected questions (one from each category in the bank) and `POST /api/applicant/assessment/submit` to handle PDF/Drive link uploads.
+  - Added review, download, and cascade delete functions to the admin dashboard, including merging assessment details directly into consolidated PDF exports.
+  - Designed the `send_research_approval_email` template to notify applicants when their research is approved.
+  - Created a dynamic assessment panel in the `/status` portal page for applicants to view their questions and upload answers, and updated the admin dashboard drawer with the answers panel.
+
+---
+
+## [v1.4.0] - 2026-06-10
+### Added
+- **Interactive FAQ Accordion**:
+  - Implemented a custom JS-driven FAQ accordion section in the landing page (`landing.html`).
+  - Added 6 critical questions selected from the main `FAQ.md` (covering Intern vs Instructor roles, compensation terms, onboarding roadmap, co-working locations, and required hours).
+  - Built smooth max-height expansion/collapse animations and border-glow highlights.
+- **Premium Branded Footer**:
+  - Replaced the simple footer in the base template (`base.html`) with a modern multi-column layout.
+  - Includes columns for branding description, Contact Us info (with custom SVG icons), and follow-mission links to official Instagram/TikTok/LinkedIn profiles.
+
+### Modified
+- **Landing Page Portal Theme Upgrade**:
+  - Refined page layouts, updated the hero section, key highlights grid, and onboarding roadmap.
+  - Enhanced responsive behavior, visual gradients, and typography for a professional space-tech portal vibe.
+  - Maintained core authentication and modal inputs so user registration and login endpoints function without issues.
+
 ---
 
 ## [v1.3.1] - 2026-06-07

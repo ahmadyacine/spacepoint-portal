@@ -2,6 +2,29 @@
 
 {% block title %}Application Status - SpacePoint{% endblock %}
 
+{% block head %}
+<style>
+    #questions-list::-webkit-scrollbar {
+        width: 8px;
+    }
+    #questions-list::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.01);
+        border-radius: 8px;
+    }
+    #questions-list::-webkit-scrollbar-thumb {
+        background: rgba(167, 125, 255, 0.25);
+        border-radius: 8px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+    }
+    #questions-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(167, 125, 255, 0.4);
+        border: 2px solid transparent;
+        background-clip: padding-box;
+    }
+</style>
+{% endblock %}
+
 {% block nav_actions %}
 <button onclick="logout()" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">Logout</button>
 {% endblock %}
@@ -9,7 +32,7 @@
 {% block content %}
 <div class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
     <div
-        class="w-full max-w-2xl glass-panel p-10 rounded-2xl relative z-10 shadow-2xl animate-fade-in-up border-t-4 border-t-blue-500 text-center">
+        class="w-full max-w-2xl glass-panel p-10 rounded-2xl relative z-10 shadow-2xl animate-fade-in-up border-t-4 border-t-blue-500 text-center transition-all duration-500">
 
         <div id="loading" class="flex justify-center items-center py-10">
             <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -63,11 +86,148 @@
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('status-container').classList.remove('hidden');
 
+            // Dynamically set card top border & max-width based on status
+            const mainCard = document.querySelector('.glass-panel.p-10');
+            if (mainCard) {
+                // Remove all top border and max-width classes
+                mainCard.classList.remove(
+                    'border-t-blue-500', 'border-t-indigo-500', 'border-t-purple-500', 'border-t-green-500', 'border-t-red-500',
+                    'max-w-2xl', 'max-w-6xl'
+                );
+                
+                if (data.status === 'RESEARCH_APPROVED') {
+                    mainCard.classList.add('max-w-6xl', 'border-t-indigo-500');
+                } else {
+                    mainCard.classList.add('max-w-2xl', 'border-t-blue-500');
+                    if (data.status === 'PHASE_1_APPROVED') {
+                        mainCard.classList.remove('border-t-blue-500');
+                        mainCard.classList.add('border-t-purple-500');
+                    } else if (data.status === 'APPROVED') {
+                        mainCard.classList.remove('border-t-blue-500');
+                        mainCard.classList.add('border-t-green-500');
+                    } else if (data.status === 'REJECTED') {
+                        mainCard.classList.remove('border-t-blue-500');
+                        mainCard.classList.add('border-t-red-500');
+                    }
+                }
+            }
+
             const iconContainer = document.getElementById('icon-container');
             const statusTitle = document.getElementById('status-title');
             const statusMsg = document.getElementById('status-msg');
 
-            if (data.status === 'PHASE_1_APPROVED') {
+            if (data.status === 'RESEARCH_APPROVED') {
+                iconContainer.className = "mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6 border-4 border-indigo-500 bg-indigo-500/20 text-indigo-400";
+                iconContainer.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>`;
+                statusTitle.textContent = "Research Approved!";
+                statusMsg.textContent = "Please complete the 10 Questions Assessment below. Upload your answers as a single PDF. If the PDF exceeds 10MB, upload it to Google Drive (set access to 'Anyone with the link') and share the link below.";
+                
+                // Fetch and render assessment questions
+                const formContainer = document.createElement('div');
+                formContainer.className = "mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left";
+                formContainer.innerHTML = `
+                    <div class="lg:col-span-7 glass-panel p-6 rounded-xl border border-white/10 space-y-5 max-h-[600px] overflow-y-auto pr-2 shadow-inner" id="questions-list">
+                        <div class="text-center py-8 text-gray-500 flex flex-col items-center justify-center gap-3">
+                            <svg class="animate-spin h-6 w-6 text-space-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-sm text-gray-400 font-medium">Loading assessment questions...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="lg:col-span-5">
+                        <form id="assessment-form" onsubmit="submitAssessment(event)" class="space-y-5 bg-space-900/60 p-6 rounded-xl border border-white/5 shadow-xl">
+                            <h4 class="text-base font-display font-bold text-white tracking-wide border-b border-white/5 pb-2.5">Submit Your Answers</h4>
+                            
+                            <div class="border-2 border-dashed border-white/10 rounded-xl p-6 text-center hover:border-space-accent hover:bg-white/[0.01] active:scale-[0.99] transition-all duration-200 cursor-pointer bg-space-900/20 relative">
+                                <input type="file" id="assess_file_upload" accept="application/pdf" class="hidden" onchange="updateAssessFileName()">
+                                <label for="assess_file_upload" class="cursor-pointer flex flex-col items-center">
+                                    <div class="bg-white/5 p-3.5 rounded-full mb-2 text-space-accent" id="assess-upload-icon">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="text-xs font-semibold text-white" id="assess-file-name">Click to upload answers PDF (optional if Google Drive link is provided)</span>
+                                </label>
+                            </div>
+                            
+                            <div>
+                                <label for="assess_drive_link" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5 font-sans">Google Drive Link (Required if PDF not uploaded)</label>
+                                <input type="url" id="assess_drive_link" placeholder="https://drive.google.com/..." class="block w-full rounded-lg border-white/15 bg-space-900/40 px-3.5 py-2.5 text-white placeholder-gray-600 focus:ring-2 focus:ring-space-accent focus:border-transparent outline-none sm:text-sm border transition-all duration-200">
+                            </div>
+
+                            <div>
+                                <label for="assess_comments" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5 font-sans">Comments / Notes (Optional)</label>
+                                <textarea id="assess_comments" rows="3" placeholder="Additional notes or comments..." class="block w-full rounded-lg border-white/15 bg-space-900/40 px-3.5 py-2.5 text-white placeholder-gray-600 focus:ring-2 focus:ring-space-accent focus:border-transparent outline-none sm:text-sm border resize-none transition-all duration-200"></textarea>
+                            </div>
+                            
+                            <div id="assess-submit-error" class="hidden text-sm text-red-400 text-center font-medium bg-red-500/10 border border-red-500/20 py-2.5 px-4 rounded-lg"></div>
+                            
+                            <button type="submit" id="btn-assess-submit" class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-space-900 bg-space-accent hover:bg-space-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-space-accent focus:ring-offset-space-900 transition-all duration-200 shadow-[0_0_15px_rgba(167,125,255,0.25)] hover:shadow-[0_0_20px_rgba(167,125,255,0.4)] active:scale-[0.98]">
+                                Submit Assessment
+                            </button>
+                        </form>
+                    </div>
+                `;
+                document.getElementById('status-container').appendChild(formContainer);
+                
+                // Fetch the questions
+                fetch('/api/applicant/assessment/questions')
+                    .then(r => r.json())
+                    .then(qs => {
+                        let questionsHtml = `
+                            <h3 class="text-lg font-display font-bold text-white mb-5 border-b border-white/10 pb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-space-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                </svg>
+                                Assigned Assessment Questions
+                            </h3>
+                            <div class="space-y-4 pr-1">
+                        `;
+                        
+                        qs.forEach((q, idx) => {
+                            questionsHtml += `
+                                <div class="bg-gradient-to-r from-space-900/80 to-space-800/40 rounded-xl p-5 border border-white/5 hover:border-space-accent/20 transition-all duration-300 shadow-md space-y-3.5">
+                                    <!-- Header with badge -->
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-2.5">
+                                        <span class="inline-flex self-start px-2.5 py-0.5 text-[10px] font-bold text-space-accent bg-space-accent/10 rounded-full uppercase tracking-wider border border-space-accent/20">
+                                            Question ${idx+1}
+                                        </span>
+                                        <span class="text-[11px] font-medium text-gray-400 font-sans tracking-wide">
+                                            ${q.category_name}
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Main Task -->
+                                    <div class="text-sm font-semibold text-gray-100 leading-relaxed pt-1">
+                                        ${q.task}
+                                    </div>
+                                    
+                                    <!-- Follow up block -->
+                                    <div class="mt-3 bg-space-900/80 p-3.5 rounded-lg border-l-2 border-space-accent/70 shadow-inner">
+                                        <div class="text-[10px] font-bold text-space-accent uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                            <svg class="w-3.5 h-3.5 text-space-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Follow-Up Task
+                                        </div>
+                                        <p class="text-[12px] text-gray-300 font-medium leading-relaxed m-0">${q.follow_up}</p>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        questionsHtml += `</div>`;
+                        
+                        const list = document.getElementById('questions-list');
+                        list.innerHTML = questionsHtml;
+                    })
+                    .catch(err => {
+                        document.getElementById('questions-list').innerHTML = '<div class="text-red-400 text-sm py-4 text-center font-medium bg-red-500/10 border border-red-500/20 rounded-lg">Error loading questions. Please reload page.</div>';
+                    });
+
+            } else if (data.status === 'PHASE_1_APPROVED') {
                 iconContainer.classList.add('border-purple-500', 'bg-purple-500/20', 'text-purple-400');
                 iconContainer.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>`;
                 statusTitle.textContent = "Phase 1 Approved!";
@@ -95,11 +255,26 @@
                 iconContainer.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
                 statusTitle.textContent = "Under Review";
                 statusMsg.textContent = "Your application is under review. We will contact you if you are shortlisted for the next phase.";
+                // Show assessment info if submitted
+                if (data.assessment) {
+                    const assessInfo = document.createElement('div');
+                    assessInfo.className = "mt-4 text-sm text-gray-400 border-t border-white/5 pt-4 text-left space-y-1";
+                    let linksHtml = '';
+                    if (data.assessment.original_filename) {
+                        linksHtml += `Uploaded PDF: <span class="text-space-accent">${data.assessment.original_filename}</span>`;
+                    }
+                    if (data.assessment.google_drive_link) {
+                        if (linksHtml) linksHtml += ' &middot; ';
+                        linksHtml += `Drive Link: <a href="${data.assessment.google_drive_link}" target="_blank" class="text-space-accent hover:underline break-all">${data.assessment.google_drive_link}</a>`;
+                    }
+                    assessInfo.innerHTML = `<div class="font-bold text-white mb-1">Assessment Submitted:</div>${linksHtml}`;
+                    document.getElementById('status-msg').appendChild(assessInfo);
+                }
                 // Optionally show the link if they just submitted it
                 if (data.presentation_link) {
                     const presInfo = document.createElement('div');
-                    presInfo.className = "mt-4 text-sm text-gray-400";
-                    presInfo.innerHTML = `Presentation submitted: <a href="${data.presentation_link}" target="_blank" class="text-space-accent hover:underline break-all">${data.presentation_link}</a>`;
+                    presInfo.className = "mt-4 text-sm text-gray-400 border-t border-white/5 pt-4 text-left";
+                    presInfo.innerHTML = `<div class="font-bold text-white mb-1">Presentation Submitted:</div><a href="${data.presentation_link}" target="_blank" class="text-space-accent hover:underline break-all">${data.presentation_link}</a>`;
                     document.getElementById('status-msg').appendChild(presInfo);
                 }
             } else if (data.status === 'APPROVED') {
@@ -142,6 +317,73 @@
     async function logout() {
         await fetch("/api/auth/logout", { method: "POST" });
         window.location.href = "/";
+    }
+
+    function updateAssessFileName() {
+        const input = document.getElementById('assess_file_upload');
+        const fileNameSpan = document.getElementById('assess-file-name');
+        const iconDiv = document.getElementById('assess-upload-icon');
+
+        if (input.files.length > 0) {
+            fileNameSpan.textContent = `Selected: ${input.files[0].name}`;
+            fileNameSpan.classList.add('text-space-accent');
+            iconDiv.classList.replace('text-space-accent', 'text-green-400');
+            iconDiv.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+        } else {
+            fileNameSpan.textContent = "Click to upload answers PDF (optional if Google Drive link is provided)";
+            fileNameSpan.classList.remove('text-space-accent');
+        }
+    }
+
+    async function submitAssessment(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('assess_file_upload');
+        const driveInput = document.getElementById('assess_drive_link').value;
+        const commentsInput = document.getElementById('assess_comments').value;
+        const errDiv = document.getElementById('assess-submit-error');
+        const btn = document.getElementById('btn-assess-submit');
+
+        if (fileInput.files.length === 0 && driveInput.trim() === "") {
+            errDiv.textContent = "Please upload a PDF file or provide a Google Drive link.";
+            errDiv.classList.remove('hidden');
+            return;
+        }
+
+        errDiv.classList.add('hidden');
+        btn.disabled = true;
+        btn.textContent = "Submitting...";
+
+        const formData = new FormData();
+        if (fileInput.files.length > 0) {
+            formData.append("file", fileInput.files[0]);
+        }
+        if (driveInput.trim() !== "") {
+            formData.append("google_drive_link", driveInput);
+        }
+        if (commentsInput.trim() !== "") {
+            formData.append("comments", commentsInput);
+        }
+
+        try {
+            const resp = await fetch("/api/applicant/assessment/submit", {
+                method: "POST",
+                body: formData
+            });
+
+            if (resp.ok) {
+                window.location.reload();
+            } else {
+                const data = await resp.json();
+                errDiv.textContent = data.detail || "Error submitting assessment.";
+                errDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            errDiv.textContent = "Network error during submission.";
+            errDiv.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Submit Assessment";
+        }
     }
 
     async function reopenApp() {
