@@ -413,3 +413,94 @@ def complete_training_video(video_id: int, db: Session = Depends(get_db), curren
     db.commit()
     
     return {"success": True, "message": "Video marked as complete"}
+
+
+# --------------------------------------------------------------------------------
+# INSTRUCTOR SELF-SERVICE PROFILE (name, phone, city, transportation, etc.)
+# --------------------------------------------------------------------------------
+
+@router.get("/profile")
+def get_instructor_profile(
+    instructor: User = Depends(_require_instructor),
+    db: Session = Depends(get_db),
+):
+    """Return the instructor's editable profile fields."""
+    from app.models.profile import ApplicantProfile
+    import json
+
+    profile = db.query(ApplicantProfile).filter(
+        ApplicantProfile.user_id == instructor.id
+    ).first()
+
+    deliver_cities = []
+    if profile and profile.deliver_cities_json:
+        try:
+            deliver_cities = json.loads(profile.deliver_cities_json)
+        except Exception:
+            deliver_cities = []
+
+    return {
+        "name": instructor.name,
+        "email": instructor.email,
+        "phone": instructor.phone or "",
+        "city_of_residence": (profile.city_of_residence or "") if profile else "",
+        "country": (profile.country or "United Arab Emirates") if profile else "United Arab Emirates",
+        "has_own_transportation": (profile.has_own_transportation or False) if profile else False,
+        "deliver_cities": deliver_cities,
+    }
+
+
+from pydantic import BaseModel
+from typing import List as PyList, Optional as PyOptional
+
+class InstructorProfileUpdate(BaseModel):
+    name: PyOptional[str] = None
+    phone: PyOptional[str] = None
+    city_of_residence: PyOptional[str] = None
+    country: PyOptional[str] = None
+    has_own_transportation: PyOptional[bool] = None
+    deliver_cities: PyOptional[PyList[str]] = None
+
+
+@router.put("/profile")
+def update_instructor_profile(
+    data: InstructorProfileUpdate,
+    instructor: User = Depends(_require_instructor),
+    db: Session = Depends(get_db),
+):
+    """Update instructor's personal details. Creates ApplicantProfile row if missing."""
+    from app.models.profile import ApplicantProfile
+    import json
+
+    # Update User table fields
+    if data.name is not None and data.name.strip():
+        instructor.name = data.name.strip()
+    if data.phone is not None:
+        instructor.phone = data.phone.strip() or None
+    db.flush()
+
+    # Upsert ApplicantProfile
+    profile = db.query(ApplicantProfile).filter(
+        ApplicantProfile.user_id == instructor.id
+    ).first()
+
+    if not profile:
+        profile = ApplicantProfile(
+            user_id=instructor.id,
+            university="",
+            highest_degree="",
+            background_areas_json="[]",
+        )
+        db.add(profile)
+
+    if data.city_of_residence is not None:
+        profile.city_of_residence = data.city_of_residence.strip() or None
+    if data.country is not None:
+        profile.country = data.country.strip() or "United Arab Emirates"
+    if data.has_own_transportation is not None:
+        profile.has_own_transportation = data.has_own_transportation
+    if data.deliver_cities is not None:
+        profile.deliver_cities_json = json.dumps(data.deliver_cities)
+
+    db.commit()
+    return {"success": True, "message": "Profile updated successfully."}

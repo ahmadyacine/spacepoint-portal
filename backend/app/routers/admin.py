@@ -570,6 +570,67 @@ def list_instructors(admin: User = Depends(get_current_admin), db: Session = Dep
         })
     return res
 
+
+class InstructorCreate(BaseModel):
+    name: str
+    email: EmailStr
+    phone: Optional[str] = None
+
+
+@router.post("/instructors")
+def create_instructor_manual(
+    data: InstructorCreate,
+    admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin manually adds an instructor (bypassing the onboarding process).
+    A secure random password is generated and emailed to the instructor.
+    They are flagged to change it on first login.
+    """
+    import secrets
+    import string
+    from app.services.email_service import send_instructor_welcome_email
+
+    existing = db.query(User).filter(User.email == data.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="A user with this email already exists.")
+
+    # Generate a secure 12-char password (letters + digits + safe symbols)
+    alphabet = string.ascii_letters + string.digits + "!@#$%"
+    temp_password = "".join(secrets.choice(alphabet) for _ in range(12))
+
+    new_user = User(
+        name=data.name,
+        email=data.email,
+        phone=data.phone,
+        password_hash=get_password_hash(temp_password),
+        role=UserRole.INSTRUCTOR,
+        must_change_password=1,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    # Send welcome email with credentials (non-blocking — log failure but don't crash)
+    try:
+        send_instructor_welcome_email(
+            to_email=data.email,
+            name=data.name,
+            temp_password=temp_password,
+        )
+    except Exception as e:
+        print(f"[admin] Warning: failed to send welcome email to {data.email}: {e}")
+
+    return {
+        "id": new_user.id,
+        "name": new_user.name,
+        "email": new_user.email,
+        "role": new_user.role,
+        "message": f"Instructor account created. Welcome email sent to {data.email}.",
+    }
+
+
 @router.get("/instructors/{user_id}")
 def get_instructor_detail(user_id: int, admin: User = Depends(get_current_admin), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id, User.role == UserRole.INSTRUCTOR).first()

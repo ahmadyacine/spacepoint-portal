@@ -850,3 +850,127 @@ def send_certificates_email(to_email: str, name: str, pdf_paths: list[str]) -> b
         return False
 
 
+def send_instructor_welcome_email(to_email: str, name: str, temp_password: str) -> bool:
+    """
+    Sends a welcome email to a manually-added instructor with their
+    generated login credentials. They will be prompted to change their
+    password on first login.
+    """
+    smtp_host = settings.SMTP_HOST
+    smtp_port = settings.SMTP_PORT
+    smtp_user = settings.SMTP_USER
+    smtp_password = settings.SMTP_PASSWORD
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Welcome to SpacePoint — Your Instructor Account"
+    msg["From"] = f"SpacePoint <{smtp_user}>"
+    msg["To"] = to_email
+
+    LOGO_URL = "https://spacepoint.ae/assets/img/SpacePoint%20logo.png"
+    portal_url = settings.BASE_URL.rstrip("/")
+
+    html_body = f"""\
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:system-ui,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0;background:#f3f4f6;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border-radius:16px;overflow:hidden;
+                    box-shadow:0 4px 24px rgba(36,17,52,0.12);">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#241134,#653f84);padding:28px 32px;">
+            <img src="{LOGO_URL}" height="44" alt="SpacePoint" style="display:block;">
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 32px;">
+            <h2 style="margin:0 0 6px 0;font-size:22px;font-weight:700;color:#1a1135;">
+              Welcome to SpacePoint, {name}! &#127881;
+            </h2>
+            <p style="margin:0 0 24px 0;font-size:12px;font-weight:700;color:#653f84;
+                       text-transform:uppercase;letter-spacing:0.1em;">
+              Instructor Portal Access
+            </p>
+
+            <p style="margin:0 0 16px 0;font-size:15px;color:#374151;line-height:1.7;">
+              You have been added as an <strong>Instructor</strong> on the SpacePoint portal.
+              Below are your login credentials &mdash; please keep them safe.
+            </p>
+
+            <!-- Credentials box -->
+            <div style="background:#faf8ff;border:1px solid #ddd6fe;border-radius:12px;
+                         padding:22px 26px;margin:0 0 24px 0;">
+              <p style="margin:0 0 12px 0;font-size:13px;font-weight:700;color:#653f84;">
+                Your Login Details
+              </p>
+              <table cellpadding="0" cellspacing="0" style="width:100%;">
+                <tr>
+                  <td style="padding:6px 0;font-size:14px;color:#6b7280;width:110px;">Email</td>
+                  <td style="padding:6px 0;font-size:14px;color:#1a1135;font-weight:600;">{to_email}</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;font-size:14px;color:#6b7280;">Password</td>
+                  <td style="padding:6px 0;font-size:14px;color:#1a1135;font-weight:600;
+                              font-family:monospace;letter-spacing:0.08em;">{temp_password}</td>
+                </tr>
+              </table>
+            </div>
+
+            <p style="margin:0 0 24px 0;font-size:14px;color:#f59e0b;font-weight:600;">
+              &#9888;&#65039; For security, you will be asked to change your password the first time you log in.
+            </p>
+
+            <!-- CTA button -->
+            <table cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="background:linear-gradient(135deg,#241134,#653f84);border-radius:10px;">
+                  <a href="{portal_url}/instructor/dashboard"
+                     style="display:inline-block;padding:13px 32px;font-size:14px;
+                            font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.04em;">
+                    Log In to Portal &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:28px 0 0 0;font-size:14px;color:#6b7280;line-height:1.7;">
+              Best regards,<br>
+              <strong style="color:#241134;">The SpacePoint Team</strong>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;padding:18px 32px;border-top:1px solid #ede9f7;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.7;">
+              &copy; 2026 SpacePoint &nbsp;&middot;&nbsp; www.spacepoint.ae<br>
+              <em>Do not reply to this email. This mailbox is not monitored.</em>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+"""
+    msg.attach(MIMEText(html_body, "html"))
+
+    try:
+        server = smtplib.SMTP(smtp_host, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_user, to_email, msg.as_string())
+        server.quit()
+        print(f"[email_service] Instructor welcome email sent to {to_email}")
+        return True
+    except Exception as e:
+        print(f"[email_service] Failed to send instructor welcome email: {e}")
+        return False

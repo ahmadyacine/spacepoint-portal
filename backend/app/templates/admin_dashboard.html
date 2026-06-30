@@ -339,17 +339,68 @@
 
     <!-- TAB: Instructors -->
     <div id="tab-instructors" class="w-full flex-col gap-6 hidden">
-        <div class="flex justify-between items-center">
+        <div class="flex justify-between items-center flex-wrap gap-3">
             <h2 class="text-2xl font-display font-bold text-white tracking-tight">Approved Instructors</h2>
-            <button onclick="fetchInstructors()"
-                class="text-space-accent hover:text-white transition-colors flex items-center text-sm font-medium">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                    </path>
-                </svg>
-                Refresh
-            </button>
+            <div class="flex items-center gap-3">
+                <button onclick="openAddInstructorModal()"
+                    class="flex items-center gap-2 px-4 py-2 rounded-xl bg-space-accent hover:bg-space-accent/80 text-space-900 font-semibold text-sm transition-all shadow-lg shadow-space-accent/20">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add Instructor
+                </button>
+                <button onclick="fetchInstructors()"
+                    class="text-space-accent hover:text-white transition-colors flex items-center text-sm font-medium">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                        </path>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Add Instructor Modal -->
+        <div id="add-instructor-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);">
+            <div class="animate-modal w-full max-w-md glass-panel rounded-2xl border border-white/10 shadow-2xl p-8">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h3 class="text-xl font-display font-bold text-white">Add Instructor</h3>
+                        <p class="text-sm text-gray-400 mt-1">A password will be generated &amp; emailed to them.</p>
+                    </div>
+                    <button onclick="closeAddInstructorModal()" class="text-gray-400 hover:text-white transition-colors ml-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Full Name <span class="text-red-400">*</span></label>
+                        <input id="add-inst-name" type="text" placeholder="e.g. Sara Al Mansoori"
+                            class="w-full rounded-xl bg-space-900/80 border border-white/10 px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-space-accent/50 focus:border-space-accent/50 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Email <span class="text-red-400">*</span></label>
+                        <input id="add-inst-email" type="email" placeholder="instructor@example.com"
+                            class="w-full rounded-xl bg-space-900/80 border border-white/10 px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-space-accent/50 focus:border-space-accent/50 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Phone <span class="text-gray-500">(optional)</span></label>
+                        <input id="add-inst-phone" type="tel" placeholder="+971 50 000 0000"
+                            class="w-full rounded-xl bg-space-900/80 border border-white/10 px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-space-accent/50 focus:border-space-accent/50 transition-all">
+                    </div>
+
+                    <div id="add-inst-feedback" class="hidden text-sm rounded-xl px-4 py-3"></div>
+
+                    <button id="add-inst-submit-btn" onclick="submitAddInstructor()"
+                        class="w-full mt-2 py-3 rounded-xl bg-space-accent hover:bg-space-accent/80 text-space-900 font-bold text-sm transition-all shadow-lg shadow-space-accent/20">
+                        Create Account &amp; Send Email
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div id="instructors-list-view" class="w-full glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-xl">
@@ -1326,6 +1377,7 @@ function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
             document.getElementById('tab-instructors').classList.remove('hidden');
             document.getElementById('tab-instructors').classList.add('flex');
             closeInstructorDetail();
+            fetchInstructors();
         } else if (tab === 'invites') {
             document.getElementById('nav-desk-invites').className = "nav-link-desk " + activeClassBtn;
             document.getElementById('nav-mob-invites').className = "nav-link-mob " + activeClassBtn;
@@ -1977,6 +2029,77 @@ function showPromptModal({ title, placeholder, defaultValue = '', onConfirm }) {
             tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-red-400">Error loading instructors.</td></tr>`;
         }
     }
+
+    function openAddInstructorModal() {
+        document.getElementById('add-inst-name').value = '';
+        document.getElementById('add-inst-email').value = '';
+        document.getElementById('add-inst-phone').value = '';
+        const fb = document.getElementById('add-inst-feedback');
+        fb.className = 'hidden text-sm rounded-xl px-4 py-3';
+        fb.textContent = '';
+        document.getElementById('add-inst-submit-btn').disabled = false;
+        document.getElementById('add-inst-submit-btn').textContent = 'Create Account & Send Email';
+        document.getElementById('add-instructor-modal').classList.remove('hidden');
+    }
+
+    function closeAddInstructorModal() {
+        document.getElementById('add-instructor-modal').classList.add('hidden');
+    }
+
+    async function submitAddInstructor() {
+        const name  = document.getElementById('add-inst-name').value.trim();
+        const email = document.getElementById('add-inst-email').value.trim();
+        const phone = document.getElementById('add-inst-phone').value.trim();
+        const fb    = document.getElementById('add-inst-feedback');
+        const btn   = document.getElementById('add-inst-submit-btn');
+
+        if (!name || !email) {
+            fb.textContent = 'Name and email are required.';
+            fb.className = 'block text-sm rounded-xl px-4 py-3 bg-red-500/10 border border-red-500/30 text-red-400';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+        fb.className = 'hidden text-sm rounded-xl px-4 py-3';
+
+        try {
+            const resp = await fetch('/api/admin/instructors', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, phone: phone || null })
+            });
+            const data = await resp.json();
+
+            if (!resp.ok) {
+                fb.textContent = data.detail || 'Failed to create instructor.';
+                fb.className = 'block text-sm rounded-xl px-4 py-3 bg-red-500/10 border border-red-500/30 text-red-400';
+                btn.disabled = false;
+                btn.textContent = 'Create Account & Send Email';
+                return;
+            }
+
+            fb.textContent = `✓ ${data.message}`;
+            fb.className = 'block text-sm rounded-xl px-4 py-3 bg-green-500/10 border border-green-500/30 text-green-400';
+            btn.textContent = 'Done!';
+
+            // Close modal and refresh list after 1.5 s
+            setTimeout(() => {
+                closeAddInstructorModal();
+                fetchInstructors();
+            }, 1500);
+        } catch (e) {
+            fb.textContent = 'Network error. Please try again.';
+            fb.className = 'block text-sm rounded-xl px-4 py-3 bg-red-500/10 border border-red-500/30 text-red-400';
+            btn.disabled = false;
+            btn.textContent = 'Create Account & Send Email';
+        }
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('add-instructor-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeAddInstructorModal();
+    });
 
     async function openInstructorDetail(uid) {
         document.getElementById('instructors-list-view').classList.add('hidden');

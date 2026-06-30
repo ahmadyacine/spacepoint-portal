@@ -1,108 +1,269 @@
 {% extends "base_instructor.html" %}
 
 {% block title %}Profile Settings | SpacePoint Instructor{% endblock %}
-{% block page_title %}Instructor Profile{% endblock %}
+{% block page_title %}Profile Settings{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-8 animate-fade-in-up">
+<div class="max-w-3xl mx-auto space-y-8 animate-fade-in-up">
 
+    {% if user.must_change_password %}
+    <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
+        <svg class="w-5 h-5 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path>
+        </svg>
+        <div>
+            <p class="text-amber-300 font-semibold text-sm">Temporary Password Active</p>
+            <p class="text-amber-200/70 text-sm mt-0.5">Please <a href="/instructor/change-password"
+                    class="underline hover:text-amber-300">change your password</a> before updating your profile.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Profile Header -->
     <div class="glass-panel p-8 rounded-2xl border border-white/5 shadow-2xl">
-        <div class="flex items-center gap-6 mb-8 pb-8 border-b border-white/10">
-            <div
-                class="w-24 h-24 rounded-full bg-space-800 border-2 border-space-accent flex items-center justify-center text-3xl font-display font-bold text-space-accent shadow-[0_0_20px_rgba(167,125,255,0.3)]">
-                {{ user.name[0] }}
+        <div class="flex items-center gap-6 pb-8 border-b border-white/10 mb-8">
+            <div id="avatar-circle"
+                class="w-20 h-20 rounded-full bg-space-800 border-2 border-space-accent flex items-center justify-center text-2xl font-display font-bold text-space-accent shadow-[0_0_20px_rgba(167,125,255,0.3)] select-none">
+                {{ user.name[0] | upper }}
             </div>
             <div>
-                <h2 class="text-3xl font-display font-bold text-white">{{ user.name }}</h2>
-                <p class="text-space-accent mt-1 tracking-wider uppercase text-sm font-semibold">Certified Instructor
-                </p>
-                <p class="text-gray-400 text-sm mt-1">Joined {{ user.created_at.strftime('%B %Y') }}</p>
+                <h2 id="header-name" class="text-2xl font-display font-bold text-white">{{ user.name }}</h2>
+                <p class="text-space-accent tracking-wider uppercase text-xs font-semibold mt-1">Certified Instructor</p>
+                <p class="text-gray-500 text-xs mt-1">SP-{{ "%04d" % user.id }}-UAE &nbsp;·&nbsp; Joined
+                    {{ user.created_at.strftime('%B %Y') }}</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Details -->
-            <div class="space-y-6">
-                <h3 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Account Details</h3>
+        <!-- ─── Edit Form ─── -->
+        <form id="profile-form" onsubmit="saveProfile(event)" class="space-y-6">
 
+            <!-- Row 1: Name + Phone -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                    <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Email Address</label>
-                    <div class="bg-space-900/50 border border-white/10 p-3 rounded-lg text-gray-300">
-                        {{ user.email }}
-                    </div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Full
+                        Name</label>
+                    <input id="f-name" name="name" type="text" required
+                        class="w-full rounded-xl bg-space-900/80 border border-white/10 px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-space-accent/50 focus:border-space-accent/50 transition-all">
                 </div>
-
                 <div>
-                    <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Phone Number</label>
-                    <div class="bg-space-900/50 border border-white/10 p-3 rounded-lg text-gray-300">
-                        {{ user.phone or 'Not provided' }}
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Instructor ID</label>
-                    <div class="bg-space-900/50 border border-white/10 p-3 rounded-lg text-space-accent font-mono">
-                        SP-{{ "%04d" % user.id }}-UAE
-                    </div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Phone
+                        Number</label>
+                    <input id="f-phone" name="phone" type="tel"
+                        placeholder="+971 50 000 0000"
+                        class="w-full rounded-xl bg-space-900/80 border border-white/10 px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-space-accent/50 focus:border-space-accent/50 transition-all">
                 </div>
             </div>
 
-            <!-- Security Settings Placeholder -->
-            <div class="space-y-6">
-                <h3 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Security Settings</h3>
-
-                {% if user.must_change_password %}
-                <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4 text-red-200 text-sm">
-                    <strong class="text-red-400 block mb-1">Action Required</strong>
-                    You are currently using a temporary password. Please update it immediately.
+            <!-- Row 2: Email (read-only) -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Email
+                    <span class="text-gray-600 normal-case font-normal">(cannot be changed)</span></label>
+                <div class="w-full rounded-xl bg-space-900/40 border border-white/5 px-4 py-2.5 text-gray-500 text-sm select-all">
+                    {{ user.email }}
                 </div>
-                {% endif %}
+            </div>
 
-                <!-- Form placeholder (Doesn't function yet as requested "UI placeholder only") -->
-                <form class="space-y-4 opacity-75"
-                    onsubmit="event.preventDefault(); alert('Password change endpoint not yet implemented.');">
-                    <div>
-                        <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Current
-                            Password</label>
-                        <input type="password" placeholder="••••••••••••"
-                            class="w-full bg-space-900 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-space-accent transition-colors">
-                    </div>
-                    <div>
-                        <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">New Password</label>
-                        <input type="password" placeholder="Min 12 characters"
-                            class="w-full bg-space-900 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-space-accent transition-colors">
-                    </div>
-                    <div>
-                        <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">Confirm New
-                            Password</label>
-                        <input type="password" placeholder="Confirm password"
-                            class="w-full bg-space-900 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-space-accent transition-colors">
-                    </div>
-                    <button type="submit"
-                        class="w-full bg-space-accent text-space-900 font-bold py-3 rounded-lg hover:bg-space-hover transition-colors shadow-lg shadow-space-accent/20">
-                        Update Password
+            <!-- Row 3: City + Country -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">City of
+                        Residence</label>
+                    <input id="f-city" name="city_of_residence" type="text" placeholder="e.g. Dubai"
+                        class="w-full rounded-xl bg-space-900/80 border border-white/10 px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-space-accent/50 focus:border-space-accent/50 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Country</label>
+                    <input id="f-country" name="country" type="text" placeholder="United Arab Emirates"
+                        class="w-full rounded-xl bg-space-900/80 border border-white/10 px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-space-accent/50 focus:border-space-accent/50 transition-all">
+                </div>
+            </div>
+
+            <!-- Row 4: Transportation toggle -->
+            <div class="flex items-center justify-between bg-space-900/50 border border-white/10 rounded-xl px-5 py-4">
+                <div>
+                    <p class="text-white text-sm font-medium">Own Transportation</p>
+                    <p class="text-gray-500 text-xs mt-0.5">Do you have your own vehicle to travel to workshop locations?</p>
+                </div>
+                <button type="button" id="transport-toggle" onclick="toggleTransport()"
+                    class="relative w-12 h-6 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-space-accent/50">
+                    <span id="transport-thumb"
+                        class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-300"></span>
+                </button>
+                <input type="hidden" id="f-transport" name="has_own_transportation" value="false">
+            </div>
+
+            <!-- Row 5: Cities I can deliver in -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Cities I Can
+                    Deliver In</label>
+                <div class="flex gap-2 mb-2">
+                    <input id="city-input" type="text" placeholder="Type a city and press Enter or Add"
+                        class="flex-1 rounded-xl bg-space-900/80 border border-white/10 px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-space-accent/50 focus:border-space-accent/50 transition-all"
+                        onkeydown="if(event.key==='Enter'){event.preventDefault();addDeliverCity();}">
+                    <button type="button" onclick="addDeliverCity()"
+                        class="px-4 py-2.5 rounded-xl bg-space-accent/10 hover:bg-space-accent hover:text-space-900 text-space-accent border border-space-accent/30 text-sm font-semibold transition-all">
+                        Add
                     </button>
-                </form>
+                </div>
+                <div id="deliver-cities-tags" class="flex flex-wrap gap-2 min-h-[36px]"></div>
             </div>
-        </div>
+
+            <!-- Feedback + Submit -->
+            <div id="profile-feedback" class="hidden text-sm rounded-xl px-4 py-3"></div>
+
+            <div class="flex items-center gap-4 pt-2">
+                <button type="submit" id="save-btn"
+                    class="flex-1 py-3 rounded-xl bg-space-accent hover:bg-space-accent/80 text-space-900 font-bold text-sm transition-all shadow-lg shadow-space-accent/20">
+                    Save Changes
+                </button>
+                <a href="/instructor/change-password"
+                    class="px-5 py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:border-white/20 text-sm font-medium transition-all text-center">
+                    Change Password
+                </a>
+            </div>
+        </form>
     </div>
 </div>
 
 <style>
     @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
     }
-
-    .animate-fade-in-up {
-        animation: fadeInUp 0.5s ease-out forwards;
-    }
+    .animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
 </style>
+
+<script>
+    // ── State ──────────────────────────────────────────────────────────────
+    let deliverCities = [];
+    let hasTransport  = false;
+
+    // ── Bootstrap: load current data ──────────────────────────────────────
+    (async function loadProfile() {
+        try {
+            const r = await fetch('/api/instructor/profile');
+            if (!r.ok) return;
+            const d = await r.json();
+
+            document.getElementById('f-name').value    = d.name   || '';
+            document.getElementById('f-phone').value   = d.phone  || '';
+            document.getElementById('f-city').value    = d.city_of_residence || '';
+            document.getElementById('f-country').value = d.country || 'United Arab Emirates';
+
+            hasTransport   = !!d.has_own_transportation;
+            deliverCities  = Array.isArray(d.deliver_cities) ? [...d.deliver_cities] : [];
+
+            applyTransportUI();
+            renderCityTags();
+        } catch (e) {
+            console.error('Failed to load profile', e);
+        }
+    })();
+
+    // ── Transportation toggle ──────────────────────────────────────────────
+    function toggleTransport() {
+        hasTransport = !hasTransport;
+        applyTransportUI();
+    }
+
+    function applyTransportUI() {
+        const btn   = document.getElementById('transport-toggle');
+        const thumb = document.getElementById('transport-thumb');
+        document.getElementById('f-transport').value = hasTransport ? 'true' : 'false';
+        if (hasTransport) {
+            btn.classList.add('bg-space-accent');
+            btn.classList.remove('bg-space-800');
+            thumb.style.transform = 'translateX(24px)';
+        } else {
+            btn.classList.remove('bg-space-accent');
+            btn.classList.add('bg-space-800');
+            thumb.style.transform = 'translateX(0)';
+        }
+    }
+    // Set initial bg
+    document.getElementById('transport-toggle').classList.add('bg-space-800');
+
+    // ── Deliver-cities tags ────────────────────────────────────────────────
+    function addDeliverCity() {
+        const inp  = document.getElementById('city-input');
+        const city = inp.value.trim();
+        if (!city) return;
+        if (!deliverCities.includes(city)) {
+            deliverCities.push(city);
+            renderCityTags();
+        }
+        inp.value = '';
+        inp.focus();
+    }
+
+    function removeDeliverCity(city) {
+        deliverCities = deliverCities.filter(c => c !== city);
+        renderCityTags();
+    }
+
+    function renderCityTags() {
+        const container = document.getElementById('deliver-cities-tags');
+        container.innerHTML = '';
+        if (deliverCities.length === 0) {
+            container.innerHTML = '<span class="text-gray-600 text-sm italic">No cities added yet.</span>';
+            return;
+        }
+        deliverCities.forEach(city => {
+            const tag = document.createElement('span');
+            tag.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-space-accent/10 border border-space-accent/30 text-space-accent text-sm';
+            tag.innerHTML = `${city}<button type="button" onclick="removeDeliverCity('${city.replace(/'/g,"\\'")}')"\
+                class="text-space-accent/60 hover:text-red-400 transition-colors ml-1 leading-none">&times;</button>`;
+            container.appendChild(tag);
+        });
+    }
+
+    // ── Save ───────────────────────────────────────────────────────────────
+    async function saveProfile(e) {
+        e.preventDefault();
+        const btn = document.getElementById('save-btn');
+        const fb  = document.getElementById('profile-feedback');
+        btn.disabled    = true;
+        btn.textContent = 'Saving…';
+        fb.className    = 'hidden text-sm rounded-xl px-4 py-3';
+
+        const payload = {
+            name:                document.getElementById('f-name').value.trim(),
+            phone:               document.getElementById('f-phone').value.trim() || null,
+            city_of_residence:   document.getElementById('f-city').value.trim() || null,
+            country:             document.getElementById('f-country').value.trim() || null,
+            has_own_transportation: hasTransport,
+            deliver_cities:      deliverCities,
+        };
+
+        try {
+            const r = await fetch('/api/instructor/profile', {
+                method:  'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(payload),
+            });
+            const data = await r.json();
+
+            if (!r.ok) {
+                fb.textContent = data.detail || 'Failed to save.';
+                fb.className   = 'block text-sm rounded-xl px-4 py-3 bg-red-500/10 border border-red-500/30 text-red-400';
+            } else {
+                fb.textContent = '✓ ' + data.message;
+                fb.className   = 'block text-sm rounded-xl px-4 py-3 bg-green-500/10 border border-green-500/30 text-green-400';
+                // Update header name live
+                if (payload.name) {
+                    document.getElementById('header-name').textContent = payload.name;
+                    document.getElementById('avatar-circle').textContent = payload.name[0].toUpperCase();
+                }
+            }
+        } catch {
+            fb.textContent = 'Network error. Please try again.';
+            fb.className   = 'block text-sm rounded-xl px-4 py-3 bg-red-500/10 border border-red-500/30 text-red-400';
+        }
+
+        btn.disabled    = false;
+        btn.textContent = 'Save Changes';
+        setTimeout(() => { fb.className = 'hidden text-sm rounded-xl px-4 py-3'; }, 4000);
+    }
+</script>
 {% endblock %}
